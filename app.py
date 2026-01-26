@@ -27,21 +27,27 @@ def load_data():
         return json.load(f)
 
 def main():
-    # --- CẤU HÌNH TỰ ĐỘNG XOAY ẢNH ---
-    # Ảnh từ mẹo 1 đến 36: Giữ nguyên
-    # Ảnh từ mẹo 37 trở đi: Xoay 270 độ
-    MOC_CHUYEN_DOI = 36 
-    GOC_XOAY_PHAN_SAU = 270 
+    # --- THANH CÔNG CỤ BÊN TRÁI (SIDEBAR) ---
+    st.sidebar.title("⚙️ Cài đặt hiển thị")
     
-    st.sidebar.title("⚙️ Cài đặt")
-    view_mode = st.sidebar.radio("Chọn bố cục:", ["Danh sách (1 cột)", "Lưới (3 cột)"], index=0)
+    # 1. Chọn chế độ xem
+    view_mode = st.sidebar.radio(
+        "Chọn bố cục:",
+        ["Danh sách (1 cột) - Ảnh to", "Lưới (3 cột) - Nhìn bao quát"],
+        index=0 
+    )
     
-    # Hiển thị thông báo để bạn dễ kiểm soát
-    st.sidebar.success(f"✅ Đang tự động xử lý:\n- Mẹo 1-{MOC_CHUYEN_DOI}: Giữ nguyên\n- Mẹo {MOC_CHUYEN_DOI+1}+: Xoay {GOC_XOAY_PHAN_SAU}°")
+    # 2. Xoay ảnh (Đã cài mặc định là 270 độ)
+    rotate_option = st.sidebar.select_slider(
+        "Góc xoay ảnh (Mặc định: 270 độ):",
+        options=[0, 90, 180, 270],
+        value=270  # <--- ĐÃ SỬA: Mặc định chọn sẵn 270 độ
+    )
 
     st.title("🚗 MẸO GIẢI NHANH 600 CÂU LÝ THUYẾT")
     st.caption("Tra cứu nhanh các mẹo học lý thuyết lái xe ô tô")
 
+    # Thanh tìm kiếm
     search_query = st.text_input("", placeholder="🔍 Nhập từ khóa (ví dụ: tốc độ, độ tuổi, biển báo...)...")
 
     try:
@@ -52,7 +58,11 @@ def main():
 
     # Lọc dữ liệu
     if search_query:
-        results = [tip for tip in data if search_query.lower() in tip['title'].lower() or any(search_query.lower() in line.lower() for line in tip['content'])]
+        results = [
+            tip for tip in data 
+            if search_query.lower() in tip['title'].lower() 
+            or any(search_query.lower() in line.lower() for line in tip['content'])
+        ]
     else:
         results = data
 
@@ -60,16 +70,22 @@ def main():
     if not results:
         st.warning(f"Không tìm thấy mẹo nào cho từ khóa: '{search_query}'")
     else:
+        # Xử lý hiển thị theo chế độ đã chọn
         if "3 cột" in view_mode:
             cols = st.columns(3)
         else:
-            cols = [st.container() for _ in range(len(results))]
+            cols = [st.container() for _ in range(len(results))] 
 
         for i, tip in enumerate(results):
-            col = cols[i % 3] if "3 cột" in view_mode else cols[i]
+            if "3 cột" in view_mode:
+                col = cols[i % 3]
+            else:
+                col = cols[i] 
 
             with col:
                 st.markdown(f'<div class="card">', unsafe_allow_html=True)
+                
+                # Tiêu đề
                 st.markdown(f'<div class="tip-title">{tip["title"]}</div>', unsafe_allow_html=True)
                 
                 # Nội dung chữ
@@ -83,14 +99,11 @@ def main():
                     if os.path.exists(image_path):
                         img = Image.open(image_path)
                         
-                        # --- LOGIC XOAY ẢNH ---
-                        current_id = tip.get('id', 0)
-                        # Nếu ID lớn hơn 36 thì xoay 270 độ
-                        if current_id > MOC_CHUYEN_DOI:
-                            img = img.rotate(-GOC_XOAY_PHAN_SAU, expand=True)
-                        # ----------------------
+                        # Xoay ảnh (Code sẽ tự động xoay 270 độ ngay khi mở web)
+                        if rotate_option != 0:
+                            img = img.rotate(-rotate_option, expand=True)
                             
-                        st.image(img, caption=f"Hình minh họa", use_container_width=True)
+                        st.image(img, caption="Hình minh họa", use_container_width=True)
                 
                 st.markdown('</div>', unsafe_allow_html=True)
 

@@ -157,7 +157,7 @@ def main():
         st.info("💡 **Mẹo:** Chọn chế độ **'Học thuộc'** để tự kiểm tra trí nhớ, sau đó chuyển sang **'Xem đáp án'** để đối chiếu.")
 
     # --- GIAO DIỆN CHÍNH ---
-    st.title("🚗 MẸO 600 CÂU LÝ THUYẾT")
+    st.title("🚗 MẸO 600 CÂU LÝ THUYẾT by SHOPTINHOC")
     
     # 1. Thanh tìm kiếm
     search = st.text_input("", placeholder="🔍 Tìm kiếm nhanh (vd: nồng độ cồn, cao tốc, 18 tuổi...)...")
@@ -193,3 +193,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+

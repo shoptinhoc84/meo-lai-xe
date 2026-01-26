@@ -27,17 +27,17 @@ def load_data():
         return json.load(f)
 
 def main():
-    # --- CẤU HÌNH XOAY ẢNH THEO ID ---
+    # --- CẤU HÌNH TỰ ĐỘNG ---
     MOC_CHUYEN_DOI = 36 
     
-    # Hiển thị thông báo cấu hình hiện tại ở Sidebar
     st.sidebar.title("⚙️ Cài đặt hiển thị")
     view_mode = st.sidebar.radio("Chọn bố cục:", ["Danh sách (1 cột)", "Lưới (3 cột)"], index=0)
     
+    # Hiển thị thông báo trạng thái
     st.sidebar.success(
-        f"✅ Trạng thái xoay ảnh:\n"
-        f"- Câu 1-{MOC_CHUYEN_DOI}: Xoay 270°\n"
-        f"- Câu {MOC_CHUYEN_DOI+1} trở đi: Giữ nguyên (0°)"
+        f"✅ Đang tự động xử lý:\n"
+        f"- Câu 1-{MOC_CHUYEN_DOI}: Giữ nguyên (0°)\n"
+        f"- Câu {MOC_CHUYEN_DOI+1}+: Xoay 270°"
     )
 
     st.title("🚗 MẸO GIẢI NHANH 600 CÂU LÝ THUYẾT")
@@ -78,22 +78,22 @@ def main():
                     formatted_line = line.replace("=>", "<span class='highlight'>=></span>")
                     st.markdown(f"- {formatted_line}", unsafe_allow_html=True)
                 
-                # Xử lý hình ảnh
+                # Hình ảnh
                 if tip.get('image'):
                     image_path = os.path.join("images", tip['image'])
                     if os.path.exists(image_path):
                         img = Image.open(image_path)
                         
-                        # --- LOGIC XOAY ẢNH MỚI ---
+                        # --- LOGIC XOAY ẢNH CHUẨN ---
                         current_id = tip.get('id', 0)
                         
                         if current_id <= MOC_CHUYEN_DOI:
-                            # Từ câu 1 đến 36: Xoay 270 độ
-                            img = img.rotate(-270, expand=True)
-                        else:
-                            # Từ câu 37 trở đi: Giữ nguyên (0 độ)
+                            # Từ câu 1 đến 36: Giữ nguyên (0 độ)
                             pass 
-                        # --------------------------
+                        else:
+                            # Từ câu 37 trở đi: Xoay 270 độ
+                            img = img.rotate(-270, expand=True)
+                        # ----------------------------
                             
                         st.image(img, caption=f"Hình minh họa", use_container_width=True)
                 

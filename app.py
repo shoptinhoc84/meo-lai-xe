@@ -30,8 +30,12 @@ def main():
     st.sidebar.title("⚙️ Cài đặt hiển thị")
     view_mode = st.sidebar.radio("Chọn bố cục:", ["Danh sách (1 cột)", "Lưới (3 cột)"], index=0)
     
-    # Hiển thị thông báo trạng thái
-    st.sidebar.success("✅ Đang áp dụng: Tất cả ảnh xoay 270°")
+    # Hiển thị thông báo trạng thái xoay ảnh
+    st.sidebar.success(
+        "✅ Cấu hình xoay ảnh:\n"
+        "- Câu 1-36: Giữ nguyên (Chuẩn)\n"
+        "- Câu 37-51: Xoay 180°"
+    )
 
     st.title("🚗 MẸO GIẢI NHANH 600 CÂU LÝ THUYẾT")
     st.caption("Tra cứu nhanh các mẹo học lý thuyết lái xe ô tô")
@@ -77,8 +81,15 @@ def main():
                     if os.path.exists(image_path):
                         img = Image.open(image_path)
                         
-                        # --- XOAY TẤT CẢ 270 ĐỘ ---
-                        img = img.rotate(-270, expand=True)
+                        # --- LOGIC XOAY ẢNH MỚI ---
+                        current_id = tip.get('id', 0)
+                        
+                        # Chỉ xoay 180 độ với các câu từ 37 đến 51
+                        if 37 <= current_id <= 51:
+                            img = img.rotate(-180, expand=True)
+                        else:
+                            # Các câu còn lại giữ nguyên (0 độ)
+                            pass
                         # --------------------------
                             
                         st.image(img, caption=f"Hình minh họa", use_container_width=True)

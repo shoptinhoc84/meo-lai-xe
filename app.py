@@ -27,18 +27,11 @@ def load_data():
         return json.load(f)
 
 def main():
-    # --- CẤU HÌNH TỰ ĐỘNG ---
-    MOC_CHUYEN_DOI = 36 
-    
     st.sidebar.title("⚙️ Cài đặt hiển thị")
     view_mode = st.sidebar.radio("Chọn bố cục:", ["Danh sách (1 cột)", "Lưới (3 cột)"], index=0)
     
     # Hiển thị thông báo trạng thái
-    st.sidebar.success(
-        f"✅ Đang tự động xử lý:\n"
-        f"- Câu 1-{MOC_CHUYEN_DOI}: Giữ nguyên (0°)\n"
-        f"- Câu {MOC_CHUYEN_DOI+1}+: Xoay 270°"
-    )
+    st.sidebar.success("✅ Đang áp dụng: Tất cả ảnh xoay 270°")
 
     st.title("🚗 MẸO GIẢI NHANH 600 CÂU LÝ THUYẾT")
     st.caption("Tra cứu nhanh các mẹo học lý thuyết lái xe ô tô")
@@ -84,16 +77,9 @@ def main():
                     if os.path.exists(image_path):
                         img = Image.open(image_path)
                         
-                        # --- LOGIC XOAY ẢNH CHUẨN ---
-                        current_id = tip.get('id', 0)
-                        
-                        if current_id <= MOC_CHUYEN_DOI:
-                            # Từ câu 1 đến 36: Giữ nguyên (0 độ)
-                            pass 
-                        else:
-                            # Từ câu 37 trở đi: Xoay 270 độ
-                            img = img.rotate(-270, expand=True)
-                        # ----------------------------
+                        # --- XOAY TẤT CẢ 270 ĐỘ ---
+                        img = img.rotate(-270, expand=True)
+                        # --------------------------
                             
                         st.image(img, caption=f"Hình minh họa", use_container_width=True)
                 

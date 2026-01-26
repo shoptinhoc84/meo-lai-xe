@@ -3,101 +3,193 @@ import json
 import os
 from PIL import Image
 
-# Cấu hình trang
+# --- 1. CẤU HÌNH TRANG & GIAO DIỆN ---
 st.set_page_config(
-    page_title="Mẹo 600 Câu Lý Thuyết",
+    page_title="Ôn Thi 600 Câu",
     page_icon="🚗",
-    layout="wide"
+    layout="wide",
+    initial_sidebar_state="collapsed" # Thu gọn menu để rộng chỗ trên điện thoại
 )
 
-# CSS tùy chỉnh
+# --- 2. CSS TỐI ƯU CHO ĐIỆN THOẠI & PC ---
 st.markdown("""
 <style>
-    .tip-title { color: #d32f2f; font-weight: bold; font-size: 1.4rem; margin-bottom: 10px; }
-    .highlight { color: #d32f2f; font-weight: 900; background-color: #ffebee; padding: 0 5px; border-radius: 4px; }
-    .card { background-color: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 8px rgba(0,0,0,0.08); margin-bottom: 25px; border: 1px solid #eee; }
-    img { border-radius: 8px; }
+    /* Chỉnh font chữ toàn bộ web to hơn */
+    html, body, [class*="css"] {
+        font-family: 'Segoe UI', sans-serif;
+    }
+    
+    /* Giao diện thẻ bài (Card) */
+    div.tip-card {
+        background-color: #ffffff;
+        border-radius: 12px;
+        padding: 20px;
+        margin-bottom: 20px;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.08); /* Đổ bóng nhẹ */
+        border-left: 5px solid #d32f2f; /* Viền đỏ bên trái làm điểm nhấn */
+        transition: transform 0.2s;
+    }
+    div.tip-card:hover {
+        transform: translateY(-2px); /* Hiệu ứng nổi khi di chuột */
+        box-shadow: 0 6px 15px rgba(0,0,0,0.12);
+    }
+
+    /* Tiêu đề của Mẹo */
+    .tip-header {
+        color: #b71c1c;
+        font-size: 1.3rem;
+        font-weight: 700;
+        margin-bottom: 12px;
+        border-bottom: 1px dashed #eee;
+        padding-bottom: 8px;
+    }
+
+    /* Phần nội dung chữ */
+    .tip-content {
+        font-size: 1.1rem; /* Chữ to dễ đọc trên đt */
+        line-height: 1.6;
+        color: #333;
+    }
+    
+    /* Highlight đáp án/từ khóa */
+    .highlight {
+        background-color: #ffebee;
+        color: #c62828;
+        font-weight: bold;
+        padding: 2px 6px;
+        border-radius: 4px;
+        border: 1px solid #ffcdd2;
+    }
+
+    /* Ảnh minh họa */
+    .tip-image {
+        margin-top: 15px;
+        border-radius: 8px;
+        border: 1px solid #ddd;
+    }
+
+    /* Ẩn bớt khoảng trắng thừa của Streamlit trên Mobile */
+    .block-container {
+        padding-top: 2rem !important;
+        padding-bottom: 2rem !important;
+    }
 </style>
 """, unsafe_allow_html=True)
 
-# Đọc dữ liệu
+# --- 3. HÀM XỬ LÝ DỮ LIỆU ---
 @st.cache_data
 def load_data():
-    with open('data.json', 'r', encoding='utf-8') as f:
-        return json.load(f)
-
-def main():
-    st.sidebar.title("⚙️ Cài đặt hiển thị")
-    view_mode = st.sidebar.radio("Chọn bố cục:", ["Danh sách (1 cột)", "Lưới (3 cột)"], index=0)
-    
-    # Hiển thị thông báo trạng thái xoay ảnh
-    st.sidebar.success(
-        "✅ Cấu hình xoay ảnh:\n"
-        "- Câu 1-36: Xoay 270°\n"
-        "- Câu 37-51: Xoay 90°"
-    )
-
-    st.title("🚗 MẸO GIẢI NHANH 600 CÂU LÝ THUYẾT")
-    st.caption("Tra cứu nhanh các mẹo học lý thuyết lái xe ô tô")
-
-    search_query = st.text_input("", placeholder="🔍 Nhập từ khóa (ví dụ: tốc độ, độ tuổi, biển báo...)...")
-
     try:
-        data = load_data()
+        with open('data.json', 'r', encoding='utf-8') as f:
+            data = json.load(f)
+            # Tự động gán category mặc định nếu thiếu
+            for item in data:
+                if 'category' not in item:
+                    item['category'] = "Chung"
+            return data
     except FileNotFoundError:
-        st.error("Lỗi: Không tìm thấy file data.json")
+        return []
+
+# --- 4. HÀM HIỂN THỊ MỘT THẺ MẸO ---
+def render_tip_card(tip, show_answer):
+    # Container HTML cho thẻ
+    html_content = f"""
+    <div class="tip-card">
+        <div class="tip-header">{tip['title']}</div>
+        <div class="tip-content">
+    """
+    
+    # Xử lý từng dòng nội dung
+    for line in tip['content']:
+        if "=>" in line:
+            parts = line.split("=>")
+            question_part = parts[0]
+            answer_part = parts[1]
+            
+            # Logic Che/Hiện đáp án
+            if show_answer:
+                # Hiện đáp án đẹp
+                display_line = f"{question_part} <span class='highlight'>👉 {answer_part}</span>"
+            else:
+                # Che đáp án (hiện dấu ???)
+                display_line = f"{question_part} <span style='color:#bbb; border:1px dashed #ccc; padding:0 5px'>??? (Bấm hiện để xem)</span>"
+        else:
+            display_line = line
+            
+        html_content += f"<div>• {display_line}</div>"
+    
+    html_content += "</div></div>"
+    st.markdown(html_content, unsafe_allow_html=True)
+
+    # Xử lý ảnh (Dùng st.image của Streamlit để tận dụng tính năng zoom/full width)
+    if tip.get('image'):
+        image_path = os.path.join("images", tip['image'])
+        if os.path.exists(image_path):
+            img = Image.open(image_path)
+            
+            # --- LOGIC XOAY ẢNH CHUẨN CỦA BẠN ---
+            current_id = tip.get('id', 0)
+            if 1 <= current_id <= 36:
+                img = img.rotate(-270, expand=True)
+            elif 37 <= current_id <= 51:
+                img = img.rotate(-90, expand=True)
+            # ------------------------------------
+            
+            st.image(img, use_container_width=True)
+
+
+# --- 5. CHƯƠNG TRÌNH CHÍNH ---
+def main():
+    data = load_data()
+    if not data:
+        st.error("⚠️ Lỗi: Không tìm thấy file data.json")
         return
 
-    # Lọc dữ liệu
-    if search_query:
-        results = [tip for tip in data if search_query.lower() in tip['title'].lower() or any(search_query.lower() in line.lower() for line in tip['content'])]
-    else:
-        results = data
+    # --- MENU BÊN TRÁI ---
+    with st.sidebar:
+        st.header("⚙️ Cài đặt học tập")
+        
+        # 1. Chế độ học (Tính năng mới!)
+        mode = st.radio("Chế độ:", ["📖 Xem đáp án", "🫣 Học thuộc (Che đáp án)"])
+        show_result = True if mode == "📖 Xem đáp án" else False
+        
+        st.divider()
+        st.info("💡 **Mẹo:** Chọn chế độ **'Học thuộc'** để tự kiểm tra trí nhớ, sau đó chuyển sang **'Xem đáp án'** để đối chiếu.")
 
-    if not results:
-        st.warning(f"Không tìm thấy mẹo nào cho từ khóa: '{search_query}'")
-    else:
-        # Xử lý hiển thị
-        if "3 cột" in view_mode:
-            cols = st.columns(3)
+    # --- GIAO DIỆN CHÍNH ---
+    st.title("🚗 MẸO 600 CÂU LÝ THUYẾT")
+    
+    # 1. Thanh tìm kiếm
+    search = st.text_input("", placeholder="🔍 Tìm kiếm nhanh (vd: nồng độ cồn, cao tốc, 18 tuổi...)...")
+
+    # 2. Phân loại Category (Tạo Tabs)
+    # Lấy danh sách các danh mục duy nhất từ dữ liệu
+    categories = ["Tất cả"] + sorted(list(set([t['category'] for t in data])))
+    
+    # Nếu đang tìm kiếm thì không hiện Tabs (để tránh rối)
+    if search:
+        st.subheader(f"Kết quả tìm kiếm cho: '{search}'")
+        filtered_data = [t for t in data if search.lower() in t['title'].lower() or any(search.lower() in x.lower() for x in t['content'])]
+        if not filtered_data:
+            st.warning("Không tìm thấy kết quả nào.")
         else:
-            cols = [st.container() for _ in range(len(results))]
-
-        for i, tip in enumerate(results):
-            col = cols[i % 3] if "3 cột" in view_mode else cols[i]
-
-            with col:
-                st.markdown(f'<div class="card">', unsafe_allow_html=True)
-                st.markdown(f'<div class="tip-title">{tip["title"]}</div>', unsafe_allow_html=True)
+            for tip in filtered_data:
+                render_tip_card(tip, show_result)
+    else:
+        # Tạo giao diện Tabs cực tiện cho điện thoại
+        tabs = st.tabs(categories)
+        
+        for i, category in enumerate(categories):
+            with tabs[i]:
+                # Lọc dữ liệu theo tab
+                if category == "Tất cả":
+                    current_tips = data
+                else:
+                    current_tips = [t for t in data if t['category'] == category]
                 
-                # Nội dung chữ
-                for line in tip['content']:
-                    formatted_line = line.replace("=>", "<span class='highlight'>=></span>")
-                    st.markdown(f"- {formatted_line}", unsafe_allow_html=True)
-                
-                # Hình ảnh
-                if tip.get('image'):
-                    image_path = os.path.join("images", tip['image'])
-                    if os.path.exists(image_path):
-                        img = Image.open(image_path)
-                        
-                        # --- LOGIC XOAY ẢNH MỚI ---
-                        current_id = tip.get('id', 0)
-                        
-                        if 1 <= current_id <= 36:
-                            # Nhóm 1: Xoay 270 độ
-                            img = img.rotate(-270, expand=True)
-                        elif 37 <= current_id <= 51:
-                            # Nhóm 2: Xoay 90 độ
-                            img = img.rotate(-90, expand=True)
-                        else:
-                            # Các trường hợp khác (nếu có) giữ nguyên
-                            pass
-                        # -------------------------------------
-                            
-                        st.image(img, caption=f"Hình minh họa", use_container_width=True)
-                
-                st.markdown('</div>', unsafe_allow_html=True)
+                # Hiển thị
+                for tip in current_tips:
+                    render_tip_card(tip, show_result)
 
 if __name__ == "__main__":
     main()

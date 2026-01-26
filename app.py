@@ -1,7 +1,7 @@
 import streamlit as st
 import json
 import os
-from PIL import Image  # Thư viện xử lý ảnh
+from PIL import Image
 
 # Cấu hình trang
 st.set_page_config(
@@ -30,18 +30,18 @@ def main():
     # --- THANH CÔNG CỤ BÊN TRÁI (SIDEBAR) ---
     st.sidebar.title("⚙️ Cài đặt hiển thị")
     
-    # 1. Chọn chế độ xem (Giải quyết vấn đề ảnh bị dọc/nhỏ)
+    # 1. Chọn chế độ xem
     view_mode = st.sidebar.radio(
         "Chọn bố cục:",
         ["Danh sách (1 cột) - Ảnh to", "Lưới (3 cột) - Nhìn bao quát"],
-        index=0 # Mặc định chọn 1 cột để ảnh nằm ngang
+        index=0 
     )
     
-    # 2. Xoay ảnh (Giải quyết nếu ảnh bị nghiêng)
+    # 2. Xoay ảnh (Đã cài mặc định là 270 độ)
     rotate_option = st.sidebar.select_slider(
-        "Xoay chiều ảnh (nếu ảnh bị ngược):",
+        "Góc xoay ảnh (Mặc định: 270 độ):",
         options=[0, 90, 180, 270],
-        value=0
+        value=270  # <--- ĐÃ SỬA: Mặc định chọn sẵn 270 độ
     )
 
     st.title("🚗 MẸO GIẢI NHANH 600 CÂU LÝ THUYẾT")
@@ -74,14 +74,13 @@ def main():
         if "3 cột" in view_mode:
             cols = st.columns(3)
         else:
-            cols = [st.container() for _ in range(len(results))] # Tạo danh sách container ảo
+            cols = [st.container() for _ in range(len(results))] 
 
         for i, tip in enumerate(results):
-            # Chọn vị trí hiển thị (Nếu 3 cột thì chia, nếu 1 cột thì xếp dọc)
             if "3 cột" in view_mode:
                 col = cols[i % 3]
             else:
-                col = cols[i] # 1 cột thì cứ lấy container tiếp theo
+                col = cols[i] 
 
             with col:
                 st.markdown(f'<div class="card">', unsafe_allow_html=True)
@@ -98,10 +97,9 @@ def main():
                 if tip.get('image'):
                     image_path = os.path.join("images", tip['image'])
                     if os.path.exists(image_path):
-                        # Mở ảnh bằng PIL để xử lý xoay
                         img = Image.open(image_path)
                         
-                        # Xoay ảnh nếu người dùng chọn trong Sidebar
+                        # Xoay ảnh (Code sẽ tự động xoay 270 độ ngay khi mở web)
                         if rotate_option != 0:
                             img = img.rotate(-rotate_option, expand=True)
                             

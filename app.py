@@ -27,17 +27,18 @@ def load_data():
         return json.load(f)
 
 def main():
-    # --- CẤU HÌNH TỰ ĐỘNG XOAY ẢNH ---
-    # Ảnh từ mẹo 1 đến 36: Giữ nguyên
-    # Ảnh từ mẹo 37 trở đi: Xoay 270 độ
+    # --- CẤU HÌNH XOAY ẢNH THEO ID ---
     MOC_CHUYEN_DOI = 36 
-    GOC_XOAY_PHAN_SAU = 270 
     
-    st.sidebar.title("⚙️ Cài đặt")
+    # Hiển thị thông báo cấu hình hiện tại ở Sidebar
+    st.sidebar.title("⚙️ Cài đặt hiển thị")
     view_mode = st.sidebar.radio("Chọn bố cục:", ["Danh sách (1 cột)", "Lưới (3 cột)"], index=0)
     
-    # Hiển thị thông báo để bạn dễ kiểm soát
-    st.sidebar.success(f"✅ Đang tự động xử lý:\n- Mẹo 1-{MOC_CHUYEN_DOI}: Giữ nguyên\n- Mẹo {MOC_CHUYEN_DOI+1}+: Xoay {GOC_XOAY_PHAN_SAU}°")
+    st.sidebar.success(
+        f"✅ Trạng thái xoay ảnh:\n"
+        f"- Câu 1-{MOC_CHUYEN_DOI}: Xoay 270°\n"
+        f"- Câu {MOC_CHUYEN_DOI+1} trở đi: Giữ nguyên (0°)"
+    )
 
     st.title("🚗 MẸO GIẢI NHANH 600 CÂU LÝ THUYẾT")
     st.caption("Tra cứu nhanh các mẹo học lý thuyết lái xe ô tô")
@@ -56,10 +57,10 @@ def main():
     else:
         results = data
 
-    # Hiển thị kết quả
     if not results:
         st.warning(f"Không tìm thấy mẹo nào cho từ khóa: '{search_query}'")
     else:
+        # Xử lý hiển thị
         if "3 cột" in view_mode:
             cols = st.columns(3)
         else:
@@ -77,18 +78,22 @@ def main():
                     formatted_line = line.replace("=>", "<span class='highlight'>=></span>")
                     st.markdown(f"- {formatted_line}", unsafe_allow_html=True)
                 
-                # Hình ảnh
+                # Xử lý hình ảnh
                 if tip.get('image'):
                     image_path = os.path.join("images", tip['image'])
                     if os.path.exists(image_path):
                         img = Image.open(image_path)
                         
-                        # --- LOGIC XOAY ẢNH ---
+                        # --- LOGIC XOAY ẢNH MỚI ---
                         current_id = tip.get('id', 0)
-                        # Nếu ID lớn hơn 36 thì xoay 270 độ
-                        if current_id > MOC_CHUYEN_DOI:
-                            img = img.rotate(-GOC_XOAY_PHAN_SAU, expand=True)
-                        # ----------------------
+                        
+                        if current_id <= MOC_CHUYEN_DOI:
+                            # Từ câu 1 đến 36: Xoay 270 độ
+                            img = img.rotate(-270, expand=True)
+                        else:
+                            # Từ câu 37 trở đi: Giữ nguyên (0 độ)
+                            pass 
+                        # --------------------------
                             
                         st.image(img, caption=f"Hình minh họa", use_container_width=True)
                 

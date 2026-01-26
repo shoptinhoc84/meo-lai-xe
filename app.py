@@ -34,7 +34,7 @@ def main():
     st.sidebar.success(
         "✅ Cấu hình xoay ảnh:\n"
         "- Câu 1-36: Xoay 270°\n"
-        "- Câu 37-51: Xoay 180°"
+        "- Câu 37-51: Xoay 90°"
     )
 
     st.title("🚗 MẸO GIẢI NHANH 600 CÂU LÝ THUYẾT")
@@ -72,32 +72,4 @@ def main():
                 
                 # Nội dung chữ
                 for line in tip['content']:
-                    formatted_line = line.replace("=>", "<span class='highlight'>=></span>")
-                    st.markdown(f"- {formatted_line}", unsafe_allow_html=True)
-                
-                # Hình ảnh
-                if tip.get('image'):
-                    image_path = os.path.join("images", tip['image'])
-                    if os.path.exists(image_path):
-                        img = Image.open(image_path)
-                        
-                        # --- LOGIC XOAY ẢNH MỚI (CẬP NHẬT) ---
-                        current_id = tip.get('id', 0)
-                        
-                        if 1 <= current_id <= 36:
-                            # Nhóm 1: Xoay 270 độ
-                            img = img.rotate(-270, expand=True)
-                        elif 37 <= current_id <= 51:
-                            # Nhóm 2: Xoay 180 độ
-                            img = img.rotate(-180, expand=True)
-                        else:
-                            # Các trường hợp khác (nếu có) giữ nguyên
-                            pass
-                        # -------------------------------------
-                            
-                        st.image(img, caption=f"Hình minh họa", use_container_width=True)
-                
-                st.markdown('</div>', unsafe_allow_html=True)
-
-if __name__ == "__main__":
-    main()
+                    formatted_line =

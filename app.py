@@ -33,7 +33,7 @@ def main():
     # Hiển thị thông báo trạng thái xoay ảnh
     st.sidebar.success(
         "✅ Cấu hình xoay ảnh:\n"
-        "- Câu 1-36: Giữ nguyên (Chuẩn)\n"
+        "- Câu 1-36: Xoay 270°\n"
         "- Câu 37-51: Xoay 180°"
     )
 
@@ -81,16 +81,19 @@ def main():
                     if os.path.exists(image_path):
                         img = Image.open(image_path)
                         
-                        # --- LOGIC XOAY ẢNH MỚI ---
+                        # --- LOGIC XOAY ẢNH MỚI (CẬP NHẬT) ---
                         current_id = tip.get('id', 0)
                         
-                        # Chỉ xoay 180 độ với các câu từ 37 đến 51
-                        if 37 <= current_id <= 51:
+                        if 1 <= current_id <= 36:
+                            # Nhóm 1: Xoay 270 độ
+                            img = img.rotate(-270, expand=True)
+                        elif 37 <= current_id <= 51:
+                            # Nhóm 2: Xoay 180 độ
                             img = img.rotate(-180, expand=True)
                         else:
-                            # Các câu còn lại giữ nguyên (0 độ)
+                            # Các trường hợp khác (nếu có) giữ nguyên
                             pass
-                        # --------------------------
+                        # -------------------------------------
                             
                         st.image(img, caption=f"Hình minh họa", use_container_width=True)
                 

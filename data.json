@@ -1,0 +1,560 @@
+[
+  {
+    "id": 1,
+    "title": "Mẹo 1: Đầu câu và cuối câu hỏi có cụm từ",
+    "content": [
+      "Câu hỏi có (gồm) chọn cả => Chọn cả (VĐ: 10, 11, 12)",
+      "Khổ - Thô sơ - Đường cao tốc => Chọn 1 (VĐ: 3, 9, 16)",
+      "Phần - Làn - Dải - Vạch - Cơ giới - Dừng xe - Đỗ xe => Chọn 2 (VĐ: 1, 2, 4, 5, 8, 14, 15)"
+    ],
+    "category": "Khái niệm",
+    "image": "1.jpg"
+  },
+  {
+    "id": 2,
+    "title": "Mẹo 2: Quy tắc nhường đường",
+    "content": [
+      "Nhường đường cho xe lên dốc (VĐ: 89)",
+      "Nhường đường cho xe ưu tiên, đường ưu tiên (VĐ: 91 - 94)",
+      "Có vòng xuyến => Nhường trái (VĐ: 92 - 93)",
+      "Không vòng xuyến => Nhường phải"
+    ],
+    "category": "Quy tắc",
+    "image": "1.jpg"
+  },
+  {
+    "id": 3,
+    "title": "Mẹo 3: Hành vi bị nghiêm cấm",
+    "content": [
+      "Rải vật sắc nhọn (VĐ: 19)",
+      "Sử dụng điện thoại (VĐ: 52)",
+      "Cải tạo trái phép cố ý (VĐ: 29)",
+      "Trên cầu hẹp 1 làn xe (VĐ: 53)",
+      "Lạng lách đánh võng (VĐ: 32)",
+      "Song song cùng chiều xe khác (VĐ: 62)",
+      "Đi xe dàn hàng ngang",
+      "Sử dụng ô"
+    ],
+    "category": "Hành vi",
+    "image": "1.jpg"
+  },
+  {
+    "id": 4,
+    "title": "Mẹo 4: Mẹo Cả và Ý",
+    "content": [
+      "4 cả và 4 ý trừ các trường hợp:",
+      "- Trong hoạt động vận tải khách => Chọn 3 (VĐ: 170)",
+      "- Có ngọn lửa khói => Chọn 1 (VĐ: 204)",
+      "3 Cả có từ:",
+      "- Người, Tuổi, Tải trọng => Chọn 1",
+      "- Luật trật tự, Nguyên liệu => Chọn 2",
+      "Lưu ý: Câu hỏi có từ Hành vi => Chọn 'Rải vật sắc nhọn'",
+      "Còn lại 3 Cả có từ Hành vi => Luôn chọn 3 Cả"
+    ],
+    "category": "Mẹo giải nhanh",
+    "image": "1.jpg"
+  },
+  {
+    "id": 5,
+    "title": "Mẹo 5: Nhìn thấy cụm từ trong đáp án là chọn ngay",
+    "content": [
+      "Cơ quan có thẩm quyền (VĐ: 21)",
+      "Ở nơi quy định (VĐ: 78, 168)",
+      "Bị xử phạt hành chính (VĐ: 22)",
+      "Thanh nối cứng (VĐ: 104, 106)",
+      "Bị nghiêm cấm (VĐ: 24, 31, 137)",
+      "Buông cả 2 tay (VĐ: 64, 65)",
+      "Giảm tốc độ, không được phép, về số thấp",
+      "Không được: đáp án 2, 3, 4 chọn hết (trừ câu VĐ 42, 47...)",
+      "Xe cảnh sát chọn 3 (VĐ: 97)",
+      "Người có GPLX chọn 2 (VĐ: 140)"
+    ],
+    "category": "Mẹo giải nhanh",
+    "image": "2-3.jpg"
+  },
+  {
+    "id": 6,
+    "title": "Mẹo 6: Cảnh sát giao thông",
+    "content": [
+      "Đứng trên bục giơ 2 tay => Chọn 4",
+      "Còn lại (Giơ 1 tay hoặc khác) => Chọn 3"
+    ],
+    "category": "Biển báo & CSGT",
+    "image": "2-3.jpg"
+  },
+  {
+    "id": 7,
+    "title": "Mẹo 7: Học hiểu khi tham gia giao thông",
+    "content": [
+      "HL người điều khiển trái với tín hiệu => Theo HL người điều khiển",
+      "Vừa có biển báo cố định và tạm thời => Chọn biển báo tạm thời",
+      "Tốc độ thấp => Đi về bên phải",
+      "Xe cơ giới tốc độ cao => Đi về bên trái",
+      "Vượt xe là => Xe đi phía sau vượt sang bên trái",
+      "Trong hầm => Bật đèn chiếu gần (VĐ: 103)",
+      "Xuống phà => Xe cơ giới, xe máy chuyên dùng (VĐ: 77)",
+      "Xe xuống dốc => Nhường đường cho xe lên dốc"
+    ],
+    "category": "Quy tắc",
+    "image": "2-3.jpg"
+  },
+  {
+    "id": 8,
+    "title": "Mẹo 8: Nhìn thấy số tuổi trên đáp án",
+    "content": [
+      "Chỉ nhìn vào 3 đáp án đầu tiên (1-2-3)",
+      "Chọn đáp án có số tuổi lớn nhất."
+    ],
+    "category": "Độ tuổi",
+    "image": "2-3.jpg"
+  },
+  {
+    "id": 9,
+    "title": "Mẹo 9: Mẹo hỏi về giấy phép lái xe",
+    "content": [
+      "01. Mô tô:",
+      "- 16 tuổi => Xe gắn máy",
+      "- A1 không => Chọn 2",
+      "- A1 được => Chọn 1",
+      "- A => Chọn 3",
+      "02. Ô tô:",
+      "- Không có số '1', không có 'E' => chọn đáp án cuối",
+      "- Nếu có số '1' => chọn 2",
+      "- Nếu có chữ 'E' => chọn chữ cái đứng trước E (BE chọn B, CE chọn C)"
+    ],
+    "category": "Giấy phép lái xe",
+    "image": "2-3.jpg"
+  },
+  {
+    "id": 10,
+    "title": "Mẹo 10: QUAN LỚN - QUAN BÉ",
+    "content": [
+      "Nhìn vào đáp án có ít nhất 2 hoặc 3 đáp án có từ 'quan' trở lên thì chọn 'quan' dài là đúng.",
+      "Lưu ý: Có 2 câu bằng nhau thì chọn câu ở trên.",
+      "Trừ câu 216 và 253."
+    ],
+    "category": "Mẹo giải nhanh",
+    "image": "2-3.jpg"
+  },
+  {
+    "id": 11,
+    "title": "Mẹo 11: Loại bỏ (Loại trừ)",
+    "content": [
+      "Nhìn vào đáp án thấy những cụm từ này là loại bỏ ngay:",
+      "- Tăng tốc, cho xe vượt qua",
+      "- Nhanh chóng yêu cầu",
+      "- Không hạn chế tốc độ",
+      "- Tăng ga, tăng số",
+      "=> Sau khi loại bỏ ta chọn đáp án còn lại là đúng."
+    ],
+    "category": "Kỹ thuật",
+    "image": "4-5.jpg"
+  },
+  {
+    "id": 12,
+    "title": "Mẹo 12: Nhìn đáp án có những con số",
+    "content": [
+      "Niên hạn ô tô: người => 20 năm, tải => 25 năm",
+      "Không quá 4 giờ, Không quá 10 giờ",
+      "Dừng đỗ bánh xe cách lề đường không quá 0.25 mét",
+      "Dừng đỗ cách xe bên kia đường tối thiểu 20 mét"
+    ],
+    "category": "Con số",
+    "image": "4-5.jpg"
+  },
+  {
+    "id": 13,
+    "title": "Mẹo 13: Trên đường bộ (trong khu đông dân cư)",
+    "content": [
+      "Đường 2 chiều có số (28) chọn đáp án 2",
+      "Còn lại chọn 1 (VĐ: 145, 147, 148)"
+    ],
+    "category": "Tốc độ",
+    "image": "4-5.jpg"
+  },
+  {
+    "id": 14,
+    "title": "Mẹo 14: Tốc độ ngoài khu đông dân cư",
+    "content": [
+      "Mẹo: Lấy số vận tốc lớn nhất trừ 30 => Ra đáp án.",
+      "Ví dụ: 80km/h - 30 = 50 => Đáp án chứa số 50 hoặc gần đó.",
+      "Bảng nhớ nhanh:",
+      "Đường đôi: 90(1) - 80(2) - 70(3) - 60(4)",
+      "Đường 2 chiều: 80(1) - 70(2) - 60(3) - 50(4)"
+    ],
+    "category": "Tốc độ",
+    "image": "4-5.jpg"
+  },
+  {
+    "id": 15,
+    "title": "Mẹo 15: Cự ly",
+    "content": [
+      "Ta lấy số km lớn nhất trừ 30. (Khoanh vùng đáp án)."
+    ],
+    "category": "Khoảng cách",
+    "image": "4-5.jpg"
+  },
+  {
+    "id": 16,
+    "title": "Mẹo 16: Chương văn hoá giao thông",
+    "content": [
+      "Có 'cả' chọn cả (Trừ câu giảm tốc độ qua vũng nước)",
+      "Để có 'tai nạn giao thông' => Chặn động mạch, Giúp đỡ, Đặt nằm ngửa, Hỗ trợ nạn nhân"
+    ],
+    "category": "Văn hóa",
+    "image": "4-5.jpg"
+  },
+  {
+    "id": 17,
+    "title": "Mẹo 17: Cấu tạo và sửa chữa ô tô (Thơ)",
+    "content": [
+      "Động cơ, truyền lực, bôi trơn, kính => chọn 1",
+      "4 kỳ, ly hợp, nhị phân minh => chọn 2",
+      "Hộp số, đèn phanh, gạt, bánh, lái => chọn 3",
+      "4 Ý chọn liền CẢ không sai."
+    ],
+    "category": "Kỹ thuật",
+    "image": "4-5.jpg"
+  },
+  {
+    "id": 18,
+    "title": "Mẹo 18: Phân biệt thứ tự xe lớn xe nhỏ",
+    "content": [
+      "Cấm xe lớn thì không cấm xe nhỏ.",
+      "Cấm xe nhỏ thì cấm luôn xe lớn.",
+      "=> Xe 2 bánh với xe 4 bánh không cấm nhau.",
+      "Thứ tự: Xe con < Xe khách < Xe tải < Máy kéo < Rơ moóc"
+    ],
+    "category": "Biển báo",
+    "image": "4-5.jpg"
+  },
+  {
+    "id": 19,
+    "title": "Mẹo 19: Cuối câu hỏi có từ móc hoặc từ kéo",
+    "content": [
+      "Cuối câu hỏi có từ 'móc' ta chọn 1 và 2.",
+      "Cuối câu hỏi có từ 'kéo' ta chọn 2 và 3.",
+      "(Hoặc nhớ: Móc 1 - Kéo 3)"
+    ],
+    "category": "Biển báo",
+    "image": "6-7.jpg"
+  },
+  {
+    "id": 20,
+    "title": "Mẹo 20: Khi gặp biển cấm mô tô và cấm xe con đi chung",
+    "content": [
+      "Đọc câu hỏi: thấy có từ 'cấm' ta chọn đáp án 1.",
+      "Thấy từ 'được' ta chọn đáp án 3.",
+      "Chốt lại: CẤM 1, ĐƯỢC 3."
+    ],
+    "category": "Biển báo",
+    "image": "6-7.jpg"
+  },
+  {
+    "id": 21,
+    "title": "Mẹo 21: Mẹo khi gặp biển báo cấm",
+    "content": [
+      "Đề bài có cấm xe tải, cấm xích lô => Chọn ngay đáp án cuối."
+    ],
+    "category": "Biển báo",
+    "image": "6-7.jpg"
+  },
+  {
+    "id": 22,
+    "title": "Mẹo 22: Hình vuông xanh có 2 móc câu",
+    "content": [
+      "Ta ưu tiên chọn CẢ.",
+      "Nếu không có CẢ thì ta chọn 2."
+    ],
+    "category": "Biển báo",
+    "image": "6-7.jpg"
+  },
+  {
+    "id": 23,
+    "title": "Mẹo 23: Gặp biển có dấu trừ",
+    "content": [
+      "Ưu tiên chọn đáp án có từ VÀ.",
+      "Nếu không có từ VÀ thì chọn đáp án 2 là luôn đúng."
+    ],
+    "category": "Biển báo",
+    "image": "6-7.jpg"
+  },
+  {
+    "id": 24,
+    "title": "Mẹo 24: Ngày chẵn, ngày lẻ",
+    "content": [
+      "Cuối câu hỏi ngày lẻ chọn 1.",
+      "Cuối câu hỏi ngày chẵn chọn 2."
+    ],
+    "category": "Biển báo",
+    "image": "6-7.jpg"
+  },
+  {
+    "id": 25,
+    "title": "Mẹo 25: Phân biệt tốc độ tối đa và tối thiểu",
+    "content": [
+      "Vòng tròn màu đỏ => Tốc độ tối đa.",
+      "Vòng tròn màu xanh => Tốc độ tối thiểu."
+    ],
+    "category": "Biển báo",
+    "image": "8-9.jpg"
+  },
+  {
+    "id": 26,
+    "title": "Mẹo 26: Khi gặp hình tròn 7t",
+    "content": [
+      "Có 2 đáp án => Chọn 2.",
+      "Có 3 đáp án => Chọn 1."
+    ],
+    "category": "Biển báo",
+    "image": "8-9.jpg"
+  },
+  {
+    "id": 27,
+    "title": "Mẹo 27: Chiều dài và khoảng cách",
+    "content": [
+      "Nhìn trong hình có mũi tên là chiều dài.",
+      "Nhìn trong hình không có mũi tên là khoảng cách."
+    ],
+    "category": "Biển báo",
+    "image": "8-9.jpg"
+  },
+  {
+    "id": 28,
+    "title": "Mẹo 28: 3 hình tròn đỏ có biển phụ đi chung",
+    "content": [
+      "Trong câu hỏi có từ 'hai bánh' là chọn đáp án 2.",
+      "Không có 'hai bánh' thì chọn đáp án 1."
+    ],
+    "category": "Biển báo",
+    "image": "8-9.jpg"
+  },
+  {
+    "id": 29,
+    "title": "Mẹo 29: Gặp 3 người trong 3 hình khác nhau",
+    "content": [
+      "Lần lượt ý nghĩa của ba hình từ trái sang phải: Nhường - Cấm - Dành."
+    ],
+    "category": "Biển báo",
+    "image": "8-9.jpg"
+  },
+  {
+    "id": 30,
+    "title": "Mẹo 30: Phân biệt trái phải của các hình",
+    "content": [
+      "Biển vạch chéo xuống thấp bên nào là phía bên đó (Thấp trái => Trái).",
+      "Biển tam giác xe rơi xuống: Rơi trước => Trước; Rơi phải => Phải; Rơi trái => Trái."
+    ],
+    "category": "Biển báo",
+    "image": "8-9.jpg"
+  },
+  {
+    "id": 31,
+    "title": "Mẹo 31: Khi gặp biển báo có 2 người đi chung",
+    "content": [
+      "Luôn chọn đáp án 2, khi gặp biển có hai người."
+    ],
+    "category": "Biển báo",
+    "image": "10-11.jpg"
+  },
+  {
+    "id": 32,
+    "title": "Mẹo 32: Mẹo chữ V (Biển dốc)",
+    "content": [
+      "Vẽ xuống là chọn dốc xuống.",
+      "Vẽ lên là chọn dốc lên. (Hoặc nhớ: Lên 9%, Xuống 10%)"
+    ],
+    "category": "Biển báo",
+    "image": "10-11.jpg"
+  },
+  {
+    "id": 33,
+    "title": "Mẹo 33: Mẹo biển báo có nhiều chữ",
+    "content": [
+      "Chọn đáp án 'Nền đường yếu'.",
+      "Chọn đáp án 'sạc lở'.",
+      "Chọn đáp án 'rời rạc'."
+    ],
+    "category": "Biển báo",
+    "image": "10-11.jpg"
+  },
+  {
+    "id": 34,
+    "title": "Mẹo 34: Khi thấy 2 hình biển xanh có 3 làn đường",
+    "content": [
+      "Câu hỏi có từ 'Đi đúng' => chọn 2.",
+      "Câu hỏi không có từ 'Đi đúng' => chọn 3."
+    ],
+    "category": "Biển báo",
+    "image": "10-11.jpg"
+  },
+  {
+    "id": 35,
+    "title": "Mẹo 35: Khi thấy 2 hoặc 3 hình tròn xanh đi chung",
+    "content": [
+      "Đọc câu hỏi thấy từ 'ngã ba' là chọn đáp án 3.",
+      "Đọc câu hỏi không có cụm từ ngã ba chọn đáp án 1."
+    ],
+    "category": "Biển báo",
+    "image": "10-11.jpg"
+  },
+  {
+    "id": 36,
+    "title": "Mẹo 36: Khi thấy biển 50 màu trắng ở đầu",
+    "content": [
+      "Ta ưu tiên chọn ngay đáp án có từ VÀ.",
+      "Nếu không có từ VÀ thì đề hỏi: Tối đa chọn 50; Tối thiểu chọn 60; Hết mọi lệnh cấm chọn 2."
+    ],
+    "category": "Biển báo",
+    "image": "10-11.jpg"
+  },
+  {
+    "id": 37,
+    "title": "Mẹo 37: Mẹo cầu vượt",
+    "content": [
+      "Biển chữ nhật: Cầu vượt liên thông.",
+      "Biển tròn: Cầu vượt cắt qua."
+    ],
+    "category": "Biển báo",
+    "image": "12-13.jpg"
+  },
+  {
+    "id": 38,
+    "title": "Mẹo 38: Khi gặp 3 biển báo có 3 chữ Zone",
+    "content": [
+      "Câu hỏi hỏi biển nào thì ta chọn đáp án tương ứng (Hỏi biển 1 chọn đáp án 1, hỏi biển 3 chọn đáp án 3)."
+    ],
+    "category": "Biển báo",
+    "image": "12-13.jpg"
+  },
+  {
+    "id": 39,
+    "title": "Mẹo 39: Nhìn bóng đèn ô tô",
+    "content": [
+      "Có thấy bóng đèn thì chọn là có.",
+      "Không thấy bóng đèn thì chọn không."
+    ],
+    "category": "Biển báo",
+    "image": "12-13.jpg"
+  },
+  {
+    "id": 40,
+    "title": "Mẹo 40: Vạch kẻ đường",
+    "content": [
+      "Trắng phân làn - Vàng phân chiều.",
+      "Nét đứt được đè vạch - nét liền thì không được đè vạch."
+    ],
+    "category": "Biển báo",
+    "image": "12-13.jpg"
+  },
+  {
+    "id": 41,
+    "title": "Mẹo 41: 5 nguyên tắc sa hình",
+    "content": [
+      "1. Vị trí xe: Xe vào giao lộ trước được đi trước.",
+      "2. Xe ưu tiên: Hỏa > Sự > An > Thương.",
+      "3. Biển báo: Đường ưu tiên đi trước.",
+      "4. Quyền bên phải trống.",
+      "5. Hướng ưu tiên: Rẽ phải > Đi thẳng > Rẽ trái."
+    ],
+    "category": "Sa hình",
+    "image": "12-13.jpg"
+  },
+  {
+    "id": 42,
+    "title": "Mẹo 42: Khi thấy 1 xe công an xuất hiện trong hình",
+    "content": [
+      "Xe công an ô nào chọn đáp án đó (Mẹo 1-1-2-4: Hình 1 chọn 1, Hình 2 chọn 4, Hình 3 chọn 2...)."
+    ],
+    "category": "Sa hình",
+    "image": "12-13.jpg"
+  },
+  {
+    "id": 43,
+    "title": "Mẹo 43: Xe tải có duy nhất biển màu đỏ",
+    "content": [
+      "Xe tải đi thẳng hướng nào thì chọn đáp án đó."
+    ],
+    "category": "Sa hình",
+    "image": "12-13.jpg"
+  },
+  {
+    "id": 44,
+    "title": "Mẹo 44: Xe nào phải nhường",
+    "content": [
+      "Ưu tiên chọn xe khách => Xe bạn => Xe con."
+    ],
+    "category": "Sa hình",
+    "image": "14-15.jpg"
+  },
+  {
+    "id": 45,
+    "title": "Mẹo 45: Khi thấy hình có 6 đèn giao thông đi chung",
+    "content": [
+      "Đề bài có từ 'chấp hành' chọn 2.",
+      "Hình có mũi tên đỏ: loại đáp án có xe con.",
+      "Hình không có mũi tên đỏ: chọn đáp án có xe con."
+    ],
+    "category": "Sa hình",
+    "image": "14-15.jpg"
+  },
+  {
+    "id": 46,
+    "title": "Mẹo 46: Khi gặp xe tải dừng, đỗ trên đường",
+    "content": [
+      "Xe tải đỗ cùng chiều với xe khác => chọn đáp án 1.",
+      "Xe tải đỗ ngược chiều với xe khác => chọn đáp án 3."
+    ],
+    "category": "Sa hình",
+    "image": "14-15.jpg"
+  },
+  {
+    "id": 47,
+    "title": "Mẹo 47: Đua xe",
+    "content": [
+      "Lấy bánh xe cuối cùng trừ 1 ra đáp án.",
+      "Ưu tiên chọn đáp án: A - C - E - G."
+    ],
+    "category": "Sa hình",
+    "image": "14-15.jpg"
+  },
+  {
+    "id": 48,
+    "title": "Mẹo 48: Nhìn hình chọn đáp án",
+    "content": [
+      "Ngồi trong xe nhìn ra ngoài thấy 1 biển báo hoặc đèn có xe tải:",
+      "=> Chọn ngay đáp án cuối và cuối đáp án đấy có từ 'xe tải'."
+    ],
+    "category": "Sa hình",
+    "image": "14-15.jpg"
+  },
+  {
+    "id": 49,
+    "title": "Mẹo 49: Xe nào gần hàng rào",
+    "content": [
+      "Xe nào gần bờ rào xe đó đi trước."
+    ],
+    "category": "Sa hình",
+    "image": "14-15.jpg"
+  },
+  {
+    "id": 50,
+    "title": "Mẹo 50: Có xe đạp xuất hiện trong hình",
+    "content": [
+      "Xe đạp đi cùng chiều với xe của bạn => chọn 2.",
+      "Xe đạp đi khác chiều xe của bạn => chọn 3."
+    ],
+    "category": "Sa hình",
+    "image": "16-17.jpg"
+  },
+  {
+    "id": 51,
+    "title": "Mẹo 51: Mẹo trong sa hình đáp án có nhiều chữ",
+    "content": [
+      "Ta chọn ngay khi thấy các cụm từ: An toàn, Nhường đường, Giảm tốc độ.",
+      "Ngoại trừ 1 câu có 4 xe phía trước: Chọn 'Cả ý 1 và 2'."
+    ],
+    "category": "Sa hình",
+    "image": "16-17.jpg"
+  }
+]

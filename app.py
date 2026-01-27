@@ -19,6 +19,9 @@ if 'zoomed_image_data' not in st.session_state:
     st.session_state.zoomed_image_data = None
 if 'current_question_index' not in st.session_state:
     st.session_state.current_question_index = 0
+# State để lưu câu trả lời tạm thời của người dùng cho câu hỏi hiện tại
+if 'user_selected_answer' not in st.session_state:
+    st.session_state.user_selected_answer = None
 
 # --- 3. CSS GIAO DIỆN ---
 st.markdown("""
@@ -50,6 +53,13 @@ st.markdown("""
         margin-bottom: 8px; display: inline-block;
     }
     
+    /* Badge Điểm liệt */
+    .danger-badge {
+        background-color: #ffebee; color: #c62828; font-weight: bold;
+        padding: 5px 10px; border-radius: 4px; border: 1px solid #ffcdd2;
+        display: inline-block; margin-bottom: 10px;
+    }
+    
     /* Highlight */
     .highlight {
         background-color: #ffebee; color: #c62828; font-weight: bold;
@@ -60,20 +70,22 @@ st.markdown("""
         color: #999; font-style: italic; border: 1px dashed #ccc; padding: 0 8px; border-radius: 4px;
     }
 
-    /* Nút điều hướng câu hỏi */
-    .nav-btn {
-        width: 100%;
-        margin-top: 10px;
-    }
-    
     /* Nội dung câu hỏi 600 câu */
     .question-content {
-        font-size: 1.15rem;
+        font-size: 1.2rem;
         line-height: 1.6;
         color: #333;
-        background-color: #f8f9fa;
+        font-weight: 500;
+        margin-bottom: 20px;
+    }
+    
+    /* Giải thích */
+    .explanation-box {
+        background-color: #e8f5e9;
+        border-left: 5px solid #4caf50;
         padding: 15px;
-        border-radius: 8px;
+        margin-top: 15px;
+        border-radius: 4px;
     }
 
     .block-container { padding-top: 1rem !important; padding-bottom: 2rem !important; }
@@ -93,6 +105,7 @@ def get_category_color(category):
 @st.cache_data
 def load_tips():
     try:
+        # Load file data.json (Mẹo)
         with open('data.json', 'r', encoding='utf-8') as f:
             data = json.load(f)
             for item in data:
@@ -104,9 +117,14 @@ def load_tips():
 @st.cache_data
 def load_questions():
     try:
-        # Load file 600 câu hỏi
+        # Load file dulieu_web_chuan.json (Câu hỏi)
+        # Ưu tiên load file này vì nó có cấu trúc choices và explanation chuẩn
         with open('dulieu_web_chuan.json', 'r', encoding='utf-8') as f:
-            return json.load(f)
+            data = json.load(f)
+            # Kiểm tra nếu file json có key 'questions' (như cấu trúc bạn gửi) hay là list trực tiếp
+            if isinstance(data, dict) and 'questions' in data:
+                return data['questions']
+            return data
     except FileNotFoundError:
         return []
 
@@ -194,55 +212,114 @@ def display_tips_list(tips_list, show_answer):
         
         st.markdown("</div>", unsafe_allow_html=True)
 
-# --- 6. GIAO DIỆN LUYỆN 600 CÂU (Tab 2) ---
+# --- 6. GIAO DIỆN LUYỆN 600 CÂU (ĐÃ NÂNG CẤP) ---
 def render_questions_page(questions_data):
     st.header("📝 LUYỆN THI 600 CÂU")
     
     if not questions_data:
-        st.error("Chưa tìm thấy file 'dulieu_web_chuan.json'. Vui lòng tải file lên thư mục dự án.")
+        st.error("Chưa tìm thấy dữ liệu câu hỏi. Vui lòng kiểm tra file 'dulieu_web_chuan.json'.")
         return
 
     total_questions = len(questions_data)
     
-    # Thanh điều hướng câu hỏi
+    # --- THANH ĐIỀU HƯỚNG ---
     col_prev, col_idx, col_next = st.columns([1, 2, 1])
+    
+    def change_question(new_index):
+        st.session_state.current_question_index = new_index
+        # Reset câu trả lời khi chuyển câu hỏi
+        st.session_state.user_selected_answer = None 
+        # Cần rerun để UI cập nhật lại trạng thái radio button
+        # (Streamlit đôi khi giữ cache của radio nếu key không đổi)
     
     with col_prev:
         if st.button("⬅️ Câu trước", use_container_width=True):
             if st.session_state.current_question_index > 0:
-                st.session_state.current_question_index -= 1
+                change_question(st.session_state.current_question_index - 1)
                 st.rerun()
 
     with col_next:
         if st.button("Câu sau ➡️", use_container_width=True):
             if st.session_state.current_question_index < total_questions - 1:
-                st.session_state.current_question_index += 1
+                change_question(st.session_state.current_question_index + 1)
                 st.rerun()
                 
     with col_idx:
         # Chọn câu nhanh
-        selected_index = st.number_input("Chuyển nhanh đến câu số:", min_value=1, max_value=total_questions, value=st.session_state.current_question_index + 1)
+        selected_index = st.number_input(
+            "Chuyển nhanh đến câu số:", 
+            min_value=1, 
+            max_value=total_questions, 
+            value=st.session_state.current_question_index + 1
+        )
         if selected_index - 1 != st.session_state.current_question_index:
-            st.session_state.current_question_index = selected_index - 1
+            change_question(selected_index - 1)
             st.rerun()
 
-    # Hiển thị câu hỏi hiện tại
+    # --- HIỂN THỊ CÂU HỎI ---
     current_q = questions_data[st.session_state.current_question_index]
+    
+    # Kiểm tra xem câu này có phải câu điểm liệt không
+    is_danger = current_q.get('danger', False)
     
     st.markdown(f"""
     <div class="tip-card">
-        <div class="question-header">Câu hỏi số {current_q['id']}</div>
+        <div class="question-header">Câu hỏi số {current_q['id']} / {total_questions}</div>
+        {'<div class="danger-badge">⚠️ CÂU ĐIỂM LIỆT</div>' if is_danger else ''}
         <div class="question-content">
             {current_q['question']}
         </div>
     </div>
     """, unsafe_allow_html=True)
+
+    # Hiển thị hình ảnh câu hỏi (nếu có)
+    # Lưu ý: File json của bạn có trường 'image' (ví dụ: null hoặc tên file)
+    if current_q.get('image'):
+         # Đường dẫn ảnh câu hỏi thường nằm trong thư mục images
+         q_img_path = os.path.join("images", current_q['image'])
+         if os.path.exists(q_img_path):
+             st.image(q_img_path, caption="Hình ảnh minh họa", width=500)
     
-    # Vì file JSON của bạn hiện tại chưa có đáp án tách riêng (options rỗng), 
-    # nên mình hiển thị câu hỏi dưới dạng Flashcard để bạn tự ôn.
-    # Khi nào có file JSON đầy đủ đáp án A,B,C, mình sẽ cập nhật thêm nút bấm trắc nghiệm.
+    # --- PHẦN TRẢ LỜI ---
+    choices = current_q.get('choices', [])
+    correct_idx = int(current_q.get('correct', 0)) # Index đáp án đúng (trong json 0-based hay 1-based tùy file)
+    # File dulieu_web_chuan.json của bạn: Question 2 correct=0. Vậy là 0-based index.
     
-    st.info("💡 **Gợi ý:** Sử dụng các 'Mẹo' ở Tab bên kia để giải quyết câu hỏi này nhanh chóng!")
+    # Callback khi chọn radio
+    def on_radio_change():
+        # Hàm này chạy sau khi user click, giá trị đã được update vào key
+        pass
+
+    # Radio button cho các đáp án
+    # Key phải là unique theo câu hỏi để reset khi chuyển câu
+    radio_key = f"q_radio_{current_q['id']}"
+    
+    selected_option = st.radio(
+        "Chọn đáp án:",
+        options=choices,
+        index=None, # Mặc định chưa chọn
+        key=radio_key,
+        on_change=on_radio_change
+    )
+
+    # --- XỬ LÝ KẾT QUẢ ---
+    if selected_option:
+        # Tìm index của đáp án người dùng chọn
+        user_idx = choices.index(selected_option)
+        
+        if user_idx == correct_idx:
+            st.success("✅ Chính xác!")
+        else:
+            st.error(f"❌ Sai rồi! Đáp án đúng là: {choices[correct_idx]}")
+            
+        # Hiển thị giải thích
+        explanation = current_q.get('explanation', "Không có giải thích chi tiết.")
+        st.markdown(f"""
+        <div class="explanation-box">
+            <b>📖 Giải thích:</b><br>
+            {explanation}
+        </div>
+        """, unsafe_allow_html=True)
 
 
 # --- 7. CHƯƠNG TRÌNH CHÍNH (MAIN) ---
@@ -266,7 +343,6 @@ def main():
         st.divider()
         st.subheader("Công cụ bổ trợ")
         if st.checkbox("❤️ Xem Mẹo đã Lưu"):
-            # Lọc tips đã lưu để hiển thị (Logic đơn giản hóa cho demo)
             st.session_state.show_bookmarks_only = True
         else:
             st.session_state.show_bookmarks_only = False
@@ -280,7 +356,6 @@ def main():
     # Nếu có bốc thăm ngẫu nhiên -> Hiển thị ưu tiên
     if 'random_tip' in st.session_state:
         st.info("🎲 **Mẹo ngẫu nhiên:**")
-        # Reuse logic hiển thị 1 thẻ (giản lược)
         tip = st.session_state['random_tip']
         st.markdown(f"**{tip['title']}**")
         st.write(tip['content'])
@@ -291,7 +366,6 @@ def main():
 
     # Điều hướng trang
     if page == "📖 Học Mẹo (51 Mẹo)":
-        # Xử lý lọc bookmark nếu được chọn
         display_data = tips_data
         if st.session_state.get('show_bookmarks_only'):
             display_data = [t for t in tips_data if t['id'] in st.session_state.bookmarks]

@@ -1,0 +1,25 @@
+{
+  "meta": {
+    "title": "600 Câu Hỏi Phân Loại Nâng Cao",
+    "description": "Câu hỏi được phân loại theo 8 danh mục chính và gắn tag",
+    "total_questions": 600,
+    "categories_count": 8,
+    "version": "2.0"
+  },
+  "questions": [
+    {
+      "id": 1,
+      "chapter": 1,
+      "category": "khái_niệm",
+      "tags": ["làn_đường", "phần_đường", "khái_niệm_cơ_bản"],
+      "question": "Làn đường là gì?",
+      "choices": [
+        "Là một phần của phần đường xe chạy được chia theo chiều dọc của đường, sử dụng cho xe chạy.",
+        "Là một phần của phần đường xe chạy được chia theo chiều dọc của đường, có đủ chiều rộng cho xe chạy an toàn.",
+        "Là đường cho xe ô tô chạy, dừng, đỗ an toàn."
+      ],
+      "correct": 1,
+      "explanation": "Khái niệm làn đường theo Luật Giao thông đường bộ.",
+      "danger": false,
+      "has_image": false,
+      "image": null

@@ -2,47 +2,7 @@
   "meta": {
     "title": "600 Câu Hỏi Sát Hạch Lái Xe Cơ Giới Đường Bộ",
     "year": 2025,
-    "publisher": "Cục Cảnh sát giao thông",
-    "total_questions": 600,
-    "danger_questions_count": 60,
-    "chapters": [
-      {
-        "id": 1,
-        "title": "Quy định chung và quy tắc giao thông đường bộ",
-        "range": "1-180",
-        "question_count": 180
-      },
-      {
-        "id": 2,
-        "title": "Văn hóa giao thông, đạo đức người lái xe",
-        "range": "181-205",
-        "question_count": 25
-      },
-      {
-        "id": 3,
-        "title": "Kỹ thuật lái xe",
-        "range": "206-263",
-        "question_count": 58
-      },
-      {
-        "id": 4,
-        "title": "Cấu tạo và sửa chữa",
-        "range": "264-300",
-        "question_count": 37
-      },
-      {
-        "id": 5,
-        "title": "Báo hiệu đường bộ",
-        "range": "301-485",
-        "question_count": 185
-      },
-      {
-        "id": 6,
-        "title": "Giải thể sa hình và xử lý tình huống",
-        "range": "486-600",
-        "question_count": 115
-      }
-    ]
+    "total_questions": 600
   },
   "questions": [
     {
@@ -86,6 +46,5 @@
       "danger": true,
       "image": null
     }
-    // ... tiếp tục 597 câu còn lại
   ]
 }

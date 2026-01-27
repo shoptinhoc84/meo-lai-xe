@@ -1,7 +1,7 @@
 import streamlit as st
 import json
 import os
-import random
+import re
 from PIL import Image
 
 # --- 1. CẤU HÌNH TRANG ---
@@ -56,7 +56,8 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-# --- 4. HÀM XỬ LÝ DỮ LIỆU (SMART LOADER) ---
+# --- 4. HÀM XỬ LÝ DỮ LIỆU (AUTO DETECT) ---
+
 def get_category_color(category):
     colors = {
         "Biển báo": "#1976D2", "Sa hình": "#F57C00", "Khái niệm": "#388E3C",
@@ -65,6 +66,14 @@ def get_category_color(category):
     for key, color in colors.items():
         if key in category: return color
     return "#616161"
+
+def normalize_questions(data):
+    """Đưa dữ liệu về dạng list câu hỏi chuẩn"""
+    if isinstance(data, dict) and 'questions' in data:
+        return data['questions']
+    if isinstance(data, list):
+        return data
+    return []
 
 @st.cache_data
 def load_tips():
@@ -78,32 +87,67 @@ def load_tips():
         return []
 
 @st.cache_data
-def load_questions_smart():
-    """Hàm đọc dữ liệu thông minh, tự sửa lỗi file json bị hỏng"""
-    file_path = 'dulieu_web_chuan.json'
-    if not os.path.exists(file_path):
-        return []
+def load_questions_v3():
+    """
+    V3.0: Tự động tìm file (kể cả file (1)) và tự động cắt phần lỗi.
+    """
+    # 1. Tự động tìm file tiềm năng
+    candidates = [
+        'dulieu_web_chuan.json', 
+        'dulieu_web_chuan (1).json', 
+        'dulieu_web_chuan (2).json',
+        'data.json' # Fallback
+    ]
+    
+    file_path = None
+    # Ưu tiên các tên file chuẩn
+    for f in candidates:
+        if os.path.exists(f):
+            # Kiểm tra nhanh kích thước để tránh file rỗng
+            if os.path.getsize(f) > 1024: 
+                file_path = f
+                break
+    
+    # Nếu không tìm thấy, quét tất cả file .json lớn trong thư mục
+    if not file_path:
+        for f in os.listdir('.'):
+            if f.endswith('.json') and os.path.getsize(f) > 50000: # Lớn hơn 50KB khả năng cao là data
+                file_path = f
+                break
+                
+    if not file_path:
+        return [], "Không tìm thấy file .json nào!"
 
+    # 2. Đọc và Sửa lỗi nội dung
     with open(file_path, 'r', encoding='utf-8') as f:
         content = f.read()
 
-    try:
-        # Thử đọc bình thường
-        data = json.loads(content)
-    except json.JSONDecodeError as e:
-        # Nếu lỗi do file bị nối đuôi (Extra data), cắt bỏ phần đuôi lỗi
+    # Chiến thuật 1: Regex cắt đoạn giao nhau giữa 2 json ] {
+    # File của bạn có dạng: [ ... ] { "meta": ... }
+    # Ta sẽ lấy phần [ ... ]
+    match = re.search(r'\]\s*\{', content)
+    if match:
+        # Cắt lấy phần đầu tiên
+        clean_content = content[:match.start()+1]
         try:
-            data = json.loads(content[:e.pos])
+            data = json.loads(clean_content)
+            return normalize_questions(data), f"Đã đọc file '{file_path}' (Chế độ cắt lỗi)"
         except:
-            return []
-            
-    # Chuẩn hóa dữ liệu về dạng list
-    if isinstance(data, dict) and 'questions' in data:
-        return data['questions']
-    if isinstance(data, list):
-        return data
-        
-    return []
+            pass # Thử cách khác
+
+    # Chiến thuật 2: Dựa vào thông báo lỗi của Python (fallback)
+    try:
+        data = json.loads(content)
+        return normalize_questions(data), f"Đã đọc file '{file_path}' (Chuẩn)"
+    except json.JSONDecodeError as e:
+        try:
+            # Cắt ngay tại vị trí lỗi
+            data = json.loads(content[:e.pos])
+            return normalize_questions(data), f"Đã đọc file '{file_path}' (Sửa lỗi dòng {e.lineno})"
+        except:
+            pass
+
+    return [], f"Đã tìm thấy file '{file_path}' nhưng không đọc được nội dung."
 
 def process_image(image_filename, tip_id):
     if not image_filename: return None
@@ -177,18 +221,25 @@ def display_tips_list(tips_list, show_answer, key_suffix=""):
         
         col_bk, _ = st.columns([0.2, 0.8])
         with col_bk:
-            if st.checkbox("Lưu mẹo", value=is_bookmarked, key=f"bk_{unique_key}"):
+            if st.checkbox("Lưu", value=is_bookmarked, key=f"bk_{unique_key}"):
                 st.session_state.bookmarks.add(tip['id'])
             else:
                 st.session_state.bookmarks.discard(tip['id'])
         st.markdown("</div>", unsafe_allow_html=True)
 
-# --- 6. GIAO DIỆN 600 CÂU (ĐÃ SỬA LỖI HIỂN THỊ) ---
-def render_questions_page(questions_data):
+# --- 6. GIAO DIỆN 600 CÂU (V3) ---
+def render_questions_page(questions_data, status_msg):
     st.header("📝 LUYỆN THI 600 CÂU")
     
+    # Hiển thị trạng thái load file để debug
+    if "Đã đọc file" in status_msg:
+        st.success(f"✅ {status_msg} - Tổng số câu: {len(questions_data)}")
+    else:
+        st.error(f"⚠️ {status_msg}")
+        return
+
     if not questions_data:
-        st.error("⚠️ Không tìm thấy dữ liệu! File 'dulieu_web_chuan.json' có thể bị hỏng nặng.")
+        st.warning("File không chứa câu hỏi nào.")
         return
 
     total_questions = len(questions_data)
@@ -211,7 +262,8 @@ def render_questions_page(questions_data):
                 change_question(st.session_state.current_question_index + 1)
                 st.rerun()     
     with col_idx:
-        selected_index = st.number_input("Đến câu số:", 1, total_questions, st.session_state.current_question_index + 1)
+        val_input = st.session_state.current_question_index + 1
+        selected_index = st.number_input("Đến câu số:", 1, total_questions, val_input)
         if selected_index - 1 != st.session_state.current_question_index:
             change_question(selected_index - 1)
             st.rerun()
@@ -229,6 +281,7 @@ def render_questions_page(questions_data):
     """, unsafe_allow_html=True)
 
     if current_q.get('image'):
+         # Xử lý ảnh: thử tìm trong images/
          q_img_path = os.path.join("images", current_q['image'])
          if os.path.exists(q_img_path):
              st.image(q_img_path, caption="Hình ảnh tình huống", width=500)
@@ -239,18 +292,21 @@ def render_questions_page(questions_data):
     
     # Xác định index đáp án đúng
     correct_idx = -1
+    has_correct_data = False
+    
     if isinstance(correct_val, int):
         correct_idx = correct_val 
+        has_correct_data = True
     elif isinstance(correct_val, str) and correct_val.strip().isdigit():
         correct_idx = int(correct_val) - 1
+        has_correct_data = True
     
     # Form chọn
     selected_option = st.radio("Chọn đáp án:", options=choices, index=None, key=f"q_{st.session_state.current_question_index}")
 
     if selected_option:
-        # Kiểm tra nếu file không có đáp án
-        if not correct_val and correct_val != 0:
-             st.warning("⚠️ Dữ liệu câu hỏi này trong file đang bị thiếu đáp án chuẩn.")
+        if not has_correct_data:
+             st.warning("⚠️ Câu hỏi này trong file dữ liệu chưa được nhập đáp án đúng.")
         else:
             try:
                 user_idx = choices.index(selected_option)
@@ -258,10 +314,16 @@ def render_questions_page(questions_data):
                     st.success("✅ Chính xác!")
                 else:
                     st.error("❌ Sai rồi!")
-                    true_ans = choices[correct_idx] if 0 <= correct_idx < len(choices) else f"Đáp án số {correct_idx + 1}"
+                    # Hiển thị đáp án đúng an toàn
+                    true_ans = "Không xác định"
+                    if 0 <= correct_idx < len(choices):
+                        true_ans = choices[correct_idx]
+                    else:
+                        true_ans = f"Đáp án số {correct_idx + 1}"
+                        
                     st.info(f"👉 Đáp án đúng là: **{true_ans}**")
             except:
-                st.error("Lỗi xác định đáp án.")
+                st.error("Lỗi xử lý đáp án.")
 
         if current_q.get('explanation'):
              st.markdown(f"""<div class="explanation-box"><b>📖 Giải thích:</b><br>{current_q['explanation']}</div>""", unsafe_allow_html=True)
@@ -275,8 +337,8 @@ def main():
         return
 
     tips_data = load_tips()
-    # Sử dụng hàm load thông minh
-    questions_data = load_questions_smart()
+    # LOAD DATA V3
+    questions_data, load_status = load_questions_v3()
 
     with st.sidebar:
         st.title("🗂️ Menu")
@@ -295,7 +357,7 @@ def main():
         render_tips_page(display_data)
         
     elif page == "📝 Luyện 600 Câu":
-        render_questions_page(questions_data)
+        render_questions_page(questions_data, load_status)
 
 if __name__ == "__main__":
     main()

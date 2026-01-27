@@ -12,17 +12,20 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# --- 2. KHỞI TẠO STATE (Lưu trữ trạng thái Đánh dấu) ---
+# --- 2. KHỞI TẠO STATE ---
+# Lưu trữ bookmark
 if 'bookmarks' not in st.session_state:
     st.session_state.bookmarks = set()
+# Lưu trữ ảnh đang phóng to (Để sửa lỗi Chrome)
+if 'zoomed_image_data' not in st.session_state:
+    st.session_state.zoomed_image_data = None
 
-# --- 3. CSS CAO CẤP (Giao diện đẹp) ---
+# --- 3. CSS CAO CẤP ---
 st.markdown("""
 <style>
-    /* Font chữ toàn hệ thống */
     html, body, [class*="css"] { font-family: 'Segoe UI', sans-serif; }
     
-    /* Giao diện thẻ bài (Card) */
+    /* Giao diện thẻ bài */
     div.tip-card {
         background-color: #ffffff;
         border-radius: 12px;
@@ -30,85 +33,52 @@ st.markdown("""
         margin-bottom: 20px;
         box-shadow: 0 2px 8px rgba(0,0,0,0.08);
         border: 1px solid #f0f0f0;
-        transition: all 0.2s ease-in-out;
     }
-    div.tip-card:hover {
-        transform: translateY(-3px);
-        box-shadow: 0 8px 16px rgba(0,0,0,0.12);
-        border-color: #d32f2f;
-    }
-
-    /* Tiêu đề mẹo */
+    
+    /* Tiêu đề */
     .tip-header {
         color: #b71c1c;
         font-size: 1.25rem;
         font-weight: 700;
         margin-bottom: 10px;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
     }
 
-    /* Nhãn phân loại (Badge) */
+    /* Nhãn category */
     .badge {
-        font-size: 0.8rem;
-        padding: 4px 8px;
-        border-radius: 12px;
-        color: white;
-        font-weight: 600;
-        text-transform: uppercase;
-        margin-bottom: 8px;
-        display: inline-block;
+        font-size: 0.8rem; padding: 4px 8px; border-radius: 12px;
+        color: white; font-weight: 600; text-transform: uppercase;
+        margin-bottom: 8px; display: inline-block;
     }
     
-    /* Đáp án/Từ khóa nổi bật */
+    /* Đáp án nổi bật */
     .highlight {
-        background-color: #ffebee;
-        color: #c62828;
-        font-weight: bold;
-        padding: 2px 6px;
-        border-radius: 4px;
-        border: 1px solid #ffcdd2;
+        background-color: #ffebee; color: #c62828; font-weight: bold;
+        padding: 2px 6px; border-radius: 4px; border: 1px solid #ffcdd2;
     }
     
     /* Nút che đáp án */
     .hidden-answer {
-        color: #999;
-        font-style: italic;
-        border: 1px dashed #ccc;
-        padding: 0 8px;
-        border-radius: 4px;
-        cursor: help;
+        color: #999; font-style: italic; border: 1px dashed #ccc;
+        padding: 0 8px; border-radius: 4px;
     }
 
-    /* Nút Zoom ảnh */
-    .stButton button {
-        width: 100%;
-        border-radius: 8px;
-        font-weight: 600;
-    }
+    /* Nút Zoom to hơn, nổi bật hơn */
+    .zoom-btn { width: 100%; border-radius: 8px; }
 
-    /* Ẩn khoảng trắng thừa mobile */
-    .block-container { padding-top: 1.5rem !important; padding-bottom: 2rem !important; }
+    .block-container { padding-top: 1rem !important; padding-bottom: 2rem !important; }
 </style>
 """, unsafe_allow_html=True)
 
-# --- 4. HÀM XỬ LÝ MÀU SẮC DANH MỤC ---
+# --- 4. CÁC HÀM HỖ TRỢ ---
 def get_category_color(category):
     colors = {
-        "Biển báo": "#1976D2",    # Xanh dương
-        "Sa hình": "#F57C00",     # Cam
-        "Khái niệm": "#388E3C",   # Xanh lá
-        "Quy tắc": "#00796B",     # Xanh ngọc
-        "Văn hóa": "#7B1FA2",     # Tím
-        "Kỹ thuật": "#455A64",    # Xám xanh
-        "Tốc độ": "#D32F2F",      # Đỏ
+        "Biển báo": "#1976D2", "Sa hình": "#F57C00", "Khái niệm": "#388E3C",
+        "Quy tắc": "#00796B", "Văn hóa": "#7B1FA2", "Kỹ thuật": "#455A64", "Tốc độ": "#D32F2F"
     }
     for key, color in colors.items():
         if key in category: return color
     return "#616161"
 
-# --- 5. TẢI DỮ LIỆU ---
 @st.cache_data
 def load_data():
     try:
@@ -120,19 +90,25 @@ def load_data():
     except FileNotFoundError:
         return []
 
-# --- 6. HÀM POPUP ZOOM ẢNH (New Feature) ---
-@st.dialog("🔍 HÌNH MINH HỌA CHI TIẾT")
-def show_large_image(image_obj, title):
-    st.subheader(title)
-    st.image(image_obj, use_container_width=True)
-    st.caption("Mẹo: Bạn có thể xoay ngang điện thoại để xem rõ hơn.")
+# Hàm xử lý xoay ảnh chuẩn (Logic của bạn)
+def process_image(image_filename, tip_id):
+    image_path = os.path.join("images", image_filename)
+    if os.path.exists(image_path):
+        img = Image.open(image_path)
+        # Logic xoay: 1-36 xoay 270, 37-51 xoay 90
+        if 1 <= tip_id <= 36:
+            img = img.rotate(-270, expand=True)
+        elif 37 <= tip_id <= 51:
+            img = img.rotate(-90, expand=True)
+        return img
+    return None
 
-# --- 7. HÀM HIỂN THỊ THẺ (CARD) ---
+# --- 5. HÀM HIỂN THỊ THẺ (CARD) ---
 def render_tip_card(tip, show_answer):
     cat_color = get_category_color(tip['category'])
     is_bookmarked = tip['id'] in st.session_state.bookmarks
     
-    # HTML Card Container
+    # HTML Card
     st.markdown(f"""
     <div class="tip-card">
         <span class="badge" style="background-color: {cat_color}">{tip['category']}</span>
@@ -155,25 +131,21 @@ def render_tip_card(tip, show_answer):
     
     st.markdown("</div>", unsafe_allow_html=True)
     
-    # --- XỬ LÝ ẢNH & ZOOM ---
+    # --- XỬ LÝ ẢNH & NÚT ZOOM (SỬA LỖI CHROME) ---
     if tip.get('image'):
-        image_path = os.path.join("images", tip['image'])
-        if os.path.exists(image_path):
-            img = Image.open(image_path)
+        # Xử lý ảnh nhỏ để hiển thị trước
+        img_obj = process_image(tip['image'], tip.get('id', 0))
+        
+        if img_obj:
+            st.image(img_obj, use_container_width=True)
             
-            # Logic xoay ảnh (Giữ nguyên yêu cầu của bạn)
-            cid = tip.get('id', 0)
-            if 1 <= cid <= 36:
-                img = img.rotate(-270, expand=True)
-            elif 37 <= cid <= 51:
-                img = img.rotate(-90, expand=True)
-            
-            # Hiển thị ảnh nhỏ
-            st.image(img, use_container_width=True)
-            
-            # Nút bấm Zoom (Dùng key unique theo ID để không lỗi)
-            if st.button("🔍 Bấm để phóng to", key=f"zoom_{tip['id']}"):
-                show_large_image(img, tip['title'])
+            # Nút bấm Zoom: Thay vì mở Dialog, ta lưu vào Session State để mở trang riêng
+            if st.button("🔍 Phóng to ảnh", key=f"zoom_{tip['id']}", use_container_width=True):
+                st.session_state.zoomed_image_data = {
+                    "image": img_obj,
+                    "title": tip['title']
+                }
+                st.rerun() # Tải lại trang để vào chế độ xem ảnh
     
     # --- CHECKBOX LƯU ---
     col1, col2 = st.columns([0.75, 0.25])
@@ -185,8 +157,18 @@ def render_tip_card(tip, show_answer):
             
     st.markdown("</div>", unsafe_allow_html=True)
 
-# --- 8. CHƯƠNG TRÌNH CHÍNH ---
+# --- 6. CHƯƠNG TRÌNH CHÍNH ---
 def main():
+    # === CHẾ ĐỘ XEM ẢNH PHÓNG TO (FULLSCREEN) ===
+    # Nếu đang có ảnh cần phóng to, chỉ hiện ảnh đó thôi
+    if st.session_state.zoomed_image_data:
+        st.button("🔙 QUAY LẠI DANH SÁCH", on_click=lambda: st.session_state.update(zoomed_image_data=None), type="primary", use_container_width=True)
+        st.header(st.session_state.zoomed_image_data["title"])
+        st.image(st.session_state.zoomed_image_data["image"], use_container_width=True)
+        st.caption("Mẹo: Xoay ngang điện thoại để xem rõ nhất.")
+        return # Dừng không chạy phần bên dưới nữa
+    # ============================================
+
     data = load_data()
     if not data:
         st.error("⚠️ Lỗi: Không tìm thấy file data.json")

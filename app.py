@@ -6,70 +6,71 @@ from PIL import Image
 
 # --- 1. CẤU HÌNH TRANG ---
 st.set_page_config(
-    page_title="Ôn Thi 600 Câu PRO",
+    page_title="Ôn Thi GPLX 600 Câu",
     page_icon="🚗",
     layout="wide",
-    initial_sidebar_state="collapsed"
+    initial_sidebar_state="expanded"
 )
 
-# --- 2. KHỞI TẠO STATE ---
-# Lưu trữ bookmark
+# --- 2. KHỞI TẠO STATE (Lưu trạng thái) ---
 if 'bookmarks' not in st.session_state:
     st.session_state.bookmarks = set()
-# Lưu trữ ảnh đang phóng to (Để sửa lỗi Chrome)
 if 'zoomed_image_data' not in st.session_state:
     st.session_state.zoomed_image_data = None
+if 'current_question_index' not in st.session_state:
+    st.session_state.current_question_index = 0
+if 'user_answers' not in st.session_state:
+    st.session_state.user_answers = {} # Lưu đáp án người dùng đã chọn
 
-# --- 3. CSS CAO CẤP ---
+# --- 3. CSS GIAO DIỆN ĐẸP ---
 st.markdown("""
 <style>
     html, body, [class*="css"] { font-family: 'Segoe UI', sans-serif; }
     
-    /* Giao diện thẻ bài */
+    /* Card chứa nội dung */
     div.tip-card {
         background-color: #ffffff;
         border-radius: 12px;
         padding: 20px;
         margin-bottom: 20px;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-        border: 1px solid #f0f0f0;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+        border: 1px solid #e0e0e0;
     }
     
     /* Tiêu đề */
-    .tip-header {
-        color: #b71c1c;
-        font-size: 1.25rem;
-        font-weight: 700;
-        margin-bottom: 10px;
-    }
+    .tip-header { color: #b71c1c; font-size: 1.2rem; font-weight: 700; margin-bottom: 10px; }
+    .question-header { color: #1565C0; font-size: 1.4rem; font-weight: 700; margin-bottom: 15px; }
 
-    /* Nhãn category */
+    /* Highlight đáp án đúng/sai */
+    .correct-ans { color: #2e7d32; font-weight: bold; padding: 5px; background: #e8f5e9; border-radius: 5px; }
+    .wrong-ans { color: #c62828; font-weight: bold; padding: 5px; background: #ffebee; border-radius: 5px; }
+    
+    /* Badge danh mục */
     .badge {
         font-size: 0.8rem; padding: 4px 8px; border-radius: 12px;
         color: white; font-weight: 600; text-transform: uppercase;
         margin-bottom: 8px; display: inline-block;
     }
-    
-    /* Đáp án nổi bật */
-    .highlight {
-        background-color: #ffebee; color: #c62828; font-weight: bold;
-        padding: 2px 6px; border-radius: 4px; border: 1px solid #ffcdd2;
-    }
-    
-    /* Nút che đáp án */
-    .hidden-answer {
-        color: #999; font-style: italic; border: 1px dashed #ccc;
-        padding: 0 8px; border-radius: 4px;
-    }
 
-    /* Nút Zoom to hơn, nổi bật hơn */
-    .zoom-btn { width: 100%; border-radius: 8px; }
-
+    /* Nút điều hướng to rõ */
+    .stButton button { border-radius: 8px; font-weight: 600; }
+    
     .block-container { padding-top: 1rem !important; padding-bottom: 2rem !important; }
 </style>
 """, unsafe_allow_html=True)
 
-# --- 4. CÁC HÀM HỖ TRỢ ---
+# --- 4. HÀM XỬ LÝ DỮ LIỆU ---
+@st.cache_data
+def load_data(filename):
+    try:
+        if not os.path.exists(filename):
+            return []
+        with open(filename, 'r', encoding='utf-8') as f:
+            return json.load(f)
+    except Exception as e:
+        st.error(f"Lỗi khi đọc file {filename}: {e}")
+        return []
+
 def get_category_color(category):
     colors = {
         "Biển báo": "#1976D2", "Sa hình": "#F57C00", "Khái niệm": "#388E3C",
@@ -79,146 +80,239 @@ def get_category_color(category):
         if key in category: return color
     return "#616161"
 
-@st.cache_data
-def load_data():
-    try:
-        with open('data.json', 'r', encoding='utf-8') as f:
-            data = json.load(f)
-            for item in data:
-                if 'category' not in item: item['category'] = "Chung"
-            return data
-    except FileNotFoundError:
-        return []
-
-# Hàm xử lý xoay ảnh chuẩn (Logic của bạn)
-def process_image(image_filename, tip_id):
+def process_image(image_filename, tip_id=0, is_question=False):
+    # Đường dẫn ảnh
     image_path = os.path.join("images", image_filename)
     if os.path.exists(image_path):
         img = Image.open(image_path)
-        # Logic xoay: 1-36 xoay 270, 37-51 xoay 90
-        if 1 <= tip_id <= 36:
-            img = img.rotate(-270, expand=True)
-        elif 37 <= tip_id <= 51:
-            img = img.rotate(-90, expand=True)
+        # Logic xoay ảnh (Chỉ áp dụng cho phần Mẹo, phần Câu hỏi thường không cần xoay)
+        if not is_question:
+            if 1 <= tip_id <= 36:
+                img = img.rotate(-270, expand=True)
+            elif 37 <= tip_id <= 51:
+                img = img.rotate(-90, expand=True)
         return img
     return None
 
-# --- 5. HÀM HIỂN THỊ THẺ (CARD) ---
-def render_tip_card(tip, show_answer):
-    cat_color = get_category_color(tip['category'])
-    is_bookmarked = tip['id'] in st.session_state.bookmarks
+# --- 5. GIAO DIỆN HỌC MẸO (Tab 1) ---
+def render_tips_page(tips_data):
+    st.header("💡 MẸO GIẢI NHANH")
     
-    # HTML Card
-    st.markdown(f"""
-    <div class="tip-card">
-        <span class="badge" style="background-color: {cat_color}">{tip['category']}</span>
-        <div class="tip-header"><span>{tip['title']}</span></div>
-        <div class="tip-content">
-    """, unsafe_allow_html=True)
-    
-    # Nội dung Text
-    for line in tip['content']:
-        if "=>" in line:
-            parts = line.split("=>")
-            q_text, a_text = parts[0], parts[1]
-            if show_answer:
-                display_line = f"{q_text} <span class='highlight'>👉 {a_text}</span>"
-            else:
-                display_line = f"{q_text} <span class='hidden-answer'>???</span>"
-        else:
-            display_line = line
-        st.markdown(f"• {display_line}", unsafe_allow_html=True)
-    
-    st.markdown("</div>", unsafe_allow_html=True)
-    
-    # --- XỬ LÝ ẢNH & NÚT ZOOM (SỬA LỖI CHROME) ---
-    if tip.get('image'):
-        # Xử lý ảnh nhỏ để hiển thị trước
-        img_obj = process_image(tip['image'], tip.get('id', 0))
-        
-        if img_obj:
-            st.image(img_obj, use_container_width=True)
-            
-            # Nút bấm Zoom: Thay vì mở Dialog, ta lưu vào Session State để mở trang riêng
-            if st.button("🔍 Phóng to ảnh", key=f"zoom_{tip['id']}", use_container_width=True):
-                st.session_state.zoomed_image_data = {
-                    "image": img_obj,
-                    "title": tip['title']
-                }
-                st.rerun() # Tải lại trang để vào chế độ xem ảnh
-    
-    # --- CHECKBOX LƯU ---
-    col1, col2 = st.columns([0.75, 0.25])
+    col1, col2 = st.columns([3, 1])
+    with col1:
+        search = st.text_input("", placeholder="🔍 Tìm kiếm mẹo (vd: độ tuổi, 18 tuổi, cấm dừng...)...")
     with col2:
-        if st.checkbox("Lưu", value=is_bookmarked, key=f"bk_{tip['id']}"):
-            st.session_state.bookmarks.add(tip['id'])
-        else:
-            st.session_state.bookmarks.discard(tip['id'])
-            
-    st.markdown("</div>", unsafe_allow_html=True)
-
-# --- 6. CHƯƠNG TRÌNH CHÍNH ---
-def main():
-    # === CHẾ ĐỘ XEM ẢNH PHÓNG TO (FULLSCREEN) ===
-    # Nếu đang có ảnh cần phóng to, chỉ hiện ảnh đó thôi
-    if st.session_state.zoomed_image_data:
-        st.button("🔙 QUAY LẠI DANH SÁCH", on_click=lambda: st.session_state.update(zoomed_image_data=None), type="primary", use_container_width=True)
-        st.header(st.session_state.zoomed_image_data["title"])
-        st.image(st.session_state.zoomed_image_data["image"], use_container_width=True)
-        st.caption("Mẹo: Xoay ngang điện thoại để xem rõ nhất.")
-        return # Dừng không chạy phần bên dưới nữa
-    # ============================================
-
-    data = load_data()
-    if not data:
-        st.error("⚠️ Lỗi: Không tìm thấy file data.json")
-        return
-
-    # --- SIDEBAR ---
-    with st.sidebar:
-        st.title("⚙️ Bộ Lọc & Công Cụ")
-        study_mode = st.radio("Chế độ hiển thị:", ["📖 Xem đáp án", "🫣 Học thuộc (Che đi)"])
-        show_result = (study_mode == "📖 Xem đáp án")
-        st.divider()
-        st.subheader("🎯 Lọc theo")
-        filter_bookmark = st.checkbox("❤️ Chỉ hiện mẹo đã Lưu")
-        st.divider()
-        st.subheader("🎲 Thử thách")
-        if st.button("Bốc thăm 1 câu ngẫu nhiên"):
-            st.session_state['random_tip'] = random.choice(data)
-        if st.button("Xóa bốc thăm"):
-            if 'random_tip' in st.session_state: del st.session_state['random_tip']
-
-    # --- MAIN CONTENT ---
-    if 'random_tip' in st.session_state:
-        st.info("🎲 **Mẹo ngẫu nhiên dành cho bạn:**")
-        render_tip_card(st.session_state['random_tip'], show_result)
-        st.divider()
-
-    st.title("🚗 ÔN THI LÝ THUYẾT 600 CÂU")
-    search = st.text_input("", placeholder="🔍 Nhập từ khóa để tìm (vd: độ tuổi, 18 tuổi, cấm dừng...)...")
-
-    filtered_data = data
+        study_mode = st.radio("Chế độ:", ["Xem đáp án", "Học thuộc"], horizontal=True, label_visibility="collapsed")
+    
+    show_answer = (study_mode == "Xem đáp án")
+    
+    # Lọc dữ liệu
+    filtered_data = tips_data
     if search:
         filtered_data = [t for t in filtered_data if search.lower() in t['title'].lower() or any(search.lower() in x.lower() for x in t['content'])]
-    if filter_bookmark:
-        filtered_data = [t for t in filtered_data if t['id'] in st.session_state.bookmarks]
 
     if not filtered_data:
         st.warning("Không tìm thấy mẹo nào phù hợp!")
+        return
+
+    # Hàm hiển thị danh sách
+    def display_list(data_list):
+        for tip in data_list:
+            cat_color = get_category_color(tip.get('category', 'Chung'))
+            is_bookmarked = tip['id'] in st.session_state.bookmarks
+            
+            st.markdown(f"""
+            <div class="tip-card">
+                <span class="badge" style="background-color: {cat_color}">{tip.get('category', 'Chung')}</span>
+                <div class="tip-header">{tip['title']}</div>
+            """, unsafe_allow_html=True)
+            
+            # Nội dung
+            for line in tip['content']:
+                if "=>" in line:
+                    parts = line.split("=>")
+                    display_line = f"{parts[0]} <span style='background:#ffebee; color:#c62828; padding:2px 5px; border-radius:4px'>👉 {parts[1]}</span>" if show_answer else f"{parts[0]} <span style='color:#bbb; border:1px dashed #ccc; padding:0 5px'>???</span>"
+                else:
+                    display_line = line
+                st.markdown(f"• {display_line}", unsafe_allow_html=True)
+            
+            # Ảnh
+            if tip.get('image'):
+                img = process_image(tip['image'], tip.get('id', 0), is_question=False)
+                if img:
+                    st.image(img, use_container_width=True)
+                    if st.button("🔍 Phóng to", key=f"z_tip_{tip['id']}"):
+                        st.session_state.zoomed_image_data = {"image": img, "title": tip['title']}
+                        st.rerun()
+
+            # Nút Lưu
+            if st.checkbox("Lưu", value=is_bookmarked, key=f"bk_{tip['id']}"):
+                st.session_state.bookmarks.add(tip['id'])
+            else:
+                st.session_state.bookmarks.discard(tip['id'])
+            
+            st.markdown("</div>", unsafe_allow_html=True)
+
+    # Hiển thị theo Tab hoặc List
+    if not search:
+        categories = ["Tất cả"] + sorted(list(set([t.get('category', 'Chung') for t in tips_data])))
+        tabs = st.tabs(categories)
+        for i, cat in enumerate(categories):
+            with tabs[i]:
+                display_list(tips_data if cat == "Tất cả" else [t for t in tips_data if t.get('category') == cat])
     else:
-        if search or filter_bookmark:
-            st.caption(f"Tìm thấy {len(filtered_data)} mẹo:")
-            for tip in filtered_data:
-                render_tip_card(tip, show_result)
+        display_list(filtered_data)
+
+# --- 6. GIAO DIỆN LUYỆN 600 CÂU (Tab 2 - QUAN TRỌNG) ---
+def render_questions_page(questions_data):
+    if not questions_data:
+        st.error("⚠️ Chưa tìm thấy file `dulieu_web_chuan.json`. Vui lòng kiểm tra lại thư mục.")
+        return
+
+    total = len(questions_data)
+    idx = st.session_state.current_question_index
+    current_q = questions_data[idx]
+    
+    # --- THANH ĐIỀU HƯỚNG ---
+    c1, c2, c3 = st.columns([1, 2, 1])
+    with c1:
+        if st.button("⬅️ Câu trước", use_container_width=True, disabled=(idx==0)):
+            st.session_state.current_question_index -= 1
+            st.rerun()
+    with c3:
+        if st.button("Câu sau ➡️", use_container_width=True, disabled=(idx==total-1)):
+            st.session_state.current_question_index += 1
+            st.rerun()
+    with c2:
+        new_idx = st.number_input("Nhảy đến câu số:", min_value=1, max_value=total, value=idx+1, label_visibility="collapsed")
+        if new_idx - 1 != idx:
+            st.session_state.current_question_index = new_idx - 1
+            st.rerun()
+
+    # --- HIỂN THỊ CÂU HỎI ---
+    st.markdown(f"""
+    <div class="tip-card">
+        <div class="question-header">Câu {current_q.get('id', idx+1)} / {total} { '🛑 CÂU ĐIỂM LIỆT' if current_q.get('is_critical') else ''}</div>
+        <div style="font-size: 1.15rem; margin-bottom: 15px;">{current_q.get('question', '')}</div>
+    """, unsafe_allow_html=True)
+
+    # Ảnh câu hỏi (Nếu có)
+    # Giả sử ảnh được đặt tên theo ID câu hỏi (VD: 150.jpg) hoặc trường 'image' trong json
+    q_image = current_q.get('image')
+    # Nếu json không có field image, thử tìm theo ID
+    if not q_image:
+        test_path = f"{current_q.get('id', idx+1)}.jpg"
+        if os.path.exists(os.path.join("images", test_path)):
+            q_image = test_path
+            
+    if q_image:
+        img = process_image(q_image, is_question=True)
+        if img:
+            st.image(img, use_container_width=True)
+            if st.button("🔍 Phóng to ảnh", key=f"z_q_{idx}"):
+                st.session_state.zoomed_image_data = {"image": img, "title": f"Câu {current_q.get('id')}"}
+                st.rerun()
+
+    st.markdown("</div>", unsafe_allow_html=True)
+
+    # --- PHẦN ĐÁP ÁN (TRẮC NGHIỆM) ---
+    st.write("##### Chọn đáp án:")
+    
+    # Lấy danh sách options (Nếu file json chuẩn có trường options)
+    options = current_q.get('options', [])
+    correct_ans = current_q.get('correct_answer') # Đáp án đúng (VD: 1 hoặc "1")
+
+    # Nếu không có options tách riêng, hiển thị nội dung thô để người dùng tự đoán
+    if not options:
+        st.info("Câu hỏi này chưa có dữ liệu đáp án trắc nghiệm. Bạn hãy xem nội dung và tự kiểm tra.")
+        if st.checkbox("Hiện đáp án gợi ý"):
+            st.success(f"Đáp án đúng: {correct_ans if correct_ans else 'Đang cập nhật'}")
+    else:
+        # Hiển thị 4 nút chọn
+        # Kiểm tra xem người dùng đã chọn câu này chưa
+        user_choice = st.session_state.user_answers.get(str(current_q.get('id', idx)), None)
+        
+        # Nếu chưa chọn -> Hiện Radio
+        if user_choice is None:
+            choice = st.radio("Chọn:", options, index=None, key=f"rad_{idx}", label_visibility="collapsed")
+            if choice:
+                # Lưu đáp án (Lấy ký tự đầu tiên làm số, VD: "1. Ý một" -> 1)
+                try:
+                    selected_num = int(str(choice).split('.')[0])
+                    st.session_state.user_answers[str(current_q.get('id', idx))] = selected_num
+                    st.rerun()
+                except:
+                    pass # Xử lý lỗi nếu format options không chuẩn
         else:
-            categories = ["Tất cả"] + sorted(list(set([t['category'] for t in data])))
-            tabs = st.tabs(categories)
-            for i, category in enumerate(categories):
-                with tabs[i]:
-                    current_tips = data if category == "Tất cả" else [t for t in data if t['category'] == category]
-                    for tip in current_tips:
-                        render_tip_card(tip, show_result)
+            # Nếu đã chọn -> Hiện kết quả
+            st.info(f"Bạn đã chọn: **Đáp án {user_choice}**")
+            
+            # Logic kiểm tra đúng sai
+            try:
+                # Chuyển correct_ans về số nguyên để so sánh
+                correct_num = int(str(correct_ans))
+                if user_choice == correct_num:
+                    st.success("✅ CHÍNH XÁC! Xuất sắc.")
+                else:
+                    st.error(f"❌ SAI RỒI! Đáp án đúng là: **{correct_num}**")
+            except:
+                st.warning(f"Đáp án đúng theo dữ liệu: {correct_ans}")
+            
+            if st.button("🔄 Làm lại câu này"):
+                del st.session_state.user_answers[str(current_q.get('id', idx))]
+                st.rerun()
+
+
+# --- 7. CHƯƠNG TRÌNH CHÍNH (MAIN) ---
+def main():
+    # --- XỬ LÝ ZOOM FULLSCREEN ---
+    if st.session_state.zoomed_image_data:
+        st.button("🔙 QUAY LẠI", on_click=lambda: st.session_state.update(zoomed_image_data=None), type="primary", use_container_width=True)
+        st.header(st.session_state.zoomed_image_data["title"])
+        st.image(st.session_state.zoomed_image_data["image"], use_container_width=True)
+        return
+
+    # Tải dữ liệu
+    tips_data = load_data('data.json')
+    questions_data = load_data('dulieu_web_chuan.json')
+
+    # --- SIDEBAR ---
+    with st.sidebar:
+        st.title("🗂️ Menu")
+        mode = st.radio("Chọn chức năng:", ["📖 Học Mẹo (51 Mẹo)", "📝 Luyện 600 Câu"], index=1) # Mặc định vào luyện thi
+        
+        st.divider()
+        if mode == "📖 Học Mẹo (51 Mẹo)":
+            if st.checkbox("❤️ Chỉ hiện đã Lưu"):
+                tips_data = [t for t in tips_data if t['id'] in st.session_state.bookmarks]
+            
+            if st.button("🎲 Bốc thăm mẹo"):
+                 if tips_data: st.session_state['random_tip'] = random.choice(tips_data)
+
+        elif mode == "📝 Luyện 600 Câu":
+             st.info(f"Tổng số câu: {len(questions_data)}")
+             if st.button("🗑️ Xóa lịch sử làm bài"):
+                 st.session_state.user_answers = {}
+                 st.rerun()
+
+    # --- HIỂN THỊ CHÍNH ---
+    
+    # Phần Random Mẹo (Nếu có)
+    if 'random_tip' in st.session_state:
+        st.info("🎲 **Mẹo ngẫu nhiên:**")
+        tip = st.session_state['random_tip']
+        st.markdown(f"**{tip['title']}**")
+        for line in tip['content']: st.write(line)
+        if st.button("Đóng"):
+            del st.session_state['random_tip']
+            st.rerun()
+        st.divider()
+
+    # Điều hướng trang
+    if mode == "📖 Học Mẹo (51 Mẹo)":
+        render_tips_page(tips_data)
+    else:
+        render_questions_page(questions_data)
 
 if __name__ == "__main__":
     main()

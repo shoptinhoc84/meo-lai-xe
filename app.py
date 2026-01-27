@@ -1,710 +1,516 @@
 import streamlit as st
 import json
-import random
 import os
-from datetime import datetime, timedelta
-import pandas as pd
-import plotly.express as px
+import random
 from PIL import Image
+import pandas as pd
 
-# Cấu hình trang
+# --- 1. CẤU HÌNH TRANG ---
 st.set_page_config(
-    page_title="Thi Sát Hạch Lái Xe 600 Câu",
+    page_title="Ôn Thi 600 Câu PRO",
     page_icon="🚗",
     layout="wide",
-    initial_sidebar_state="expanded"
+    initial_sidebar_state="collapsed"
 )
 
-# CSS tùy chỉnh
+# --- 2. KHỞI TẠO STATE ---
+if 'bookmarks' not in st.session_state:
+    st.session_state.bookmarks = set()
+if 'zoomed_image_data' not in st.session_state:
+    st.session_state.zoomed_image_data = None
+if 'theory_mode' not in st.session_state:
+    st.session_state.theory_mode = "tổng_quan"
+if 'theory_questions' not in st.session_state:
+    st.session_state.theory_questions = []
+if 'current_question_idx' not in st.session_state:
+    st.session_state.current_question_idx = 0
+if 'user_answers' not in st.session_state:
+    st.session_state.user_answers = {}
+if 'test_started' not in st.session_state:
+    st.session_state.test_started = False
+if 'time_left' not in st.session_state:
+    st.session_state.time_left = 1080
+if 'filtered_questions' not in st.session_state:
+    st.session_state.filtered_questions = []
+if 'exam_results' not in st.session_state:
+    st.session_state.exam_results = None
+
+# --- 3. CSS ---
 st.markdown("""
 <style>
-    .stProgress > div > div > div > div {
-        background-color: #4CAF50;
+    html, body, [class*="css"] { font-family: 'Segoe UI', sans-serif; }
+    
+    div.tip-card {
+        background-color: #ffffff;
+        border-radius: 12px;
+        padding: 20px;
+        margin-bottom: 20px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        border: 1px solid #f0f0f0;
     }
-    .stButton > button {
-        width: 100%;
+    
+    .tip-header {
+        color: #b71c1c;
+        font-size: 1.25rem;
+        font-weight: 700;
+        margin-bottom: 10px;
+    }
+    
+    .theory-card {
+        background-color: #ffffff;
+        border-radius: 12px;
+        padding: 20px;
+        margin: 15px 0;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        border-left: 6px solid #4CAF50;
+    }
+    
+    .danger-card {
+        border-left: 6px solid #FF4B4B !important;
+        background-color: #fff5f5;
+    }
+    
+    .badge {
+        font-size: 0.8rem; padding: 4px 8px; border-radius: 12px;
+        color: white; font-weight: 600; text-transform: uppercase;
+        margin-bottom: 8px; display: inline-block;
+    }
+    
+    .highlight {
+        background-color: #ffebee; color: #c62828; font-weight: bold;
+        padding: 2px 6px; border-radius: 4px; border: 1px solid #ffcdd2;
+    }
+    
+    .hidden-answer {
+        color: #999; font-style: italic; border: 1px dashed #ccc;
+        padding: 0 8px; border-radius: 4px;
+    }
+    
+    .stRadio > div {
+        background-color: #f8f9fa;
+        padding: 10px;
+        border-radius: 8px;
         margin: 5px 0;
     }
-    .category-card {
-        padding: 20px;
-        border-radius: 10px;
-        background-color: #f0f2f6;
-        margin: 10px 0;
-        border-left: 5px solid #4CAF50;
-    }
-    .danger-card {
-        border-left: 5px solid #FF4B4B;
-        background-color: #ffe6e6;
-    }
-    .question-image {
-        max-width: 300px;
-        margin: 10px auto;
-        display: block;
-        border: 2px solid #ddd;
+    
+    .stButton > button {
         border-radius: 8px;
-        padding: 5px;
-    }
-    .result-correct {
-        color: #4CAF50;
-        font-weight: bold;
-    }
-    .result-wrong {
-        color: #FF4B4B;
-        font-weight: bold;
+        font-weight: 600;
     }
 </style>
 """, unsafe_allow_html=True)
 
-# Load dữ liệu
+# --- 4. HÀM TẢI DỮ LIỆU ---
 @st.cache_data
-def load_enhanced_questions():
-    """Load câu hỏi với phân loại nâng cao"""
+def load_tips_data():
     try:
-        with open("data/questions_enhanced.json", "r", encoding="utf-8") as f:
-            data = json.load(f)
-        
-        # Thêm thống kê phân loại
-        categories = {}
-        tags = {}
-        for q in data["questions"]:
-            cat = q.get("category", "khác")
-            categories[cat] = categories.get(cat, 0) + 1
-            
-            for tag in q.get("tags", []):
-                tags[tag] = tags.get(tag, 0) + 1
-        
-        data["stats"] = {
-            "categories": categories,
-            "tags": tags
-        }
-        
-        return data
-    except FileNotFoundError:
-        # Fallback nếu file không tồn tại
-        st.error("File dữ liệu không tồn tại. Tạo file mẫu...")
-        return create_sample_data()
-
-@st.cache_data
-def load_danger_questions():
-    try:
-        with open("data/danger_questions.json", "r", encoding="utf-8") as f:
+        with open('data.json', 'r', encoding='utf-8') as f:
             return json.load(f)
-    except:
-        return {"questions": []}
+    except FileNotFoundError:
+        st.error("Không tìm thấy file data.json")
+        return []
 
-def create_sample_data():
-    """Tạo dữ liệu mẫu nếu file không tồn tại"""
-    return {
-        "meta": {
-            "title": "600 Câu Hỏi Sát Hạch",
-            "year": 2025,
-            "total_questions": 600
-        },
-        "questions": [],
-        "stats": {"categories": {}, "tags": {}}
-    }
-
-def load_image(image_path):
-    """Load và hiển thị hình ảnh"""
-    if not image_path:
-        return None
-    
-    full_path = os.path.join("data", "images", image_path)
-    if os.path.exists(full_path):
+@st.cache_data
+def load_theory_data():
+    """Tải dữ liệu lý thuyết 600 câu"""
+    # Ưu tiên tìm file questions_full.json
+    for file_name in ['questions_full.json', 'questions_enhanced.json', 'data_600_cau.json']:
         try:
-            return Image.open(full_path)
+            with open(file_name, 'r', encoding='utf-8') as f:
+                data = json.load(f)
+                if isinstance(data, dict) and 'questions' in data:
+                    return data['questions']
+                elif isinstance(data, list):
+                    return data
         except:
-            return None
+            continue
+    
+    # Tạo dữ liệu mẫu nếu không có file
+    st.warning("Không tìm thấy file dữ liệu 600 câu. Sử dụng dữ liệu mẫu.")
+    return create_sample_questions()
+
+def create_sample_questions():
+    """Tạo dữ liệu mẫu cho lý thuyết"""
+    questions = []
+    for i in range(1, 31):  # 30 câu mẫu
+        questions.append({
+            "id": i,
+            "question": f"Câu hỏi mẫu {i}: Khái niệm về làn đường là gì?",
+            "choices": [
+                f"Đáp án A cho câu {i}",
+                f"Đáp án B cho câu {i}",
+                f"Đáp án C cho câu {i}",
+                f"Đáp án D cho câu {i}"
+            ],
+            "correct": i % 4,
+            "explanation": f"Giải thích cho câu hỏi {i}",
+            "danger": True if i <= 5 else False,
+            "category": "khái_niệm" if i % 3 == 0 else "biển_báo",
+            "chapter": (i % 6) + 1
+        })
+    return questions
+
+def process_image(image_filename, tip_id):
+    """Xử lý ảnh mẹo"""
+    try:
+        image_path = os.path.join("images", image_filename)
+        if os.path.exists(image_path):
+            img = Image.open(image_path)
+            # Logic xoay ảnh của bạn
+            if 1 <= tip_id <= 36:
+                img = img.rotate(-270, expand=True)
+            elif 37 <= tip_id <= 51:
+                img = img.rotate(-90, expand=True)
+            return img
+    except:
+        pass
     return None
 
-# Khởi tạo session state
-def init_session_state():
-    defaults = {
-        "current_question": 0,
-        "answers": {},
-        "test_started": False,
-        "time_left": 1080,
-        "mode": "dashboard",  # dashboard, study, exam, practice, category
-        "selected_category": None,
-        "selected_tags": [],
-        "show_explanation": True,
-        "exam_results": None,
-        "question_order": [],
-        "filtered_questions": []
-    }
+# --- 5. HÀM HIỂN THỊ MẸO ---
+def render_tip_card(tip, show_answer):
+    cat_color = "#1976D2" if "Biển" in tip.get('category', '') else "#388E3C"
+    is_bookmarked = tip['id'] in st.session_state.bookmarks
     
-    for key, value in defaults.items():
-        if key not in st.session_state:
-            st.session_state[key] = value
-
-init_session_state()
-
-# Load dữ liệu
-data = load_enhanced_questions()
-questions = data["questions"]
-stats = data["stats"]
-danger_data = load_danger_questions()
-danger_questions = danger_data.get("questions", [])
-
-# Sidebar
-with st.sidebar:
-    st.image("https://cdn-icons-png.flaticon.com/512/1998/1998610.png", width=80)
-    st.title("🚗 Ôn Thi Lái Xe")
+    st.markdown(f"""
+    <div class="tip-card">
+        <span class="badge" style="background-color: {cat_color}">{tip.get('category', 'Chung')}</span>
+        <div class="tip-header"><span>{tip['title']}</span></div>
+        <div class="tip-content">
+    """, unsafe_allow_html=True)
     
-    # Menu chính
-    menu = st.radio(
-        "Chế độ học tập",
-        ["📊 Tổng quan", "📚 Ôn tập theo nội dung", "🎯 60 Câu liệt", 
-         "📝 Thi thử đầy đủ", "⚡ Thi nhanh", "📈 Kết quả & Thống kê"]
-    )
+    # Nội dung
+    for line in tip['content']:
+        if "=>" in line:
+            parts = line.split("=>")
+            q_text, a_text = parts[0], parts[1]
+            if show_answer:
+                st.markdown(f"• {q_text} <span class='highlight'>👉 {a_text}</span>", unsafe_allow_html=True)
+            else:
+                st.markdown(f"• {q_text} <span class='hidden-answer'>???</span>", unsafe_allow_html=True)
+        else:
+            st.markdown(f"• {line}")
+    
+    st.markdown("</div>", unsafe_allow_html=True)
+    
+    # Ảnh
+    if tip.get('image'):
+        img = process_image(tip['image'], tip.get('id', 0))
+        if img:
+            st.image(img, use_container_width=True)
+            if st.button("🔍 Phóng to ảnh", key=f"zoom_{tip['id']}", use_container_width=True):
+                st.session_state.zoomed_image_data = {"image": img, "title": tip['title']}
+                st.rerun()
+    
+    # Bookmark
+    if st.checkbox("Lưu", value=is_bookmarked, key=f"bk_{tip['id']}"):
+        st.session_state.bookmarks.add(tip['id'])
+    else:
+        st.session_state.bookmarks.discard(tip['id'])
+    
+    st.markdown("</div>", unsafe_allow_html=True)
+
+# --- 6. HÀM LÝ THUYẾT ---
+def render_theory_dashboard():
+    """Tổng quan lý thuyết"""
+    st.title("📚 Lý Thuyết 600 Câu")
+    
+    # Thống kê
+    col1, col2, col3 = st.columns(3)
+    with col1:
+        st.metric("Tổng số câu", len(st.session_state.theory_questions))
+    with col2:
+        answered = len([k for k in st.session_state.user_answers.keys() if k.startswith("theory_")])
+        st.metric("Đã ôn", answered)
+    with col3:
+        danger_q = len([q for q in st.session_state.theory_questions if q.get('danger', False)])
+        st.metric("Câu liệt", danger_q)
     
     st.markdown("---")
     
-    # Cài đặt
-    with st.expander("⚙️ Cài đặt"):
-        st.session_state.show_explanation = st.checkbox("Hiển thị giải thích", value=True)
-        auto_next = st.checkbox("Tự động chuyển câu", value=True)
-        
-        if st.session_state.mode in ["study", "category"]:
-            shuffle = st.checkbox("Xáo trộn câu hỏi", value=False)
-            if shuffle and st.button("🔀 Xáo trộn ngay"):
-                random.shuffle(st.session_state.filtered_questions)
+    # Các chương
+    chapters = {
+        1: "Quy định chung",
+        2: "Văn hóa giao thông", 
+        3: "Kỹ thuật lái xe",
+        4: "Cấu tạo sửa chữa",
+        5: "Báo hiệu đường bộ",
+        6: "Sa hình & Xử lý"
+    }
+    
+    st.subheader("📂 Nội dung ôn tập")
+    cols = st.columns(3)
+    
+    for i, (chap_num, chap_name) in enumerate(chapters.items()):
+        with cols[i % 3]:
+            count = len([q for q in st.session_state.theory_questions if q.get('chapter') == chap_num])
+            st.metric(chap_name, f"{count} câu")
+            if st.button(f"Ôn tập {chap_name}", key=f"chap_{chap_num}", use_container_width=True):
+                st.session_state.filtered_questions = [
+                    q for q in st.session_state.theory_questions 
+                    if q.get('chapter') == chap_num
+                ]
+                st.session_state.theory_mode = "ôn_tập"
+                st.session_state.current_question_idx = 0
                 st.rerun()
     
     st.markdown("---")
     
-    # Thống kê nhanh
-    st.caption("📊 Thống kê nhanh")
-    col1, col2 = st.columns(2)
-    with col1:
-        st.metric("Tổng câu", len(questions))
-    with col2:
-        st.metric("Đã trả lời", len(st.session_state.answers))
+    # Câu liệt
+    st.subheader("⚠️ 60 Câu Hỏi Liệt")
+    st.warning("Sai 1 câu là TRƯỢT!")
     
-    # Nút reset
-    if st.button("🔄 Đặt lại bài thi", use_container_width=True):
-        for key in ["answers", "test_started", "exam_results", "question_order"]:
-            if key in st.session_state:
-                st.session_state[key] = None if key == "exam_results" else 0
-        st.session_state.mode = "dashboard"
+    if st.button("🎯 Ôn 60 câu liệt ngay", use_container_width=True, type="primary"):
+        danger_questions = [q for q in st.session_state.theory_questions if q.get('danger', False)]
+        st.session_state.filtered_questions = danger_questions[:10]  # Giới hạn 10 câu mẫu
+        st.session_state.theory_mode = "ôn_tập"
+        st.session_state.current_question_idx = 0
         st.rerun()
     
     st.markdown("---")
-    st.caption(f"© {data['meta']['year']}")
-
-# Xử lý menu chính
-if menu == "📊 Tổng quan":
-    st.session_state.mode = "dashboard"
-elif menu == "📚 Ôn tập theo nội dung":
-    st.session_state.mode = "category"
-elif menu == "🎯 60 Câu liệt":
-    st.session_state.mode = "danger"
-elif menu == "📝 Thi thử đầy đủ":
-    st.session_state.mode = "exam"
-elif menu == "⚡ Thi nhanh":
-    st.session_state.mode = "practice"
-elif menu == "📈 Kết quả & Thống kê":
-    st.session_state.mode = "results"
-
-# Header chính
-st.title(data["meta"]["title"])
-st.markdown("---")
-
-# ==================== DASHBOARD ====================
-if st.session_state.mode == "dashboard":
-    st.subheader("🎯 Tổng quan & Phân loại câu hỏi")
     
-    # Thống kê phân loại
-    col1, col2, col3 = st.columns(3)
-    
+    # Thi thử
+    col1, col2 = st.columns(2)
     with col1:
-        st.metric("Tổng số câu", len(questions))
-    with col2:
-        st.metric("Câu có hình ảnh", len([q for q in questions if q.get("has_image")]))
-    with col3:
-        st.metric("Câu nguy hiểm", len(danger_questions))
-    
-    # Phân bổ theo danh mục
-    st.subheader("📂 Phân loại nội dung")
-    
-    # Tạo cards cho từng danh mục
-    categories = {
-        "khái_niệm": {"icon": "📖", "name": "Khái niệm & Quy tắc", "color": "#4CAF50"},
-        "độ_tuổi": {"icon": "🎂", "name": "Độ tuổi lái xe", "color": "#2196F3"},
-        "biển_báo": {"icon": "🚸", "name": "Biển báo đường bộ", "color": "#FF9800"},
-        "kỹ_thuật_lái_xe": {"icon": "🔧", "name": "Kỹ thuật lái xe", "color": "#9C27B0"},
-        "cấu_tạo_sửa_chữa": {"icon": "🚗", "name": "Cấu tạo & Sửa chữa", "color": "#607D8B"},
-        "tốc_độ_khoảng_cách": {"icon": "📏", "name": "Tốc độ & Khoảng cách", "color": "#795548"},
-        "hành_vi": {"icon": "🚦", "name": "Hành vi & Xử lý", "color": "#00BCD4"},
-        "ưu_tiên": {"icon": "⭐", "name": "Ưu tiên & Nhường đường", "color": "#FF5722"}
-    }
-    
-    # Hiển thị cards
-    cols = st.columns(4)
-    col_idx = 0
-    
-    for cat_id, cat_info in categories.items():
-        count = stats["categories"].get(cat_id, 0)
-        with cols[col_idx]:
-            with st.container():
-                st.markdown(f"""
-                <div style='padding: 15px; border-radius: 10px; background-color: {cat_info['color']}20; 
-                            border-left: 5px solid {cat_info['color']}; margin: 5px 0;'>
-                    <h4 style='margin: 0;'>{cat_info['icon']} {cat_info['name']}</h4>
-                    <p style='font-size: 24px; font-weight: bold; margin: 5px 0;'>{count} câu</p>
-                </div>
-                """, unsafe_allow_html=True)
-                
-                if st.button(f"Ôn tập {cat_info['name']}", key=f"cat_{cat_id}", use_container_width=True):
-                    st.session_state.selected_category = cat_id
-                    st.session_state.mode = "category"
-                    st.session_state.filtered_questions = [q for q in questions if q.get("category") == cat_id]
-                    st.rerun()
-        
-        col_idx = (col_idx + 1) % 4
-    
-    # 60 câu liệt - card đặc biệt
-    st.markdown("---")
-    with st.container():
-        st.markdown("""
-        <div class='danger-card' style='padding: 20px; border-radius: 10px; margin: 10px 0;'>
-            <h3 style='color: #FF4B4B; margin: 0;'>⚠️ 60 CÂU HỎI LIỆT</h3>
-            <p style='margin: 5px 0;'><strong>Sai 1 câu là TRƯỢT!</strong></p>
-            <p>Đây là những câu hỏi quan trọng nhất trong bài thi</p>
-        </div>
-        """, unsafe_allow_html=True)
-        
-        col1, col2 = st.columns([3, 1])
-        with col1:
-            st.progress(0, text="Chưa ôn tập")
-        with col2:
-            if st.button("🎯 Bắt đầu ôn 60 câu liệt", use_container_width=True):
-                st.session_state.mode = "danger"
-                st.rerun()
-    
-    # Biểu đồ thống kê
-    st.markdown("---")
-    st.subheader("📈 Phân bổ câu hỏi")
-    
-    if stats["categories"]:
-        df_categories = pd.DataFrame({
-            "Danh mục": [categories.get(cat, {"name": cat})["name"] for cat in stats["categories"].keys()],
-            "Số câu": list(stats["categories"].values())
-        })
-        
-        fig = px.pie(df_categories, values="Số câu", names="Danh mục", 
-                     title="Phân bổ câu hỏi theo danh mục")
-        st.plotly_chart(fig, use_container_width=True)
-
-# ==================== ÔN TẬP THEO DANH MỤC ====================
-elif st.session_state.mode == "category":
-    if not st.session_state.filtered_questions:
-        # Chọn danh mục nếu chưa chọn
-        st.subheader("📚 Chọn nội dung ôn tập")
-        
-        # Lọc theo tag phổ biến
-        popular_tags = sorted(stats["tags"].items(), key=lambda x: x[1], reverse=True)[:10]
-        
-        col1, col2 = st.columns([2, 1])
-        
-        with col1:
-            selected_cat = st.selectbox(
-                "Chọn danh mục chính",
-                options=["Tất cả"] + list(categories.keys()),
-                format_func=lambda x: categories.get(x, {"name": "Tất cả"})["name"]
-            )
-        
-        with col2:
-            if selected_cat != "Tất cả":
-                tag_options = list(set([
-                    tag for q in questions 
-                    if q.get("category") == selected_cat 
-                    for tag in q.get("tags", [])
-                ]))
-                if tag_options:
-                    selected_tags = st.multiselect("Lọc theo tag", tag_options)
-                    st.session_state.selected_tags = selected_tags
-        
-        if st.button("🔍 Bắt đầu ôn tập", type="primary", use_container_width=True):
-            if selected_cat == "Tất cả":
-                filtered = questions
-            else:
-                filtered = [q for q in questions if q.get("category") == selected_cat]
-            
-            if st.session_state.selected_tags:
-                filtered = [q for q in filtered 
-                          if any(tag in q.get("tags", []) for tag in st.session_state.selected_tags)]
-            
-            st.session_state.filtered_questions = filtered
-            st.session_state.current_question = 0
-            st.rerun()
-    else:
-        # Hiển thị câu hỏi
-        display_questions()
-
-# ==================== 60 CÂU LIỆT ====================
-elif st.session_state.mode == "danger":
-    st.subheader("🎯 60 Câu Hỏi Liệt (Nguy Hiểm)")
-    
-    if not st.session_state.test_started:
-        st.warning("""
-        ⚠️ **QUAN TRỌNG:** 
-        - Sai 1 câu trong nhóm này là KHÔNG ĐẠT
-        - Cần học kỹ trước khi thi thật
-        """)
-        
-        if st.button("▶️ Bắt đầu ôn 60 câu liệt", type="primary"):
+        if st.button("📝 Thi thử 20 câu", use_container_width=True):
+            st.session_state.filtered_questions = random.sample(st.session_state.theory_questions, min(20, len(st.session_state.theory_questions)))
+            st.session_state.theory_mode = "thi_thử"
             st.session_state.test_started = True
-            st.session_state.filtered_questions = danger_questions
-            st.session_state.current_question = 0
+            st.session_state.current_question_idx = 0
+            st.session_state.time_left = 600
             st.rerun()
-    else:
-        display_questions()
+    with col2:
+        if st.button("📖 Ôn tập tất cả", use_container_width=True):
+            st.session_state.filtered_questions = st.session_state.theory_questions
+            st.session_state.theory_mode = "ôn_tập"
+            st.session_state.current_question_idx = 0
+            st.rerun()
 
-# ==================== THI THỬ ====================
-elif st.session_state.mode in ["exam", "practice"]:
-    handle_exam_mode()
-
-# ==================== HIỂN THỊ KẾT QUẢ ====================
-elif st.session_state.mode == "results":
-    show_results()
-
-# ==================== CÁC HÀM HỖ TRỢ ====================
-
-def display_questions():
-    """Hiển thị câu hỏi và đáp án"""
+def render_theory_question():
+    """Hiển thị 1 câu hỏi"""
     if not st.session_state.filtered_questions:
         st.warning("Không có câu hỏi nào!")
         return
     
+    q = st.session_state.filtered_questions[st.session_state.current_question_idx]
     total = len(st.session_state.filtered_questions)
-    current_idx = st.session_state.current_question % total
     
-    q = st.session_state.filtered_questions[current_idx]
+    # Header
+    st.subheader(f"📝 Câu {st.session_state.current_question_idx + 1}/{total}")
+    if q.get('danger'):
+        st.error("⚠️ Câu liệt - Sai là trượt!")
     
-    # Header với thông tin
-    col1, col2, col3 = st.columns([3, 1, 1])
-    with col1:
-        category_name = categories.get(q.get("category", ""), {"name": "Khác"})["name"]
-        st.subheader(f"📝 Câu {current_idx + 1}/{total} • {category_name}")
-    with col2:
-        if q.get("danger"):
-            st.error("⚠️ Câu liệt")
-        else:
-            st.info("📌 Câu thường")
-    with col3:
-        progress = (current_idx + 1) / total
-        st.progress(progress, text=f"{current_idx + 1}/{total}")
-    
-    # Hiển thị câu hỏi
+    # Câu hỏi
     st.markdown(f"### {q['question']}")
     
-    # Hiển thị hình ảnh nếu có
-    if q.get("has_image") and q.get("image"):
-        img = load_image(q["image"])
-        if img:
-            st.image(img, use_container_width=True, caption="Hình minh họa")
-    
-    # Hiển thị đáp án
-    q_key = f"q_{q['id']}"
-    user_answer = st.session_state.answers.get(q_key)
-    
-    # Tạo options
-    options = q["choices"]
-    option_labels = [f"**{chr(65+i)}.** {opt}" for i, opt in enumerate(options)]
+    # Đáp án
+    q_key = f"theory_{q['id']}"
+    user_answer = st.session_state.user_answers.get(q_key)
     
     if user_answer is not None:
         # Đã trả lời
-        selected_label = option_labels[user_answer]
-        
-        # Radio disabled với đáp án đã chọn
-        st.radio(
-            "Đáp án của bạn:",
-            option_labels,
-            index=user_answer,
-            disabled=True,
-            key=f"radio_{q_key}_result"
-        )
-        
-        # Kiểm tra đúng/sai
-        is_correct = user_answer == q["correct"]
-        
-        if is_correct:
-            st.success(f"✅ **ĐÚNG!** Đáp án: {chr(65 + q['correct'])}")
-        else:
-            st.error(f"❌ **SAI!** Đáp án đúng: {chr(65 + q['correct'])}")
-        
-        # Hiển thị giải thích
-        if st.session_state.show_explanation and q.get("explanation"):
-            with st.expander("📖 Giải thích chi tiết"):
-                st.info(q["explanation"])
-                
-                # Hiển thị tags nếu có
-                if q.get("tags"):
-                    tags_html = " ".join([f"<span style='background-color: #e0e0e0; padding: 2px 8px; border-radius: 10px; margin: 2px; display: inline-block;'>🏷️ {tag}</span>" 
-                                          for tag in q["tags"]])
-                    st.markdown(f"**Tags:** {tags_html}", unsafe_allow_html=True)
-        
-        # Nút tiếp tục
-        if st.button("👉 Câu tiếp theo", use_container_width=True):
-            if current_idx < total - 1:
-                st.session_state.current_question += 1
+        for i, choice in enumerate(q["choices"]):
+            if i == user_answer:
+                if user_answer == q["correct"]:
+                    st.success(f"✅ **{chr(65+i)}.** {choice}")
+                else:
+                    st.error(f"❌ **{chr(65+i)}.** {choice}")
+            elif i == q["correct"]:
+                st.info(f"✓ **{chr(65+i)}.** {choice}")
             else:
-                st.session_state.current_question = 0
+                st.markdown(f"**{chr(65+i)}.** {choice}")
+        
+        # Giải thích
+        if q.get("explanation"):
+            with st.expander("📖 Giải thích"):
+                st.info(q["explanation"])
+        
+        # Nút tiếp
+        if st.button("👉 Câu tiếp theo", use_container_width=True):
+            if st.session_state.current_question_idx < total - 1:
+                st.session_state.current_question_idx += 1
             st.rerun()
-            
     else:
-        # Chưa trả lời - cho phép chọn
+        # Chưa trả lời
         selected = st.radio(
             "Chọn đáp án:",
-            option_labels,
-            key=f"radio_{q_key}"
+            [f"**{chr(65+i)}.** {choice}" for i, choice in enumerate(q["choices"])]
         )
         
         if selected:
-            selected_idx = option_labels.index(selected)
-            st.session_state.answers[q_key] = selected_idx
-            
-            # Tự động chuyển nếu đang ở chế độ thi
-            if st.session_state.mode in ["exam", "practice", "danger"]:
-                if current_idx < total - 1:
-                    st.session_state.current_question += 1
-                    st.rerun()
+            selected_idx = ord(selected[2]) - 65  # Lấy vị trí từ A, B, C, D
+            st.session_state.user_answers[q_key] = selected_idx
+            st.rerun()
     
     # Điều hướng
     st.markdown("---")
-    nav_cols = st.columns(5)
-    with nav_cols[0]:
-        if st.button("⏮️ Đầu"):
-            st.session_state.current_question = 0
+    cols = st.columns(4)
+    with cols[0]:
+        if st.button("◀️ Trước") and st.session_state.current_question_idx > 0:
+            st.session_state.current_question_idx -= 1
             st.rerun()
-    with nav_cols[1]:
-        if st.button("◀️ Trước"):
-            if current_idx > 0:
-                st.session_state.current_question -= 1
-            st.rerun()
-    with nav_cols[2]:
+    with cols[1]:
         if st.button("🔀 Ngẫu nhiên"):
-            st.session_state.current_question = random.randint(0, total-1)
+            st.session_state.current_question_idx = random.randint(0, total-1)
             st.rerun()
-    with nav_cols[3]:
-        if st.button("Tiếp theo ▶️"):
-            if current_idx < total - 1:
-                st.session_state.current_question += 1
+    with cols[2]:
+        if st.button("Tiếp theo ▶️") and st.session_state.current_question_idx < total - 1:
+            st.session_state.current_question_idx += 1
             st.rerun()
-    with nav_cols[4]:
-        if st.button("Cuối ⏭️"):
-            st.session_state.current_question = total - 1
-            st.rerun()
-    
-    # Thanh progress chi tiết
-    st.markdown("### 📊 Tiến độ ôn tập")
-    
-    # Tính số câu đã làm
-    answered_ids = [int(k.split("_")[1]) for k in st.session_state.answers.keys()]
-    current_answered = [q_id for q_id in answered_ids 
-                       if q_id in [q["id"] for q in st.session_state.filtered_questions]]
-    
-    col1, col2, col3 = st.columns(3)
-    with col1:
-        st.metric("Đã ôn", f"{len(current_answered)}/{total}")
-    with col2:
-        if current_answered:
-            correct_count = sum(1 for q_id in current_answered 
-                              for q in st.session_state.filtered_questions 
-                              if q["id"] == q_id and 
-                              st.session_state.answers.get(f"q_{q_id}") == q["correct"])
-            st.metric("Đúng", f"{correct_count}/{len(current_answered)}")
-        else:
-            st.metric("Đúng", "0/0")
-    with col3:
-        if st.button("📈 Xem kết quả chi tiết"):
-            st.session_state.mode = "results"
+    with cols[3]:
+        if st.button("🏠 Về tổng quan"):
+            st.session_state.theory_mode = "tổng_quan"
             st.rerun()
 
-def handle_exam_mode():
-    """Xử lý chế độ thi thử"""
+def render_theory_exam():
+    """Thi thử"""
     st.subheader("📝 Thi thử sát hạch")
     
     if not st.session_state.test_started:
-        if st.session_state.mode == "exam":
-            st.info("""
-            **Thi thử đầy đủ 600 câu:**
-            - Thời gian: 18 phút (1080 giây)
-            - Số câu: 600
-            - Điểm đạt: 80% (480/600 câu)
-            - Sai câu liệt: TRƯỢT
-            """)
-            
-            if st.button("▶️ Bắt đầu thi 600 câu", type="primary", use_container_width=True):
-                st.session_state.test_started = True
-                st.session_state.time_left = 1080
-                st.session_state.filtered_questions = random.sample(questions, 600)
-                st.session_state.current_question = 0
-                st.rerun()
-                
-        else:  # practice mode
-            col1, col2 = st.columns(2)
-            with col1:
-                num_q = st.number_input("Số câu thi", min_value=10, max_value=200, value=30)
-            with col2:
-                time_per_q = st.number_input("Thời gian/câu (giây)", min_value=10, max_value=120, value=20)
-            
-            if st.button(f"▶️ Bắt đầu thi {num_q} câu", type="primary", use_container_width=True):
-                st.session_state.test_started = True
-                st.session_state.time_left = num_q * time_per_q
-                st.session_state.filtered_questions = random.sample(questions, num_q)
-                st.session_state.current_question = 0
-                st.rerun()
+        st.info("Thi thử 20 câu - Thời gian: 10 phút")
+        if st.button("▶️ Bắt đầu thi", type="primary", use_container_width=True):
+            st.session_state.test_started = True
+            st.rerun()
     else:
-        # Đang thi
-        display_exam_in_progress()
-
-def display_exam_in_progress():
-    """Hiển thị bài thi đang diễn ra"""
-    # Thanh thời gian
-    time_col1, time_col2 = st.columns([3, 1])
-    with time_col1:
+        # Đếm thời gian
         minutes = st.session_state.time_left // 60
         seconds = st.session_state.time_left % 60
+        st.progress(st.session_state.time_left / 600, 
+                   text=f"⏱️ {minutes:02d}:{seconds:02d}")
         
-        # Thanh progress thời gian
-        total_time = 1080 if st.session_state.mode == "exam" else len(st.session_state.filtered_questions) * 20
-        time_progress = st.session_state.time_left / total_time
+        # Hiển thị câu hỏi
+        render_theory_question()
         
-        st.progress(time_progress, 
-                   text=f"⏱️ Thời gian còn lại: {minutes:02d}:{seconds:02d}")
-    
-    with time_col2:
+        # Nút kết thúc
         if st.button("⏹️ Kết thúc thi", type="secondary"):
-            calculate_exam_results()
-            st.rerun()
+            show_exam_results()
     
-    # Hiển thị câu hỏi (không có giải thích trong lúc thi)
-    temp_show = st.session_state.show_explanation
-    st.session_state.show_explanation = False
-    display_questions()
-    st.session_state.show_explanation = temp_show
-    
-    # Tự động đếm thời gian
+    # Tự động giảm thời gian
     if st.session_state.time_left > 0:
         st.session_state.time_left -= 1
-        if st.session_state.time_left == 0:
-            st.error("⏰ Hết giờ!")
-            calculate_exam_results()
 
-def calculate_exam_results():
-    """Tính kết quả bài thi"""
-    results = []
-    total_questions = len(st.session_state.filtered_questions)
-    correct_count = 0
+def show_exam_results():
+    """Hiển thị kết quả thi"""
+    correct = 0
     danger_wrong = False
+    results = []
     
     for q in st.session_state.filtered_questions:
-        q_key = f"q_{q['id']}"
-        user_answer = st.session_state.answers.get(q_key, -1)
+        q_key = f"theory_{q['id']}"
+        user_answer = st.session_state.user_answers.get(q_key, -1)
         is_correct = user_answer == q["correct"]
         
         if is_correct:
-            correct_count += 1
-        elif q.get("danger"):
+            correct += 1
+        elif q.get('danger'):
             danger_wrong = True
         
         results.append({
             "Câu": q["id"],
-            "Nội dung": q["question"][:50] + "..." if len(q["question"]) > 50 else q["question"],
-            "Đáp án bạn chọn": chr(65 + user_answer) if user_answer >= 0 else "Chưa trả lời",
-            "Đáp án đúng": chr(65 + q["correct"]),
             "Kết quả": "✅ Đúng" if is_correct else "❌ Sai",
-            "Loại": "⚠️ Liệt" if q.get("danger") else "📌 Thường"
+            "Loại": "⚠️ Liệt" if q.get('danger') else "📌 Thường"
         })
     
-    score = (correct_count / total_questions) * 100
-    passed = score >= 80 and not danger_wrong
-    
     st.session_state.exam_results = {
-        "total": total_questions,
-        "correct": correct_count,
-        "score": score,
-        "passed": passed,
-        "danger_wrong": danger_wrong,
-        "details": results
+        "total": len(st.session_state.filtered_questions),
+        "correct": correct,
+        "danger_wrong": danger_wrong
     }
-    
-    st.session_state.mode = "results"
-    st.session_state.test_started = False
+    st.session_state.theory_mode = "kết_quả"
+    st.rerun()
 
-def show_results():
-    """Hiển thị kết quả chi tiết"""
+def render_results():
+    """Hiển thị kết quả"""
     if not st.session_state.exam_results:
-        st.info("Chưa có kết quả bài thi nào. Hãy làm bài thi trước!")
+        st.info("Chưa có kết quả")
         return
     
-    results = st.session_state.exam_results
-    
+    r = st.session_state.exam_results
     st.subheader("📊 Kết Quả Bài Thi")
     
-    # Thông tin tổng quan
-    col1, col2, col3, col4 = st.columns(4)
+    col1, col2, col3 = st.columns(3)
     with col1:
-        st.metric("Tổng số câu", results["total"])
+        st.metric("Tổng câu", r["total"])
     with col2:
-        st.metric("Số câu đúng", results["correct"])
+        st.metric("Đúng", r["correct"])
     with col3:
-        st.metric("Tỷ lệ đúng", f"{results['score']:.1f}%")
-    with col4:
-        if results["passed"]:
-            st.success("🎉 ĐẠT")
+        score = (r["correct"] / r["total"]) * 100
+        if score >= 80 and not r["danger_wrong"]:
+            st.success(f"🎉 {score:.1f}%")
         else:
-            st.error("💥 KHÔNG ĐẠT")
+            st.error(f"💥 {score:.1f}%")
     
-    # Cảnh báo câu liệt
-    if results["danger_wrong"]:
-        st.error("""
-        ⚠️ **KHÔNG ĐẠT VÌ SAI CÂU LIỆT!**
-        
-        Bạn đã trả lời sai ít nhất 1 câu trong nhóm 60 câu hỏi liệt.
-        Trong kỳ thi thật, bạn sẽ bị đánh trượt ngay lập tức.
-        """)
+    if r["danger_wrong"]:
+        st.error("⚠️ Bạn đã sai câu liệt - KHÔNG ĐẠT!")
     
-    # Biểu đồ
-    st.markdown("### 📈 Biểu đồ kết quả")
-    
-    df_results = pd.DataFrame({
-        "Loại": ["Đúng", "Sai"],
-        "Số câu": [results["correct"], results["total"] - results["correct"]]
-    })
-    
-    fig = px.pie(df_results, values="Số câu", names="Loại", 
-                 color_discrete_map={"Đúng": "#4CAF50", "Sai": "#FF4B4B"})
-    st.plotly_chart(fig, use_container_width=True)
-    
-    # Chi tiết từng câu
-    st.markdown("### 📋 Chi tiết từng câu")
-    
-    df_details = pd.DataFrame(results["details"])
-    st.dataframe(df_details, use_container_width=True, hide_index=True)
-    
-    # Phân tích theo loại câu hỏi
-    st.markdown("### 🔍 Phân tích theo nội dung")
-    
-    # Xuất kết quả
-    st.markdown("### 💾 Xuất kết quả")
-    
-    csv = df_details.to_csv(index=False).encode('utf-8')
-    st.download_button(
-        label="📥 Tải kết quả (CSV)",
-        data=csv,
-        file_name=f"ket_qua_thi_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv",
-        mime="text/csv"
-    )
-    
-    # Nút làm lại
-    if st.button("🔄 Làm bài thi khác", type="primary", use_container_width=True):
-        st.session_state.mode = "dashboard"
+    if st.button("🔄 Làm bài khác", use_container_width=True):
+        st.session_state.theory_mode = "tổng_quan"
         st.session_state.exam_results = None
         st.rerun()
 
-# Footer
-st.markdown("---")
-st.caption(f"📚 {data['meta']['title']} • © {data['meta']['year']} • Phiên bản 2.0 với phân loại nâng cao")
+# --- 7. MAIN APP ---
+def main():
+    # Tải dữ liệu
+    if not st.session_state.theory_questions:
+        st.session_state.theory_questions = load_theory_data()
+    
+    # Xử lý ảnh phóng to
+    if st.session_state.zoomed_image_data:
+        st.button("🔙 Quay lại", 
+                 on_click=lambda: st.session_state.update(zoomed_image_data=None),
+                 use_container_width=True)
+        st.image(st.session_state.zoomed_image_data["image"], use_container_width=True)
+        return
+    
+    # Sidebar
+    st.sidebar.title("🚗 ÔN THI LÁI XE")
+    mode = st.sidebar.radio("Chế độ học:", ["📖 Học Mẹo", "📚 Lý Thuyết"])
+    
+    if mode == "📖 Học Mẹo":
+        # Học mẹo
+        data = load_tips_data()
+        if not data:
+            return
+        
+        with st.sidebar:
+            show_answer = st.radio("Hiển thị:", ["Xem đáp án", "Che đáp án"]) == "Xem đáp án"
+            filter_bookmark = st.checkbox("Chỉ hiện mẹo đã lưu")
+        
+        st.title("🚗 HỌC MẸO THI LÁI XE")
+        search = st.text_input("🔍 Tìm kiếm:", placeholder="Nhập từ khóa...")
+        
+        filtered = data
+        if search:
+            filtered = [t for t in filtered if search.lower() in t['title'].lower()]
+        if filter_bookmark:
+            filtered = [t for t in filtered if t['id'] in st.session_state.bookmarks]
+        
+        for tip in filtered:
+            render_tip_card(tip, show_answer)
+    
+    else:
+        # Lý thuyết
+        st.sidebar.markdown("---")
+        st.sidebar.markdown("### ⚙️ Lý thuyết")
+        
+        if st.session_state.theory_mode in ["ôn_tập", "thi_thử"]:
+            if st.sidebar.button("🔄 Xáo trộn"):
+                random.shuffle(st.session_state.filtered_questions)
+                st.rerun()
+        
+        if st.sidebar.button("🗑️ Xóa kết quả"):
+            st.session_state.user_answers = {}
+            st.session_state.theory_mode = "tổng_quan"
+            st.rerun()
+        
+        # Main content lý thuyết
+        if st.session_state.theory_mode == "tổng_quan":
+            render_theory_dashboard()
+        elif st.session_state.theory_mode == "ôn_tập":
+            render_theory_question()
+        elif st.session_state.theory_mode == "thi_thử":
+            render_theory_exam()
+        elif st.session_state.theory_mode == "kết_quả":
+            render_results()
+
+if __name__ == "__main__":
+    main()

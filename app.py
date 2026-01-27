@@ -56,7 +56,7 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-# --- 4. HÀM XỬ LÝ DỮ LIỆU (AUTO DETECT) ---
+# --- 4. HÀM XỬ LÝ DỮ LIỆU (V4.0 - THÔNG MINH) ---
 
 def get_category_color(category):
     colors = {
@@ -75,6 +75,17 @@ def normalize_questions(data):
         return data
     return []
 
+def check_data_quality(questions):
+    """Chấm điểm chất lượng dữ liệu: Dữ liệu có đáp án sẽ được điểm cao hơn"""
+    if not questions: return 0
+    score = 0
+    for q in questions[:10]: # Kiểm tra 10 câu đầu
+        # Kiểm tra các trường chứa đáp án phổ biến
+        ans = str(q.get('correct_answer', q.get('correct', ''))).strip()
+        if ans and ans != '0': # Có đáp án
+            score += 1
+    return score
+
 @st.cache_data
 def load_tips():
     try:
@@ -87,67 +98,79 @@ def load_tips():
         return []
 
 @st.cache_data
-def load_questions_v3():
+def load_questions_v4():
     """
-    V3.0: Tự động tìm file (kể cả file (1)) và tự động cắt phần lỗi.
+    V4.0: Tự động tách file bị lỗi nối đuôi và chọn phần có dữ liệu tốt nhất (có đáp án).
     """
-    # 1. Tự động tìm file tiềm năng
+    # 1. Tự động tìm file
     candidates = [
         'dulieu_web_chuan.json', 
         'dulieu_web_chuan (1).json', 
-        'dulieu_web_chuan (2).json',
-        'data.json' # Fallback
+        'data.json'
     ]
-    
     file_path = None
-    # Ưu tiên các tên file chuẩn
     for f in candidates:
-        if os.path.exists(f):
-            # Kiểm tra nhanh kích thước để tránh file rỗng
-            if os.path.getsize(f) > 1024: 
-                file_path = f
-                break
+        if os.path.exists(f) and os.path.getsize(f) > 1024:
+            file_path = f
+            break
     
-    # Nếu không tìm thấy, quét tất cả file .json lớn trong thư mục
     if not file_path:
+        # Quét thư mục nếu không thấy tên chuẩn
         for f in os.listdir('.'):
-            if f.endswith('.json') and os.path.getsize(f) > 50000: # Lớn hơn 50KB khả năng cao là data
+            if f.endswith('.json') and os.path.getsize(f) > 50000:
                 file_path = f
                 break
-                
-    if not file_path:
-        return [], "Không tìm thấy file .json nào!"
 
-    # 2. Đọc và Sửa lỗi nội dung
+    if not file_path:
+        return [], "Không tìm thấy file .json!"
+
+    # 2. Đọc nội dung
     with open(file_path, 'r', encoding='utf-8') as f:
         content = f.read()
 
-    # Chiến thuật 1: Regex cắt đoạn giao nhau giữa 2 json ] {
-    # File của bạn có dạng: [ ... ] { "meta": ... }
-    # Ta sẽ lấy phần [ ... ]
-    match = re.search(r'\]\s*\{', content)
-    if match:
-        # Cắt lấy phần đầu tiên
-        clean_content = content[:match.start()+1]
-        try:
-            data = json.loads(clean_content)
-            return normalize_questions(data), f"Đã đọc file '{file_path}' (Chế độ cắt lỗi)"
-        except:
-            pass # Thử cách khác
+    potential_datasets = []
 
-    # Chiến thuật 2: Dựa vào thông báo lỗi của Python (fallback)
-    try:
-        data = json.loads(content)
-        return normalize_questions(data), f"Đã đọc file '{file_path}' (Chuẩn)"
-    except json.JSONDecodeError as e:
+    # --- PHÂN TÍCH VÀ TÁCH DỮ LIỆU ---
+    
+    # Thử tách bằng Regex (tìm đoạn nối giữa 2 json: ] { )
+    split_match = re.search(r'\]\s*\{', content)
+    
+    if split_match:
+        # Tìm thấy 2 phần!
+        part1_str = content[:split_match.start()+1]
+        part2_str = content[split_match.end()-1:] # Lấy từ dấu { trở đi
+        
         try:
-            # Cắt ngay tại vị trí lỗi
-            data = json.loads(content[:e.pos])
-            return normalize_questions(data), f"Đã đọc file '{file_path}' (Sửa lỗi dòng {e.lineno})"
-        except:
-            pass
+            d1 = normalize_questions(json.loads(part1_str))
+            potential_datasets.append({"data": d1, "source": "Phần đầu file", "score": check_data_quality(d1)})
+        except: pass
+        
+        try:
+            d2 = normalize_questions(json.loads(part2_str))
+            potential_datasets.append({"data": d2, "source": "Phần cuối file (Version 2)", "score": check_data_quality(d2)})
+        except: pass
 
-    return [], f"Đã tìm thấy file '{file_path}' nhưng không đọc được nội dung."
+    # Thử đọc toàn bộ (trường hợp file không lỗi hoặc lỗi nhẹ)
+    if not potential_datasets:
+        try:
+            d_full = normalize_questions(json.loads(content))
+            potential_datasets.append({"data": d_full, "source": "Toàn bộ file", "score": check_data_quality(d_full)})
+        except json.JSONDecodeError as e:
+            # Fallback: Cắt ngay tại lỗi
+            try:
+                d_cut = normalize_questions(json.loads(content[:e.pos]))
+                potential_datasets.append({"data": d_cut, "source": "Cắt lỗi tự động", "score": check_data_quality(d_cut)})
+            except: pass
+
+    # 3. CHỌN BỘ DỮ LIỆU TỐT NHẤT
+    if not potential_datasets:
+        return [], f"File '{file_path}' bị hỏng, không đọc được dữ liệu nào."
+    
+    # Sắp xếp theo điểm chất lượng (ưu tiên bộ có đáp án)
+    best_set = sorted(potential_datasets, key=lambda x: x['score'], reverse=True)[0]
+    
+    msg = f"Đã tải: {best_set['source']} từ '{file_path}' (Chất lượng: {best_set['score']}/10)"
+    return best_set['data'], msg
 
 def process_image(image_filename, tip_id):
     if not image_filename: return None
@@ -162,7 +185,6 @@ def process_image(image_filename, tip_id):
 # --- 5. GIAO DIỆN HỌC MẸO ---
 def render_tips_page(tips_data):
     st.header("💡 MẸO GIẢI NHANH")
-    
     col1, col2 = st.columns([3, 1])
     with col1:
         search = st.text_input("", placeholder="🔍 Tìm kiếm mẹo...")
@@ -177,7 +199,7 @@ def render_tips_page(tips_data):
     if not filtered_data:
         st.warning("Không tìm thấy mẹo nào!")
         return
-
+    
     if not search:
         categories = ["Tất cả"] + sorted(list(set([t['category'] for t in tips_data])))
         tabs = st.tabs(categories)
@@ -208,7 +230,6 @@ def display_tips_list(tips_list, show_answer, key_suffix=""):
             else:
                 display_line = line
             st.markdown(f"• {display_line}", unsafe_allow_html=True)
-        
         st.markdown("</div>", unsafe_allow_html=True)
         
         if tip.get('image'):
@@ -227,26 +248,22 @@ def display_tips_list(tips_list, show_answer, key_suffix=""):
                 st.session_state.bookmarks.discard(tip['id'])
         st.markdown("</div>", unsafe_allow_html=True)
 
-# --- 6. GIAO DIỆN 600 CÂU (V3) ---
+# --- 6. GIAO DIỆN 600 CÂU (V4) ---
 def render_questions_page(questions_data, status_msg):
     st.header("📝 LUYỆN THI 600 CÂU")
     
-    # Hiển thị trạng thái load file để debug
-    if "Đã đọc file" in status_msg:
-        st.success(f"✅ {status_msg} - Tổng số câu: {len(questions_data)}")
+    if "Đã tải" in status_msg:
+        st.success(f"✅ {status_msg} - Tổng: {len(questions_data)} câu")
     else:
         st.error(f"⚠️ {status_msg}")
         return
 
-    if not questions_data:
-        st.warning("File không chứa câu hỏi nào.")
-        return
+    if not questions_data: return
 
     total_questions = len(questions_data)
     
     # Điều hướng
     col_prev, col_idx, col_next = st.columns([1, 2, 1])
-    
     def change_question(new_index):
         st.session_state.current_question_index = new_index
         st.session_state.user_selected_answer = None 
@@ -262,8 +279,8 @@ def render_questions_page(questions_data, status_msg):
                 change_question(st.session_state.current_question_index + 1)
                 st.rerun()     
     with col_idx:
-        val_input = st.session_state.current_question_index + 1
-        selected_index = st.number_input("Đến câu số:", 1, total_questions, val_input)
+        val = st.session_state.current_question_index + 1
+        selected_index = st.number_input("Đến câu số:", 1, total_questions, val)
         if selected_index - 1 != st.session_state.current_question_index:
             change_question(selected_index - 1)
             st.rerun()
@@ -281,16 +298,16 @@ def render_questions_page(questions_data, status_msg):
     """, unsafe_allow_html=True)
 
     if current_q.get('image'):
-         # Xử lý ảnh: thử tìm trong images/
          q_img_path = os.path.join("images", current_q['image'])
          if os.path.exists(q_img_path):
              st.image(q_img_path, caption="Hình ảnh tình huống", width=500)
     
-    # Xử lý Đáp án
+    # Xử lý Đáp án linh hoạt (hỗ trợ nhiều định dạng)
     choices = current_q.get('choices', current_q.get('options', []))
+    
+    # Logic tìm đáp án đúng siêu mạnh
     correct_val = current_q.get('correct', current_q.get('correct_answer'))
     
-    # Xác định index đáp án đúng
     correct_idx = -1
     has_correct_data = False
     
@@ -298,32 +315,41 @@ def render_questions_page(questions_data, status_msg):
         correct_idx = correct_val 
         has_correct_data = True
     elif isinstance(correct_val, str) and correct_val.strip().isdigit():
-        correct_idx = int(correct_val) - 1
+        correct_idx = int(correct_val) 
+        # Nếu dữ liệu dùng index bắt đầu từ 1 (VD: "1", "2") thì trừ 1. Nếu file đã là index 0 thì giữ nguyên.
+        # Thường JSON hay dùng index 1 cho đáp án (1,2,3,4).
+        # Ta kiểm tra: Nếu đáp án là "4" mà chỉ có 3 lựa chọn -> chắc chắn là index 1-based (trừ 1 đi).
+        # Giả định mặc định là 1-based (trừ 1) nếu là chuỗi số.
+        if correct_idx > 0: correct_idx -= 1
         has_correct_data = True
     
-    # Form chọn
     selected_option = st.radio("Chọn đáp án:", options=choices, index=None, key=f"q_{st.session_state.current_question_index}")
 
     if selected_option:
         if not has_correct_data:
-             st.warning("⚠️ Câu hỏi này trong file dữ liệu chưa được nhập đáp án đúng.")
+             st.warning(f"⚠️ Dữ liệu câu này thiếu đáp án (Debug: val={correct_val})")
         else:
             try:
                 user_idx = choices.index(selected_option)
-                if user_idx == correct_idx:
+                # Logic so khớp
+                is_correct = False
+                # 1. So theo index
+                if user_idx == correct_idx: is_correct = True
+                
+                if is_correct:
                     st.success("✅ Chính xác!")
                 else:
                     st.error("❌ Sai rồi!")
-                    # Hiển thị đáp án đúng an toàn
-                    true_ans = "Không xác định"
+                    # Hiển thị đáp án đúng
+                    true_ans_text = "Không xác định"
                     if 0 <= correct_idx < len(choices):
-                        true_ans = choices[correct_idx]
+                        true_ans_text = choices[correct_idx]
                     else:
-                        true_ans = f"Đáp án số {correct_idx + 1}"
-                        
-                    st.info(f"👉 Đáp án đúng là: **{true_ans}**")
+                        # Fallback
+                        true_ans_text = f"Đáp án số {correct_idx + 1}"
+                    st.info(f"👉 Đáp án đúng là: **{true_ans_text}**")
             except:
-                st.error("Lỗi xử lý đáp án.")
+                st.error("Lỗi xử lý.")
 
         if current_q.get('explanation'):
              st.markdown(f"""<div class="explanation-box"><b>📖 Giải thích:</b><br>{current_q['explanation']}</div>""", unsafe_allow_html=True)
@@ -337,8 +363,7 @@ def main():
         return
 
     tips_data = load_tips()
-    # LOAD DATA V3
-    questions_data, load_status = load_questions_v3()
+    questions_data, load_status = load_questions_v4() # V4 Load
 
     with st.sidebar:
         st.title("🗂️ Menu")

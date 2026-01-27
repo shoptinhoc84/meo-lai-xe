@@ -56,7 +56,7 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-# --- 4. HÀM XỬ LÝ DỮ LIỆU (V5.0 - DEEP SCAN) ---
+# --- 4. HÀM XỬ LÝ DỮ LIỆU (V6.0 - DEEP MINER) ---
 
 def get_category_color(category):
     colors = {
@@ -68,7 +68,7 @@ def get_category_color(category):
     return "#616161"
 
 def normalize_questions(data):
-    """Đưa dữ liệu về dạng list câu hỏi chuẩn"""
+    """Chuẩn hóa dữ liệu về list"""
     if isinstance(data, dict) and 'questions' in data:
         return data['questions']
     if isinstance(data, list):
@@ -76,12 +76,12 @@ def normalize_questions(data):
     return []
 
 def check_data_quality(questions):
-    """Chấm điểm chất lượng dữ liệu: Dữ liệu có đáp án sẽ được điểm cao hơn"""
+    """Chấm điểm: Ưu tiên bộ dữ liệu có đáp án"""
     if not questions: return 0
     score = 0
-    # Kiểm tra mẫu 20 câu đầu
-    for q in questions[:20]: 
-        # Kiểm tra tất cả các trường có thể chứa đáp án
+    # Quét 50 câu đầu để kiểm tra
+    for q in questions[:50]: 
+        # Kiểm tra mọi biến thể của trường đáp án
         ans = str(q.get('correct_answer', q.get('correct', q.get('answer', '')))).strip()
         if ans and ans != '0' and ans != '': 
             score += 1
@@ -99,17 +99,12 @@ def load_tips():
         return []
 
 @st.cache_data
-def load_questions_v5():
+def load_questions_v6():
     """
-    V5.0: Deep Scan - Sử dụng raw_decode để đọc dữ liệu bất chấp lỗi đuôi file.
+    V6.0: Deep Miner - Tìm kiếm trực tiếp block 'questions': [...] để bỏ qua phần lỗi.
     """
-    # 1. Tự động tìm file
-    candidates = [
-        'dulieu_web_chuan.json', 
-        'dulieu_web_chuan (1).json', 
-        'dulieu_web_chuan (2).json', 
-        'data.json'
-    ]
+    # 1. Tìm file
+    candidates = ['dulieu_web_chuan.json', 'dulieu_web_chuan (1).json', 'dulieu_web_chuan (2).json', 'data.json']
     file_path = None
     for f in candidates:
         if os.path.exists(f) and os.path.getsize(f) > 1024:
@@ -117,7 +112,6 @@ def load_questions_v5():
             break
             
     if not file_path:
-        # Fallback quét thư mục
         for f in os.listdir('.'):
             if f.endswith('.json') and os.path.getsize(f) > 50000:
                 file_path = f
@@ -126,68 +120,64 @@ def load_questions_v5():
     if not file_path:
         return [], "Không tìm thấy file .json!", None
 
-    # 2. Đọc nội dung
+    # 2. Đọc file
     with open(file_path, 'r', encoding='utf-8') as f:
         content = f.read()
 
     potential_datasets = []
 
-    # --- KỸ THUẬT 1: TÁCH FILE BẰNG REGEX ---
-    split_match = re.search(r'\]\s*\{', content)
+    # --- CHIẾN THUẬT 1: TÌM 'questions': [ ---
+    # Đây là chìa khóa để lấy bộ dữ liệu V2.0 xịn
+    key_pattern = '"questions"'
+    start_search = 0
     
-    if split_match:
-        # PHẦN 1: Thường là data cũ
-        try:
-            part1_str = content[:split_match.start()+1]
-            d1 = normalize_questions(json.loads(part1_str))
-            s1 = check_data_quality(d1)
-            potential_datasets.append({"data": d1, "source": "Phần 1 (Data cũ)", "score": s1})
-        except: pass
+    while True:
+        idx = content.find(key_pattern, start_search)
+        if idx == -1: break
         
-        # PHẦN 2: Thường là data V2.0 (Hay bị lỗi đuôi)
-        try:
-            part2_str = content[split_match.end()-1:]
-            # Dùng raw_decode để bỏ qua rác ở cuối file
-            obj, _ = json.JSONDecoder().raw_decode(part2_str)
-            d2 = normalize_questions(obj)
-            s2 = check_data_quality(d2)
-            # Tăng trọng số cho phần 2 vì nó thường mới hơn
-            potential_datasets.append({"data": d2, "source": "Phần 2 (Data V2.0)", "score": s2 + 0.1})
-        except: 
-            # Nếu raw_decode fail, thử loads thường
+        # Tìm dấu [ mở đầu mảng
+        array_start = content.find('[', idx)
+        if array_start != -1:
             try:
-                d2 = normalize_questions(json.loads(part2_str))
-                s2 = check_data_quality(d2)
-                potential_datasets.append({"data": d2, "source": "Phần 2 (Data V2.0)", "score": s2 + 0.1})
+                # Dùng raw_decode để parse mảng JSON bắt đầu từ dấu [
+                obj, end_idx = json.JSONDecoder().raw_decode(content, idx=array_start)
+                data = normalize_questions(obj)
+                score = check_data_quality(data)
+                potential_datasets.append({
+                    "data": data, 
+                    "source": f"Bộ dữ liệu 'questions' (tìm thấy tại ký tự {idx})", 
+                    "score": score + 5 # Cộng điểm ưu tiên cho bộ này
+                })
             except: pass
+        
+        start_search = idx + len(key_pattern)
 
-    # --- KỸ THUẬT 2: ĐỌC TOÀN BỘ (FALLBACK) ---
+    # --- CHIẾN THUẬT 2: PARSE TRUYỀN THỐNG (BACKUP) ---
     if not potential_datasets:
-        try:
-            d_full = normalize_questions(json.loads(content))
-            s_full = check_data_quality(d_full)
-            potential_datasets.append({"data": d_full, "source": "Toàn bộ file", "score": s_full})
-        except json.JSONDecodeError as e:
+        # Thử regex tách 2 file
+        split_match = re.search(r'\]\s*\{', content)
+        if split_match:
             try:
-                # Cắt ngay tại điểm lỗi
-                d_cut = normalize_questions(json.loads(content[:e.pos]))
-                s_cut = check_data_quality(d_cut)
-                potential_datasets.append({"data": d_cut, "source": "Cắt lỗi tự động", "score": s_cut})
+                d1 = normalize_questions(json.loads(content[:split_match.start()+1]))
+                potential_datasets.append({"data": d1, "source": "Phần đầu file", "score": check_data_quality(d1)})
             except: pass
-
-    # 3. CHỌN BỘ DỮ LIỆU TỐT NHẤT
+            
+    # 3. CHỐT BỘ DỮ LIỆU TỐT NHẤT
     if not potential_datasets:
-        return [], f"File '{file_path}' lỗi cấu trúc nặng.", None
+        # Last resort: Đọc toàn bộ
+        try:
+            d_all = normalize_questions(json.loads(content))
+            return d_all, "Đọc toàn bộ file (Mode cơ bản)", d_all[0] if d_all else {}
+        except:
+             return [], f"Không đọc được dữ liệu nào từ '{file_path}'.", None
     
-    # Sắp xếp chọn bộ có điểm cao nhất
+    # Sắp xếp theo điểm chất lượng cao nhất
     best_set = sorted(potential_datasets, key=lambda x: x['score'], reverse=True)[0]
     
-    msg = f"Đã tải: {best_set['source']} (Điểm: {best_set['score']:.1f})"
+    msg = f"Đã kích hoạt {best_set['source']} - Chất lượng: {best_set['score']} điểm"
+    sample = best_set['data'][0] if best_set['data'] else {}
     
-    # Trả về thêm sample data để debug nếu điểm thấp
-    sample_item = best_set['data'][0] if best_set['data'] else {}
-    
-    return best_set['data'], msg, sample_item
+    return best_set['data'], msg, sample
 
 def process_image(image_filename, tip_id):
     if not image_filename: return None
@@ -265,22 +255,17 @@ def display_tips_list(tips_list, show_answer, key_suffix=""):
                 st.session_state.bookmarks.discard(tip['id'])
         st.markdown("</div>", unsafe_allow_html=True)
 
-# --- 6. GIAO DIỆN 600 CÂU (V5) ---
+# --- 6. GIAO DIỆN 600 CÂU (V6) ---
 def render_questions_page(questions_data, status_msg, sample_item):
     st.header("📝 LUYỆN THI 600 CÂU")
     
-    # Logic kiểm tra trạng thái
-    is_success = "Điểm:" in status_msg and float(status_msg.split('Điểm:')[1].replace(')', '')) > 0.5
-    
-    if is_success:
-        st.success(f"✅ {status_msg} - {len(questions_data)} câu")
+    if "Chất lượng" in status_msg and float(status_msg.split('Chất lượng:')[1].split('điểm')[0]) > 2:
+        st.success(f"✅ {status_msg} - Đã tải {len(questions_data)} câu hỏi.")
     else:
         st.warning(f"⚠️ {status_msg}")
-        # DEBUG INFO: Hiển thị nếu không tìm thấy đáp án
-        with st.expander("🛠️ Xem chi tiết cấu trúc dữ liệu (Debug)", expanded=True):
-            st.write("Dữ liệu đang được đọc nhưng không tìm thấy trường đáp án. Dưới đây là cấu trúc của 1 câu hỏi:")
-            st.json(sample_item)
-            st.info("Hãy kiểm tra xem trường chứa đáp án tên là gì (ví dụ: 'correct', 'correct_answer', 'ans'...) để cập nhật code.")
+        if sample_item:
+            with st.expander("🛠️ Debug Dữ liệu", expanded=False):
+                st.json(sample_item)
 
     if not questions_data: return
 
@@ -326,10 +311,10 @@ def render_questions_page(questions_data, status_msg, sample_item):
          if os.path.exists(q_img_path):
              st.image(q_img_path, caption="Hình ảnh tình huống", width=500)
     
-    # --- XỬ LÝ ĐÁP ÁN (V5: Tìm mọi ngóc ngách) ---
+    # --- XỬ LÝ ĐÁP ÁN (AUTO DETECT) ---
     choices = current_q.get('choices', current_q.get('options', []))
     
-    # Tìm đáp án trong nhiều tên trường khác nhau
+    # Tìm trường đáp án (hỗ trợ nhiều tên)
     correct_val = current_q.get('correct', current_q.get('correct_answer', current_q.get('answer')))
     
     correct_idx = -1
@@ -339,30 +324,27 @@ def render_questions_page(questions_data, status_msg, sample_item):
         correct_idx = correct_val 
         has_correct_data = True
     elif isinstance(correct_val, str) and correct_val.strip().isdigit():
-        correct_idx = int(correct_val) 
-        # Giả định: Nếu đáp án > 0 và là chuỗi số, file dùng 1-based index
-        if correct_idx > 0: 
-            correct_idx -= 1
+        correct_idx = int(correct_val)
+        # Giả định chuẩn: Nếu đáp án > 0 và là số chuỗi, file dùng 1-based index
+        if correct_idx > 0: correct_idx -= 1
         has_correct_data = True
     elif isinstance(correct_val, str) and correct_val:
-        # Trường hợp đáp án là text
+        # Hỗ trợ đáp án dạng text
         try:
-            # Thử tìm text trong list choices
-            # Xử lý text (lowercase, strip) để so sánh
-            norm_ans = correct_val.lower().strip()
-            for idx, c in enumerate(choices):
-                if norm_ans in c.lower():
-                    correct_idx = idx
-                    has_correct_data = True
-                    break
+             norm_ans = correct_val.lower().strip()
+             for i, c in enumerate(choices):
+                 if norm_ans in str(c).lower():
+                     correct_idx = i
+                     has_correct_data = True
+                     break
         except: pass
 
-    # Radio button
+    # Radio
     selected_option = st.radio("Chọn đáp án:", options=choices, index=None, key=f"q_{st.session_state.current_question_index}")
 
     if selected_option:
         if not has_correct_data:
-             st.warning(f"⚠️ Không tìm thấy đáp án trong dữ liệu (Giá trị đọc được: {correct_val})")
+             st.warning(f"⚠️ Không tìm thấy đáp án trong dữ liệu (Giá trị raw: {correct_val})")
         else:
             try:
                 user_idx = choices.index(selected_option)
@@ -370,10 +352,11 @@ def render_questions_page(questions_data, status_msg, sample_item):
                     st.success("✅ Chính xác!")
                 else:
                     st.error("❌ Sai rồi!")
+                    # Hiển thị đáp án đúng
                     true_ans_text = choices[correct_idx] if 0 <= correct_idx < len(choices) else f"Đáp án {correct_idx + 1}"
                     st.info(f"👉 Đáp án đúng là: **{true_ans_text}**")
             except:
-                st.error("Lỗi xử lý đáp án.")
+                st.error("Lỗi so sánh đáp án.")
 
         if current_q.get('explanation'):
              st.markdown(f"""<div class="explanation-box"><b>📖 Giải thích:</b><br>{current_q['explanation']}</div>""", unsafe_allow_html=True)
@@ -387,8 +370,8 @@ def main():
         return
 
     tips_data = load_tips()
-    # GỌI HÀM V5
-    questions_data, load_status, sample_item = load_questions_v5() 
+    # GỌI HÀM V6
+    questions_data, load_status, sample_item = load_questions_v6() 
 
     with st.sidebar:
         st.title("🗂️ Menu")

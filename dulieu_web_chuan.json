@@ -1,13 +1,17 @@
 {
   "meta": {
-    "title": "600 Câu Hỏi Sát Hạch Lái Xe Cơ Giới Đường Bộ",
-    "year": 2025,
-    "total_questions": 600
+    "title": "600 Câu Hỏi Phân Loại Nâng Cao",
+    "description": "Câu hỏi được phân loại theo 8 danh mục chính và gắn tag",
+    "total_questions": 600,
+    "categories_count": 8,
+    "version": "2.0"
   },
   "questions": [
     {
       "id": 1,
       "chapter": 1,
+      "category": "khái_niệm",
+      "tags": ["làn_đường", "phần_đường", "khái_niệm_cơ_bản"],
       "question": "Làn đường là gì?",
       "choices": [
         "Là một phần của phần đường xe chạy được chia theo chiều dọc của đường, sử dụng cho xe chạy.",
@@ -15,36 +19,7 @@
         "Là đường cho xe ô tô chạy, dừng, đỗ an toàn."
       ],
       "correct": 1,
-      "explanation": "Theo khoản 3.4 Điều 3 Luật Giao thông đường bộ 2008, làn đường là một phần của phần đường xe chạy được chia theo chiều dọc của đường, có bề rộng đủ cho xe chạy an toàn.",
+      "explanation": "Khái niệm làn đường theo Luật Giao thông đường bộ.",
       "danger": false,
+      "has_image": false,
       "image": null
-    },
-    {
-      "id": 2,
-      "chapter": 1,
-      "question": "Khổ giới hạn của đường bộ được hiểu như thế nào là đúng?",
-      "choices": [
-        "Khổ giới hạn của đường bộ là khoảng tròn có kích thước giới hạn về chiều rộng, chiều cao của đường bộ để các xe, bao gồm cả hàng hóa xếp trên xe đi qua được an toàn và được xác định theo quy chuẩn, tiêu chuẩn kỹ thuật của đường bộ.",
-        "Là khoảng tròn có kích thước giới hạn về chiều rộng của đường, cầu, bến phà, hầm trên đường bộ để các xe kể cả hàng hóa xếp trên xe đi qua được an toàn.",
-        "Là khoảng tròn có kích thước giới hạn về chiều cao của cầu, bến phà, hầm trên đường bộ để các xe đi qua được an toàn."
-      ],
-      "correct": 0,
-      "explanation": "Khổ giới hạn đường bộ bao gồm cả chiều rộng và chiều cao theo quy định tại khoản 3.12 Điều 3 Luật Giao thông đường bộ 2008.",
-      "danger": false,
-      "image": null
-    },
-    {
-      "id": 15,
-      "chapter": 1,
-      "question": "Đỗ xe được hiểu như thế nào là đúng?",
-      "choices": [
-        "Là trạng thái đứng yên của xe có giới hạn thời gian trong một khoảng thời gian cần thiết đủ để cho người lên, xuống xe đó, xếp dỡ hàng hóa hoặc thực hiện công việc khác.",
-        "Là trạng thái đứng yên của xe không giới hạn thời gian. Khi đỗ xe, người điều khiển phương tiện tham gia giao thông đường bộ chỉ được rời khỏi xe khi đã sử dụng phanh đỗ xe hoặc thực hiện biện pháp an toàn khác. Xe đỗ trên đoạn đường dốc phải đánh lái về phía lề đường, chèn bánh."
-      ],
-      "correct": 1,
-      "explanation": "Đỗ xe là trạng thái dừng xe không giới hạn thời gian. Khi đỗ phải thực hiện các biện pháp an toàn.",
-      "danger": true,
-      "image": null
-    }
-  ]
-}

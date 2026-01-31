@@ -191,7 +191,7 @@ def process_image(image_filename, tip_id):
 
 # --- 5. GIAO DIỆN HỌC MẸO ---
 def render_tips_page(tips_data):
-    st.header("💡 MẸO GIẢI NHANH")
+    st.header("💡 MẸO GIẢI NHANH by SHOPTINHOC")
     col1, col2 = st.columns([3, 1])
     with col1:
         search = st.text_input("", placeholder="🔍 Tìm kiếm mẹo...")

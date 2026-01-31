@@ -6,7 +6,7 @@ from PIL import Image
 
 # --- 1. CẤU HÌNH TRANG ---
 st.set_page_config(
-    page_title="Ôn Thi GPLX Pro",
+    page_title="Ôn Thi GPLX SHOPTINHOC",
     page_icon="🚗",
     layout="wide",
     initial_sidebar_state="expanded"

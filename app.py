@@ -1,11 +1,11 @@
 import streamlit as st
 import json
 import os
-from PIL import Image, ImageOps  # Thêm ImageOps để xử lý xoay ảnh
+from PIL import Image, ImageOps
 
 # --- 1. CẤU HÌNH TRANG ---
 st.set_page_config(
-    page_title="Ôn Thi GPLX SHOPTINHOC",
+    page_title="Ôn Thi GPLX",
     page_icon="🚗",
     layout="wide"
 )
@@ -31,7 +31,19 @@ st.markdown("""
         border-left: 5px solid #007bff; margin-bottom: 20px;
     }
     .highlight { background-color: #ffebee; color: #c62828; font-weight: bold; padding: 2px 6px; border-radius: 4px; }
-    .stButton button { width: 100%; }
+    .stButton button { width: 100%; font-weight: 500; }
+    /* Căn giữa ảnh và caption */
+    div[data-testid="stImage"] {
+        display: block;
+        margin-left: auto;
+        margin-right: auto;
+    }
+    div[data-testid="stImage"] > img {
+        width: auto;
+        max-width: 100%; 
+        max-height: 500px;
+        object-fit: contain;
+    }
 </style>
 """, unsafe_allow_html=True)
 
@@ -54,22 +66,29 @@ def load_600_questions():
     except FileNotFoundError:
         return None
 
-def load_image_fixed(image_name, folder="images"):
+def load_image_smart(image_name, folder_priority=[]):
     """
-    Hàm load ảnh ĐẶC TRỊ LỖI LẬT NGƯỢC
-    Sử dụng ImageOps.exif_transpose để xoay ảnh về đúng chiều chuẩn.
+    Hàm load ảnh thông minh:
+    1. Tìm trong danh sách folder ưu tiên (images_a1, images...)
+    2. Tự động xoay ảnh nếu bị ngược (ImageOps.exif_transpose)
     """
     if not image_name: return None
     
-    img_path = os.path.join(folder, image_name)
-    
-    if os.path.exists(img_path):
+    # Duyệt qua các folder để tìm ảnh
+    found_path = None
+    for folder in folder_priority:
+        path = os.path.join(folder, image_name)
+        if os.path.exists(path):
+            found_path = path
+            break
+            
+    if found_path:
         try:
-            image = Image.open(img_path)
-            # DÒNG QUAN TRỌNG NHẤT: Xoay ảnh dựa trên thông tin EXIF
+            image = Image.open(found_path)
+            # Xoay ảnh đúng chiều
             image = ImageOps.exif_transpose(image)
             return image
-        except Exception as e:
+        except:
             return None
     return None
 
@@ -78,7 +97,7 @@ def render_tips_page(data, is_oto):
     st.header(f"📖 Mẹo Thi Lý Thuyết {'Ô Tô' if is_oto else 'Xe Máy'}")
     
     if not data:
-        st.warning("Chưa có dữ liệu mẹo.")
+        st.warning("Chưa có dữ liệu mẹo. Vui lòng kiểm tra file data.json hoặc tips_a1.json")
         return
 
     categories = list(set([item.get('category', 'Khác') for item in data]))
@@ -90,9 +109,13 @@ def render_tips_page(data, is_oto):
 
     for tip in filtered_data:
         st.markdown(f"""<div class="tip-card"><h3>{tip.get('title', 'Mẹo')}</h3>""", unsafe_allow_html=True)
-        cols = st.columns([2, 1])
+        
+        # --- THAY ĐỔI BỐ CỤC ---
+        # Thay vì chia cột 2:1 (bị dồn ảnh), ta chia 1:1 hoặc để ảnh phía dưới nếu màn hình nhỏ
+        cols = st.columns([1, 1]) # Chia đều 50-50 để ảnh to hơn
         
         with cols[0]:
+            st.write("**Nội dung:**")
             for line in tip.get('content', []):
                 parts = line.split("=>")
                 if len(parts) > 1:
@@ -101,13 +124,20 @@ def render_tips_page(data, is_oto):
 
         with cols[1]:
             if tip.get('image'):
-                folder_img = "images" if is_oto else "images_a1"
-                # Gọi hàm load ảnh đã fix lỗi
-                img_obj = load_image_fixed(tip['image'], folder=folder_img)
+                # Logic tìm ảnh: Nếu là xe máy, ưu tiên tìm trong 'images_a1', nếu không thấy thì tìm 'images'
+                # Nếu là ô tô, ưu tiên 'images'
+                folders = ["images", "images_a1"] if is_oto else ["images_a1", "images"]
+                
+                img_obj = load_image_smart(tip['image'], folder_priority=folders)
                 if img_obj:
+                    # use_container_width=True giúp ảnh tự giãn đầy cột (không bị bé tí)
                     st.image(img_obj, use_container_width=True)
+                else:
+                    # Ẩn cảnh báo nếu không thấy ảnh để giao diện đỡ rối, hoặc hiện mờ
+                    st.caption(f"(Thiếu ảnh: {tip['image']})")
         
         st.markdown("</div>", unsafe_allow_html=True)
+
 
 # --- 6. GIAO DIỆN: LUYỆN THI 600 CÂU ---
 def render_exam_page():
@@ -135,7 +165,7 @@ def render_exam_page():
                 st.session_state.show_answer = False
                 st.rerun()
     with c2:
-        new_idx = st.number_input("Đến câu:", 1, total_q, st.session_state.current_q_index + 1)
+        new_idx = st.number_input("Câu số:", 1, total_q, st.session_state.current_q_index + 1)
         if new_idx - 1 != st.session_state.current_q_index:
             st.session_state.current_q_index = new_idx - 1
             st.session_state.show_answer = False
@@ -150,16 +180,35 @@ def render_exam_page():
     </div>
     """, unsafe_allow_html=True)
 
-    # Hiển thị ảnh (Đã fix lỗi lật)
+    # Hiển thị ảnh (Căn giữa, không set cứng width=500 nữa)
     if q.get('image'):
-        img_obj = load_image_fixed(q['image'], folder="images")
+        # Luôn tìm trong folder images cho phần 600 câu
+        img_obj = load_image_smart(q['image'], folder_priority=["images"])
         if img_obj:
-            st.image(img_obj, caption=f"Hình câu {q['id']}", width=500)
+            # Không set width cố định, cho ảnh tự nhiên nhưng giới hạn bởi CSS max-height
+            st.image(img_obj)
         elif "Sa hình" in q.get('category', '') or "Biển báo" in q.get('category', ''):
-            st.warning(f"Không tìm thấy ảnh: {q['image']}")
+            st.warning(f"Chưa có ảnh: {q['image']}")
 
     # Chọn đáp án
     st.write("**Chọn đáp án:**")
+    # CSS tùy chỉnh cho Radio button to hơn một chút
+    st.markdown("""
+    <style>
+    div[role="radiogroup"] > label > div:first-child {
+        background-color: #f0f2f6;
+        border: 1px solid #d1d5db;
+        padding: 10px;
+        border-radius: 8px;
+        width: 100%;
+        margin-bottom: 5px;
+    }
+    div[role="radiogroup"] > label > div:first-child:hover {
+        background-color: #e2e8f0;
+    }
+    </style>
+    """, unsafe_allow_html=True)
+    
     user_choice = st.radio("Answers", q['options'], index=None, key=f"q_{q['id']}", label_visibility="collapsed")
 
     if st.button("Kiểm tra kết quả", type="primary"):
@@ -193,7 +242,7 @@ def main():
 
         mode = st.radio("Chế độ:", ["📖 Học Mẹo", "📝 Luyện Thi (600 câu)"])
         st.write("---")
-        st.caption("Ver 4.0 - Fix EXIF Rotation")
+        st.caption("Ver 5.0 - Giao diện Fix")
 
     is_oto = "Ô tô" in st.session_state.license_type
 

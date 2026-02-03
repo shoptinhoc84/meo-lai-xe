@@ -1,6 +1,7 @@
 import streamlit as st
 import json
 import os
+from PIL import Image
 
 # --- 1. CẤU HÌNH TRANG ---
 st.set_page_config(
@@ -9,7 +10,7 @@ st.set_page_config(
     layout="wide"
 )
 
-# --- 2. KHỞI TẠO STATE (Lưu trạng thái) ---
+# --- 2. KHỞI TẠO STATE ---
 if 'license_type' not in st.session_state:
     st.session_state.license_type = "Ô tô (B1, B2, C...)"
 # State cho phần Luyện Thi 600 câu
@@ -40,7 +41,7 @@ st.markdown("""
 
 @st.cache_data
 def load_tips_data(license_type):
-    """Load dữ liệu Mẹo thi (Code cũ)"""
+    """Load dữ liệu Mẹo thi"""
     try:
         if "Ô tô" in license_type:
             file_path = 'data.json'
@@ -50,48 +51,41 @@ def load_tips_data(license_type):
         with open(file_path, 'r', encoding='utf-8') as f:
             return json.load(f)
     except FileNotFoundError:
-        st.error(f"Không tìm thấy file {file_path}. Vui lòng kiểm tra lại.")
         return []
 
 @st.cache_data
 def load_600_questions():
-    """Load dữ liệu 600 câu (Code mới)"""
+    """Load dữ liệu 600 câu"""
     try:
-        # Nhớ đổi tên file 600 câu thành dulieu_600_cau.json
+        # File này cần nằm cùng thư mục app.py
         with open('dulieu_600_cau.json', 'r', encoding='utf-8') as f:
             return json.load(f)
     except FileNotFoundError:
         return None
 
-def get_image_path_string(image_name, is_oto_mode=True, is_exam_mode=False):
+def load_image_with_pil(image_name, folder="images"):
     """
-    Hàm xử lý ảnh KHÔNG DÙNG PIL để tránh bị lật ngược.
-    Trả về đường dẫn file (string) để Streamlit tự xử lý.
+    Hàm load ảnh sử dụng PIL (Giống code cũ của bạn).
+    Cách này sẽ hiển thị ảnh đúng như bạn mong muốn.
     """
     if not image_name: return None
     
-    # Xác định thư mục ảnh
-    if is_exam_mode:
-        # Chế độ thi 600 câu: dùng chung thư mục images
-        folder = "images" 
-    else:
-        # Chế độ học mẹo: giữ logic cũ (images cho Oto, images_a1 cho Xe máy)
-        folder = "images" if is_oto_mode else "images_a1"
-    
-    # Tạo đường dẫn
     img_path = os.path.join(folder, image_name)
     
-    # Kiểm tra file có tồn tại không
     if os.path.exists(img_path):
-        return img_path
-    
+        try:
+            return Image.open(img_path)
+        except:
+            return None
     return None
 
-# --- 5. GIAO DIỆN: HỌC MẸO (Code từ file cũ) ---
+# --- 5. GIAO DIỆN: HỌC MẸO ---
 def render_tips_page(data, is_oto):
     st.header(f"📖 Mẹo Thi Lý Thuyết {'Ô Tô' if is_oto else 'Xe Máy'}")
     
-    if not data: return
+    if not data:
+        st.warning("Chưa có dữ liệu mẹo.")
+        return
 
     # Filter danh mục
     categories = list(set([item.get('category', 'Khác') for item in data]))
@@ -102,7 +96,6 @@ def render_tips_page(data, is_oto):
         filtered_data = data
 
     for tip in filtered_data:
-        # Tạo Card cho mỗi mẹo
         st.markdown(f"""<div class="tip-card"><h3>{tip.get('title', 'Mẹo')}</h3>""", unsafe_allow_html=True)
         
         cols = st.columns([2, 1])
@@ -111,7 +104,6 @@ def render_tips_page(data, is_oto):
         with cols[0]:
             content = tip.get('content', [])
             for line in content:
-                # Xử lý highlight text (giữ logic cũ)
                 parts = line.split("=>")
                 if len(parts) > 1:
                     display_line = f"{parts[0]} => <span class='highlight'>{parts[1]}</span>"
@@ -119,18 +111,20 @@ def render_tips_page(data, is_oto):
                     display_line = line
                 st.markdown(f"• {display_line}", unsafe_allow_html=True)
 
-        # Cột hình ảnh (SỬA LỖI LẬT ẢNH)
+        # Cột hình ảnh (Dùng PIL)
         with cols[1]:
             if tip.get('image'):
-                # Gọi hàm lấy đường dẫn String
-                img_path = get_image_path_string(tip['image'], is_oto_mode=is_oto, is_exam_mode=False)
-                if img_path:
-                    st.image(img_path, use_container_width=True)
+                # Xác định folder ảnh cho Mẹo
+                folder_img = "images" if is_oto else "images_a1"
+                img_obj = load_image_with_pil(tip['image'], folder=folder_img)
+                
+                if img_obj:
+                    st.image(img_obj, use_container_width=True)
         
         st.markdown("</div>", unsafe_allow_html=True)
 
 
-# --- 6. GIAO DIỆN: LUYỆN THI 600 CÂU (Code mới thêm) ---
+# --- 6. GIAO DIỆN: LUYỆN THI 600 CÂU ---
 def render_exam_page():
     st.header("📝 Luyện Tập 600 Câu Hỏi")
     
@@ -138,7 +132,6 @@ def render_exam_page():
     
     if not questions:
         st.error("⚠️ LỖI: Chưa tìm thấy file `dulieu_600_cau.json`.")
-        st.info("Hãy tải file JSON 600 câu về, đổi tên thành 'dulieu_600_cau.json' và đặt cạnh file app.py")
         return
 
     total_q = len(questions)
@@ -174,14 +167,14 @@ def render_exam_page():
     </div>
     """, unsafe_allow_html=True)
 
-    # --- Hiển thị ảnh (SỬA LỖI LẬT ẢNH) ---
+    # --- Hiển thị ảnh (Dùng PIL để đúng chiều) ---
     if q.get('image'):
-        # Mode thi = True để luôn tìm trong folder 'images'
-        img_path = get_image_path_string(q['image'], is_oto_mode=True, is_exam_mode=True)
-        if img_path:
-            st.image(img_path, caption=f"Hình minh họa câu {q['id']}", width=500)
+        # Mode thi: Luôn lấy từ thư mục "images"
+        img_obj = load_image_with_pil(q['image'], folder="images")
+        
+        if img_obj:
+            st.image(img_obj, caption=f"Hình minh họa câu {q['id']}", width=500)
         else:
-            # Chỉ báo lỗi nếu là câu hỏi hình ảnh
             if "Sa hình" in q.get('category', '') or "Biển báo" in q.get('category', ''):
                 st.warning(f"⚠️ Không tìm thấy ảnh: {q['image']} trong thư mục images/")
 
@@ -211,7 +204,7 @@ def render_exam_page():
             st.info(f"👉 Đáp án đúng: **{q['correct_answer']}**")
 
 
-# --- 7. MAIN APP (Sidebar & Routing) ---
+# --- 7. MAIN APP ---
 def main():
     with st.sidebar:
         st.title("🗂️ ÔN THI GPLX")
@@ -224,17 +217,13 @@ def main():
             ["Ô tô (B1, B2, C...)", "Xe máy (A1, A2)"]
         )
         
-        # Reset khi đổi loại bằng
         if current_license != old_license:
             st.session_state.license_type = current_license
             st.cache_data.clear()
             st.rerun()
 
-        # Menu điều hướng
         mode = st.radio("Chế độ:", ["📖 Học Mẹo", "📝 Luyện Thi (600 câu)"])
-        
         st.write("---")
-        st.caption("Phiên bản: 3.0 (Fixed Image Flip)")
 
     is_oto = "Ô tô" in st.session_state.license_type
 

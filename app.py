@@ -1,11 +1,12 @@
 import streamlit as st
 import json
 import os
+import time  # <--- THÊM THƯ VIỆN NÀY ĐỂ TẠO ĐỘ TRỄ
 from PIL import Image, ImageOps
 
 # --- 1. CẤU HÌNH TRANG ---
 st.set_page_config(
-    page_title="GPLX Pro - V31 Dashboard",
+    page_title="GPLX Pro - V32 Auto Next",
     page_icon="🚗",
     layout="wide",
     initial_sidebar_state="collapsed"
@@ -13,15 +14,18 @@ st.set_page_config(
 
 # --- 2. KHỞI TẠO STATE ---
 if 'page' not in st.session_state:
-    st.session_state.page = "home" # home, exam, tips
+    st.session_state.page = "home"
 if 'license_type' not in st.session_state:
     st.session_state.license_type = "Ô tô (B1, B2, C...)"
 if 'current_q_index' not in st.session_state:
     st.session_state.current_q_index = 0
 if 'exam_category' not in st.session_state:
     st.session_state.exam_category = "Tất cả"
+# State cho Auto Next (Mặc định là Tắt)
+if 'auto_next' not in st.session_state:
+    st.session_state.auto_next = False
 
-# --- 3. CSS GIAO DIỆN HIỆN ĐẠI (DASHBOARD UI) ---
+# --- 3. CSS GIAO DIỆN ---
 st.markdown("""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap');
@@ -33,45 +37,29 @@ st.markdown("""
         padding-bottom: 6rem !important;
     }
 
-    /* --- HERO SECTION (TRANG CHỦ) --- */
+    /* HERO SECTION */
     .hero-card {
         background: linear-gradient(135deg, #4f46e5 0%, #3b82f6 100%);
-        padding: 30px;
-        border-radius: 24px;
-        color: white;
-        text-align: center;
-        margin-bottom: 30px;
+        padding: 30px; border-radius: 24px; color: white;
+        text-align: center; margin-bottom: 30px;
         box-shadow: 0 10px 25px -5px rgba(79, 70, 229, 0.4);
     }
     .hero-title { font-size: 2rem; font-weight: 800; margin-bottom: 10px; }
     .hero-subtitle { font-size: 1.1rem; opacity: 0.9; font-weight: 500; }
 
-    /* --- ACTION CARDS (NÚT BẤM TO) --- */
+    /* ACTION CARDS */
     .action-card {
-        background: white;
-        padding: 25px;
-        border-radius: 20px;
-        border: 1px solid #e2e8f0;
-        box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
-        text-align: center;
-        cursor: pointer;
-        transition: all 0.3s ease;
-        height: 100%;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
+        background: white; padding: 25px; border-radius: 20px;
+        border: 1px solid #e2e8f0; text-align: center; cursor: pointer;
+        transition: all 0.3s ease; height: 100%;
+        display: flex; flex-direction: column; align-items: center; justify-content: center;
     }
-    .action-card:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 15px 30px -5px rgba(0,0,0,0.1);
-        border-color: #6366f1;
-    }
+    .action-card:hover { transform: translateY(-5px); border-color: #6366f1; }
     .icon { font-size: 3rem; margin-bottom: 15px; }
-    .card-title { font-size: 1.2rem; font-weight: 700; color: #1e293b; margin-bottom: 5px; }
+    .card-title { font-size: 1.2rem; font-weight: 700; color: #1e293b; }
     .card-desc { font-size: 0.9rem; color: #64748b; }
 
-    /* --- CÁC THÀNH PHẦN CŨ (GIỮ NGUYÊN CSS TỐI ƯU) --- */
+    /* GENERAL UI */
     .top-nav-container {
         background: white; padding: 10px; border-radius: 12px;
         box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); margin-bottom: 15px;
@@ -92,7 +80,7 @@ st.markdown("""
         color: #0f172a !important; line-height: 1.5 !important; margin-top: 5px !important;
     }
     
-    /* ĐÁP ÁN TO RÕ */
+    /* ĐÁP ÁN */
     div[data-testid="stRadio"] > label { display: none; }
     div[role="radiogroup"] { gap: 16px; display: flex; flex-direction: column; }
     div[data-testid="stRadio"] div[role="radiogroup"] > label {
@@ -158,161 +146,130 @@ def get_category_border(category):
     }
     return borders.get(category, "#94a3b8")
 
-# --- 5. GIAO DIỆN TRANG CHỦ (DASHBOARD) ---
+# --- 5. GIAO DIỆN TRANG CHỦ ---
 def render_home_page():
-    # Hero Section
     st.markdown("""
     <div class="hero-card">
         <div class="hero-title">🚗 GPLX MASTER PRO</div>
-        <div class="hero-subtitle">Ứng dụng ôn thi lý thuyết lái xe hiện đại nhất</div>
+        <div class="hero-subtitle">Ôn thi lý thuyết lái xe hiệu quả</div>
     </div>
     """, unsafe_allow_html=True)
 
-    # Chọn loại bằng (Dạng Radio nhưng style đẹp hơn)
-    st.markdown("### 1. Chọn loại bằng của bạn")
+    st.markdown("### 1. Chọn loại bằng")
     col_l1, col_l2 = st.columns(2)
-    
-    # Nút bấm giả lập để chọn bằng
     with col_l1:
         is_oto = "Ô tô" in st.session_state.license_type
-        btn_oto = st.button("🚗 Ô TÔ (B1, B2, C)", type="primary" if is_oto else "secondary", use_container_width=True)
-        if btn_oto: 
+        if st.button("🚗 Ô TÔ (B1, B2, C)", type="primary" if is_oto else "secondary", use_container_width=True): 
             st.session_state.license_type = "Ô tô (B1, B2, C...)"
             st.rerun()
-            
     with col_l2:
         is_xm = "Xe máy" in st.session_state.license_type
-        btn_xm = st.button("🛵 XE MÁY (A1, A2)", type="primary" if is_xm else "secondary", use_container_width=True)
-        if btn_xm: 
+        if st.button("🛵 XE MÁY (A1, A2)", type="primary" if is_xm else "secondary", use_container_width=True): 
             st.session_state.license_type = "Xe máy (A1, A2)"
             st.rerun()
 
     st.markdown("---")
-    
-    # Chọn chế độ học (Dạng Card lớn)
     st.markdown(f"### 2. Bắt đầu học ({st.session_state.license_type})")
-    
     c1, c2 = st.columns(2)
-    
     with c1:
         st.markdown("""
         <div class="action-card">
             <div class="icon">📝</div>
-            <div class="card-title">Luyện Thi 600 Câu</div>
-            <div class="card-desc">Làm bài trắc nghiệm, có đáp án và giải thích.</div>
+            <div class="card-title">Luyện Thi</div>
+            <div class="card-desc">600 câu trắc nghiệm</div>
         </div>
         """, unsafe_allow_html=True)
-        if st.button("Vào Luyện Thi ➡️", key="btn_go_exam", use_container_width=True):
+        if st.button("Vào Thi ➡️", key="btn_go_exam", use_container_width=True):
             st.session_state.page = "exam"
             st.rerun()
-
     with c2:
         st.markdown("""
         <div class="action-card">
             <div class="icon">💡</div>
-            <div class="card-title">Học Mẹo Ghi Nhớ</div>
-            <div class="card-desc">Các mẹo chọn nhanh đáp án đúng không cần học vẹt.</div>
+            <div class="card-title">Học Mẹo</div>
+            <div class="card-desc">Mẹo ghi nhớ nhanh</div>
         </div>
         """, unsafe_allow_html=True)
         if st.button("Xem Mẹo ➡️", key="btn_go_tips", use_container_width=True):
             st.session_state.page = "tips"
             st.rerun()
 
-    # Thống kê giả lập (Để giao diện đẹp hơn)
-    st.markdown("---")
-    st.markdown("### 📊 Tiến độ của bạn")
-    k1, k2, k3 = st.columns(3)
-    k1.metric("Câu đã làm", f"{st.session_state.current_q_index}", "+1")
-    k2.metric("Chính xác", "85%", "Cao")
-    k3.metric("Trạng thái", "Đang học", "Tốt")
-
 # --- 6. GIAO DIỆN HỌC MẸO ---
 def render_tips_page():
     if st.button("🏠 Về Trang Chủ"):
         st.session_state.page = "home"
         st.rerun()
-        
     license_type = st.session_state.license_type
     st.markdown(f"### 📖 Mẹo: {license_type}")
     data = load_data_by_license(license_type)
-    
-    if not data:
-        st.error("Thiếu dữ liệu mẹo.")
-        return
-
+    if not data: return
     cats = sorted(list(set([i.get('category', 'Khác') for i in data])))
-    
-    st.markdown('<div style="font-size:0.9rem; font-weight:700; color:#64748b; margin-bottom:5px;">CHỌN CHỦ ĐỀ MẸO:</div>', unsafe_allow_html=True)
+    st.markdown('<div style="font-size:0.9rem; font-weight:700; color:#64748b; margin-bottom:5px;">CHỌN CHỦ ĐỀ:</div>', unsafe_allow_html=True)
     selected_cat = st.selectbox("Mẹo:", ["Tất cả"] + cats, label_visibility="collapsed")
-    
     border = get_category_border(selected_cat)
     items = data if selected_cat == "Tất cả" else [d for d in data if d.get('category') == selected_cat]
-
     st.write("---")
     for tip in items:
         st.markdown(f"""
         <div style="background:white; padding:25px; border-radius:16px; border-left:8px solid {border}; box-shadow:0 4px 10px rgba(0,0,0,0.05); margin-bottom:20px;">
             <div style="font-size:1rem; color:{border}; font-weight:800;">{tip.get('category', 'Mẹo')}</div>
-            <div style="font-weight:800; font-size:1.4rem; margin-top:8px; line-height:1.4;">📌 {tip.get('title', 'Mẹo')}</div>
+            <div style="font-weight:800; font-size:1.4rem; margin-top:8px;">📌 {tip.get('title', 'Mẹo')}</div>
         </div>
         """, unsafe_allow_html=True)
-        
         for line in tip.get('content', []):
             line = line.replace("=>", "👉 <b>").replace("(", "<br><span style='color:#718096; font-size:1.1rem'>(")
             if "<b>" in line: line += "</b>"
-            if "<span" in line: line += "</span>"
-            st.markdown(f"<div style='font-size:1.25rem; margin-bottom:10px; line-height:1.6;'>• {line}</div>", unsafe_allow_html=True)
-            
+            st.markdown(f"<div style='font-size:1.25rem; margin-bottom:10px;'>• {line}</div>", unsafe_allow_html=True)
         if tip.get('image'):
             folders = ["images", "images_a1"] if "Ô tô" in license_type else ["images_a1", "images"]
             img = load_image_strict(tip['image'], folders)
             if img: st.image(img, use_container_width=True)
         st.write("---")
 
-# --- 7. GIAO DIỆN LUYỆN THI ---
+# --- 7. GIAO DIỆN LUYỆN THI (AUTO NEXT) ---
 def render_exam_page():
-    # Nút Home trên cùng
     c_home, c_title = st.columns([1, 4])
     with c_home:
         if st.button("🏠 Home"):
             st.session_state.page = "home"
             st.rerun()
     with c_title:
-        st.markdown(f"**Đang luyện thi: {st.session_state.license_type}**")
+        st.markdown(f"**Luyện thi: {st.session_state.license_type}**")
 
     all_qs = load_json_file('dulieu_600_cau.json')
     if not all_qs: return
-
     cats = sorted(list(set([q.get('category', 'Khác') for q in all_qs])))
     
     # FILTER AREA
     with st.container():
         st.markdown('<div class="filter-area">', unsafe_allow_html=True)
-        c1, c2 = st.columns([1, 1])
+        c1, c2, c3 = st.columns([1, 1, 0.8])
         with c1:
             st.markdown('<div style="font-size:0.9rem; font-weight:700; color:#64748b;">🔍 TÌM KIẾM:</div>', unsafe_allow_html=True)
-            search_query = st.text_input("Search", placeholder="Nhập từ khóa...", label_visibility="collapsed")
+            search_query = st.text_input("Search", placeholder="Từ khóa...", label_visibility="collapsed")
         with c2:
             st.markdown('<div style="font-size:0.9rem; font-weight:700; color:#64748b;">📂 CHỦ ĐỀ:</div>', unsafe_allow_html=True)
             idx = 0
-            if st.session_state.exam_category in cats:
-                idx = cats.index(st.session_state.exam_category) + 1
+            if st.session_state.exam_category in cats: idx = cats.index(st.session_state.exam_category) + 1
             sel_cat = st.selectbox("Category", ["Tất cả"] + cats, index=idx, label_visibility="collapsed")
             if sel_cat != st.session_state.exam_category:
                 st.session_state.exam_category = sel_cat
                 st.session_state.current_q_index = 0
                 st.rerun()
+        
+        # NÚT BẬT/TẮT AUTO NEXT
+        with c3:
+            st.markdown('<div style="font-size:0.9rem; font-weight:700; color:#64748b;">⚡ TỰ ĐỘNG:</div>', unsafe_allow_html=True)
+            # Toggle trả về True/False
+            auto_next_mode = st.toggle("Tự qua câu", key="auto_next_toggle")
+
         st.markdown('</div>', unsafe_allow_html=True)
 
-    # FILTER LOGIC
-    if st.session_state.exam_category == "Tất cả":
-        filtered = all_qs
-    else:
-        filtered = [q for q in all_qs if q.get('category') == st.session_state.exam_category]
-
+    # LOGIC
+    if st.session_state.exam_category == "Tất cả": filtered = all_qs
+    else: filtered = [q for q in all_qs if q.get('category') == st.session_state.exam_category]
     if search_query:
-        query_lower = search_query.lower()
-        filtered = [q for q in filtered if query_lower in q['question'].lower()]
+        filtered = [q for q in filtered if search_query.lower() in q['question'].lower()]
 
     total = len(filtered)
     if total == 0:
@@ -362,20 +319,27 @@ def render_exam_page():
         else:
             st.error(f"❌ SAI: Đáp án là {correct}")
 
+        # --- LOGIC TỰ ĐỘNG QUA CÂU ---
+        if auto_next_mode: # Nếu nút gạt đang BẬT
+            # Chỉ tự động qua câu nếu chưa phải câu cuối
+            if st.session_state.current_q_index < total - 1:
+                time.sleep(0.7) # Chờ 0.7 giây để người dùng kịp nhìn kết quả
+                st.session_state.current_q_index += 1 # Tăng index
+                st.rerun() # Tải lại trang
+
     # NAV BOTTOM
     st.markdown("---")
     st.markdown('<div style="height:40px"></div>', unsafe_allow_html=True)
-    
-    col_b1, col_b2, col_b3 = st.columns([1, 1, 1])
-    with col_b1:
+    c1, c2, c3 = st.columns([1, 1, 1])
+    with c1:
         if st.button("⬅️ Trước", key="bot_prev", use_container_width=True):
             st.session_state.current_q_index = max(0, st.session_state.current_q_index - 1)
             st.rerun()
-    with col_b3:
+    with c3:
         if st.button("Tiếp theo ➡️", key="bot_next", type="primary", use_container_width=True):
             st.session_state.current_q_index = min(total - 1, st.session_state.current_q_index + 1)
             st.rerun()
-    with col_b2:
+    with c2:
          new_idx = st.number_input("Nhảy tới câu:", 1, total, st.session_state.current_q_index + 1, label_visibility="collapsed")
          if new_idx - 1 != st.session_state.current_q_index:
              st.session_state.current_q_index = new_idx - 1
@@ -383,13 +347,9 @@ def render_exam_page():
 
 # --- MAIN ---
 def main():
-    # Điều hướng trang
-    if st.session_state.page == "home":
-        render_home_page()
-    elif st.session_state.page == "tips":
-        render_tips_page()
-    elif st.session_state.page == "exam":
-        render_exam_page()
+    if st.session_state.page == "home": render_home_page()
+    elif st.session_state.page == "tips": render_tips_page()
+    elif st.session_state.page == "exam": render_exam_page()
 
 if __name__ == "__main__":
     main()

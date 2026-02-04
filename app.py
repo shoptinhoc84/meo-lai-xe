@@ -5,7 +5,7 @@ from PIL import Image, ImageOps
 
 # --- 1. CẤU HÌNH TRANG ---
 st.set_page_config(
-    page_title="Ôn Thi GPLX - Fix Cứng Câu 1",
+    page_title="Ôn Thi GPLX - Kết Quả Tức Thì",
     page_icon="🚗",
     layout="wide"
 )
@@ -15,8 +15,7 @@ if 'license_type' not in st.session_state:
     st.session_state.license_type = "Ô tô (B1, B2, C...)"
 if 'current_q_index' not in st.session_state:
     st.session_state.current_q_index = 0
-if 'show_answer' not in st.session_state:
-    st.session_state.show_answer = False
+# Bỏ biến 'show_answer' vì không cần nút bấm nữa
 
 # --- 3. CSS GIAO DIỆN ---
 st.markdown("""
@@ -32,6 +31,7 @@ st.markdown("""
     }
     .highlight { background-color: #ffebee; color: #c62828; font-weight: bold; padding: 2px 6px; border-radius: 4px; }
     
+    /* Giao diện nút chọn đáp án */
     div[data-testid="stRadio"] > label { display: none; }
     div[data-testid="stRadio"] div[role="radiogroup"] { gap: 10px; }
     div[data-testid="stRadio"] div[role="radiogroup"] > label {
@@ -110,13 +110,12 @@ def render_tips_page(license_type):
                 st.markdown(f"• {line}", unsafe_allow_html=True)
         with c2:
             if tip.get('image'):
-                # Mẹo được phép tìm ở cả 2 nơi
                 folders = ["images", "images_a1"] if "Ô tô" in license_type else ["images_a1", "images"]
                 img = load_image_strict(tip['image'], folders)
                 if img: st.image(img, use_container_width=True)
         st.markdown("</div>", unsafe_allow_html=True)
 
-# --- 6. GIAO DIỆN LUYỆN THI ---
+# --- 6. GIAO DIỆN LUYỆN THI (ĐÃ CHỈNH: HIỆN KẾT QUẢ LUÔN) ---
 def render_exam_page():
     st.header("📝 Luyện Tập 600 Câu Hỏi")
     questions = load_json_file('dulieu_600_cau.json')
@@ -131,18 +130,15 @@ def render_exam_page():
     with c1:
         if st.button("⬅️ Trước", use_container_width=True):
             st.session_state.current_q_index = max(0, st.session_state.current_q_index - 1)
-            st.session_state.show_answer = False
             st.rerun()
     with c3:
         if st.button("Sau ➡️", use_container_width=True):
             st.session_state.current_q_index = min(total - 1, st.session_state.current_q_index + 1)
-            st.session_state.show_answer = False
             st.rerun()
     with c2:
         val = st.number_input("Câu số:", 1, total, st.session_state.current_q_index + 1)
         if val - 1 != st.session_state.current_q_index:
             st.session_state.current_q_index = val - 1
-            st.session_state.show_answer = False
             st.rerun()
 
     q = questions[st.session_state.current_q_index]
@@ -154,36 +150,35 @@ def render_exam_page():
     </div>
     """, unsafe_allow_html=True)
 
-    # --- ĐOẠN CODE FIX CỨNG (QUAN TRỌNG NHẤT) ---
-    # Nếu là Câu 1: Bắt buộc KHÔNG hiển thị ảnh (gán image = None)
-    # Điều này ghi đè bất kỳ file ảnh nào đang tồn tại.
+    # --- FIX ẢNH CÂU 1 (GIỮ NGUYÊN) ---
     if q['id'] == 1:
         q['image'] = None
 
-    # Xử lý hiển thị ảnh cho các câu khác
     if q.get('image'):
-        # Chỉ tìm trong folder 'images'
         img = load_image_strict(q['image'], folders_allowed=['images'])
         if img:
             st.image(img, width=500)
-    # ---------------------------------------------
+    # -----------------------------------
 
     st.write("---")
-    user_choice = st.radio("Chọn đáp án:", q['options'], index=None, key=f"q_{st.session_state.current_q_index}")
+    
+    # LOGIC MỚI: Radio Button chọn xong là hiện kết quả
+    user_choice = st.radio(
+        "Chọn đáp án:", 
+        q['options'], 
+        index=None, 
+        key=f"q_{st.session_state.current_q_index}"
+    )
 
-    if st.button("Kiểm tra kết quả", type="primary", use_container_width=True):
-        st.session_state.show_answer = True
-
-    if st.session_state.show_answer:
-        st.write("")
+    # Nếu người dùng đã chọn (user_choice có dữ liệu) -> Hiện kết quả ngay
+    if user_choice:
+        st.write("") # Tạo khoảng cách nhỏ
         correct = q['correct_answer'].strip()
-        if user_choice:
-            if user_choice.strip() == correct:
-                st.success(f"🎉 CHÍNH XÁC! Đáp án: {correct}")
-            else:
-                st.error(f"❌ SAI RỒI! Đáp án đúng là: {correct}")
+        
+        if user_choice.strip() == correct:
+            st.success(f"🎉 CHÍNH XÁC! Đáp án: {correct}")
         else:
-            st.info(f"👉 Đáp án đúng là: {correct}")
+            st.error(f"❌ SAI RỒI! Đáp án đúng là: {correct}")
 
 # --- 7. MAIN APP ---
 def main():
@@ -194,14 +189,12 @@ def main():
         if license != st.session_state.license_type:
             st.session_state.license_type = license
             st.session_state.current_q_index = 0
-            st.session_state.show_answer = False
-            # Xóa cache khi đổi bằng để tránh lưu trạng thái cũ
             st.cache_data.clear()
             st.rerun()
 
         mode = st.radio("Chế độ:", ["📖 Học Mẹo", "📝 Luyện Thi (600 câu)"])
         st.divider()
-        if st.button("Xóa Cache hệ thống"):
+        if st.button("Reset / Xóa Cache"):
             st.cache_data.clear()
             st.rerun()
 

@@ -5,7 +5,7 @@ from PIL import Image, ImageOps
 
 # --- 1. CẤU HÌNH TRANG ---
 st.set_page_config(
-    page_title="Ôn Thi GPLX - 600 Câu",
+    page_title="Ôn Thi GPLX - Chuẩn Layout",
     page_icon="🚗",
     layout="wide"
 )
@@ -18,238 +18,165 @@ if 'current_q_index' not in st.session_state:
 if 'show_answer' not in st.session_state:
     st.session_state.show_answer = False
 
-# --- 3. CSS GIAO DIỆN (ĐÃ FIX LỖI LỆCH HÀNG) ---
+# --- 3. CSS GIAO DIỆN (ĐÃ FIX NGAY NGẮN & KHÔNG LỆCH) ---
 st.markdown("""
 <style>
-    /* Tổng thể */
-    .main { background-color: #f5f7f9; }
-    
-    /* Thẻ Mẹo */
-    .tip-card {
-        background-color: #ffffff; border-radius: 12px; padding: 25px;
-        margin-bottom: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.05);
-        border: 1px solid #eef2f6;
-    }
-    
-    /* Box Câu Hỏi */
+    /* Box câu hỏi */
     .question-box {
         background-color: #ffffff; 
-        border-radius: 12px; 
-        padding: 25px;
-        border-left: 8px solid #007bff; 
-        margin-bottom: 25px;
-        box-shadow: 0 4px 15px rgba(0,0,0,0.05);
-    }
-    .question-text {
-        font-size: 1.2rem;
-        font-weight: 600;
-        color: #1e293b;
-        line-height: 1.5;
+        border-radius: 10px; 
+        padding: 20px;
+        border-left: 6px solid #1a73e8; 
+        margin-bottom: 20px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
     }
     
-    /* Highlight cho mẹo */
-    .highlight { 
-        background-color: #fee2e2; 
-        color: #dc2626; 
-        font-weight: bold; 
-        padding: 2px 8px; 
-        border-radius: 4px; 
-    }
-
-    /* CSS FIX CHO RADIO BUTTONS (ĐÁP ÁN) */
-    div[data-testid="stRadio"] > label {
-        display: none; /* Ẩn cái label "Answers" mặc định */
-    }
-    
+    /* Fix đáp án thẳng hàng */
     div[data-testid="stRadio"] div[role="radiogroup"] {
-        gap: 12px; /* Khoảng cách giữa các đáp án */
-    }
-
-    /* Tạo style cho từng dòng đáp án */
-    div[data-testid="stRadio"] div[role="radiogroup"] > label {
-        background-color: white;
-        border: 1px solid #e2e8f0;
-        padding: 15px 20px;
-        border-radius: 10px;
-        width: 100%;
-        transition: all 0.2s ease;
-        cursor: pointer;
         display: flex;
-        align-items: center;
+        flex-direction: column;
+        gap: 10px;
+    }
+    
+    div[data-testid="stRadio"] div[role="radiogroup"] > label {
+        background-color: #f8f9fa;
+        border: 1px solid #dee2e6;
+        padding: 12px 15px;
+        border-radius: 8px;
+        cursor: pointer;
+        width: 100%;
+        margin: 0;
     }
 
     div[data-testid="stRadio"] div[role="radiogroup"] > label:hover {
-        border-color: #3b82f6;
-        background-color: #f8fafc;
+        border-color: #1a73e8;
+        background-color: #e8f0fe;
     }
 
-    /* Khi được chọn */
-    div[data-testid="stRadio"] div[role="radiogroup"] [data-checked="true"] {
-        background-color: #eff6ff !important;
-        border-color: #3b82f6 !important;
-        box-shadow: 0 0 0 1px #3b82f6;
-    }
-
-    /* Ảnh minh họa */
-    .img-container {
+    /* Ảnh căn giữa đẹp */
+    .stImage {
         display: flex;
         justify-content: center;
-        margin: 20px 0;
+        padding: 10px 0;
     }
 </style>
 """, unsafe_allow_html=True)
 
-# --- 4. HÀM XỬ LÝ DỮ LIỆU & ẢNH ---
+# --- 4. HÀM LOAD DỮ LIỆU ---
 @st.cache_data
-def load_tips_data(license_type):
-    try:
-        file_path = 'data.json' if "Ô tô" in license_type else 'tips_a1.json'
-        with open(file_path, 'r', encoding='utf-8') as f:
-            return json.load(f)
-    except: return []
-
-@st.cache_data
-def load_600_questions():
+def load_600_questions(license_type):
     try:
         with open('dulieu_600_cau.json', 'r', encoding='utf-8') as f:
-            return json.load(f)
-    except: return None
+            full_data = json.load(f)
+        
+        # Nếu là xe máy, có thể lọc bớt câu hỏi nếu file JSON có trường phân loại
+        if "Xe máy" in license_type:
+            # Lọc các câu không thuộc về cấu tạo, sửa chữa ô tô (nếu data có category)
+            return [q for q in full_data if "ô tô" not in q.get('category', '').lower()]
+        return full_data
+    except:
+        return []
 
-def load_image_smart(image_name, folder_priority=[]):
+def load_image_strict(image_name, is_oto):
+    """Tìm ảnh chính xác theo loại bằng để không bị dính ảnh lẫn nhau"""
     if not image_name: return None
-    for folder in folder_priority:
-        path = os.path.join(folder, image_name)
-        if os.path.exists(path):
-            try:
-                img = Image.open(path)
-                return ImageOps.exif_transpose(img)
-            except: continue
+    
+    # Ưu tiên folder theo loại bằng
+    folder = "images" if is_oto else "images_a1"
+    path = os.path.join(folder, image_name)
+    
+    if os.path.exists(path):
+        try:
+            return ImageOps.exif_transpose(Image.open(path))
+        except: return None
+    
+    # Nếu folder chính không có, mới tìm folder còn lại làm fallback
+    other_folder = "images_a1" if is_oto else "images"
+    path_fallback = os.path.join(other_folder, image_name)
+    if os.path.exists(path_fallback):
+        try:
+            return ImageOps.exif_transpose(Image.open(path_fallback))
+        except: return None
     return None
 
-# --- 5. GIAO DIỆN: HỌC MẸO ---
-def render_tips_page(data, is_oto):
-    st.subheader(f"📖 Mẹo Thi Lý Thuyết {'Ô Tô' if is_oto else 'Xe Máy'}")
+# --- 5. GIAO DIỆN LUYỆN THI ---
+def render_exam_page(is_oto):
+    st.subheader(f"📝 Luyện Tập Câu Hỏi {'Ô Tô' if is_oto else 'Xe Máy'}")
     
-    if not data:
-        st.warning("Không tìm thấy dữ liệu mẹo.")
-        return
-
-    categories = sorted(list(set([item.get('category', 'Khác') for item in data])))
-    selected_cat = st.selectbox("Lọc theo danh mục:", ["Tất cả"] + categories)
-    filtered_data = data if selected_cat == "Tất cả" else [d for d in data if d.get('category') == selected_cat]
-
-    for tip in filtered_data:
-        with st.container():
-            st.markdown(f"""<div class="tip-card"><h4>💡 {tip.get('title', 'Mẹo')}</h4>""", unsafe_allow_html=True)
-            c1, c2 = st.columns([1.2, 1])
-            with c1:
-                for line in tip.get('content', []):
-                    if "=>" in line:
-                        parts = line.split("=>")
-                        line = f"{parts[0]} <span class='highlight'>➔ {parts[1]}</span>"
-                    st.markdown(f"• {line}", unsafe_allow_html=True)
-            with c2:
-                if tip.get('image'):
-                    folders = ["images", "images_a1"] if is_oto else ["images_a1", "images"]
-                    img_obj = load_image_smart(tip['image'], folders)
-                    if img_obj: st.image(img_obj, use_container_width=True)
-            st.markdown("</div>", unsafe_allow_html=True)
-
-# --- 6. GIAO DIỆN: LUYỆN THI 600 CÂU ---
-def render_exam_page():
-    st.subheader("📝 Luyện Tập 600 Câu Hỏi")
-    questions = load_600_questions()
+    questions = load_600_questions(st.session_state.license_type)
     if not questions:
-        st.error("Lỗi: Không tìm thấy file `dulieu_600_cau.json`.")
+        st.error("Không tìm thấy dữ liệu câu hỏi.")
         return
 
     total_q = len(questions)
     
-    # Thanh điều hướng
-    nav_cols = st.columns([1, 1, 1, 1])
-    with nav_cols[0]:
+    # Điều hướng
+    c1, c2, c3 = st.columns([1, 2, 1])
+    with c1:
         if st.button("⬅️ Câu trước"):
-            if st.session_state.current_q_index > 0:
-                st.session_state.current_q_index -= 1
-                st.session_state.show_answer = False
-                st.rerun()
-    with nav_cols[1]:
+            st.session_state.current_q_index = max(0, st.session_state.current_q_index - 1)
+            st.session_state.show_answer = False
+            st.rerun()
+    with c3:
         if st.button("Câu tiếp ➡️"):
-            if st.session_state.current_q_index < total_q - 1:
-                st.session_state.current_q_index += 1
-                st.session_state.show_answer = False
-                st.rerun()
-    with nav_cols[2]:
-        new_idx = st.number_input("Nhảy tới câu:", 1, total_q, st.session_state.current_q_index + 1)
-        if new_idx - 1 != st.session_state.current_q_index:
-            st.session_state.current_q_index = new_idx - 1
+            st.session_state.current_q_index = min(total_q - 1, st.session_state.current_q_index + 1)
+            st.session_state.show_answer = False
+            st.rerun()
+    with c2:
+        val = st.number_input("Câu số:", 1, total_q, st.session_state.current_q_index + 1)
+        if val - 1 != st.session_state.current_q_index:
+            st.session_state.current_q_index = val - 1
             st.session_state.show_answer = False
             st.rerun()
 
-    # Hiển thị câu hỏi
     q = questions[st.session_state.current_q_index]
+    
+    # Hiển thị câu hỏi
     st.markdown(f"""
     <div class="question-box">
-        <div style="color: #64748b; margin-bottom: 8px;">Câu {st.session_state.current_q_index + 1} / {total_q} - [{q.get('category', 'Chung')}]</div>
-        <div class="question-text">{q['question']}</div>
+        <b style="color:#1a73e8">Câu {st.session_state.current_q_index + 1}:</b> {q['question']}
     </div>
     """, unsafe_allow_html=True)
 
-    # Hiển thị ảnh (nếu có)
+    # Hiển thị ảnh (Chỉ tìm đúng folder của loại bằng đó)
     if q.get('image'):
-        img_obj = load_image_smart(q['image'], ["images", "images_a1"])
-        if img_obj:
-            st.image(img_obj, width=500)
+        img = load_image_strict(q['image'], is_oto)
+        if img:
+            st.image(img, width=450)
 
     # Đáp án
-    user_choice = st.radio(
-        "Chọn đáp án:", 
-        q['options'], 
-        index=None, 
-        key=f"q_{st.session_state.current_q_index}",
-        label_visibility="collapsed"
-    )
+    user_choice = st.radio("Chọn đáp án:", q['options'], index=None, 
+                           key=f"ex_{st.session_state.current_q_index}", 
+                           label_visibility="collapsed")
 
-    c1, c2 = st.columns([1, 4])
-    with c1:
-        if st.button("Kiểm tra", type="primary", use_container_width=True):
-            st.session_state.show_answer = True
+    if st.button("Kiểm tra kết quả", type="primary"):
+        st.session_state.show_answer = True
 
     if st.session_state.show_answer:
-        st.markdown("---")
         correct = q['correct_answer'].strip()
-        if user_choice:
-            if user_choice.strip() == correct:
-                st.success(f"✅ CHÍNH XÁC: {correct}")
-            else:
-                st.error(f"❌ SAI RỒI! Đáp án đúng là: **{correct}**")
+        if user_choice and user_choice.strip() == correct:
+            st.success(f"✅ Chính xác! Đáp án: {correct}")
         else:
-            st.info(f"💡 Đáp án đúng là: **{correct}**")
+            st.error(f"❌ Sai rồi! Đáp án đúng là: {correct}")
 
-# --- 7. MAIN APP ---
+# --- 6. MAIN ---
 def main():
     with st.sidebar:
-        st.title("🚗 GPLX PRO")
-        st.divider()
-        
-        old_license = st.session_state.license_type
-        current_license = st.selectbox("Chọn hạng bằng:", ["Ô tô (B1, B2, C...)", "Xe máy (A1, A2)"])
-        
-        if current_license != old_license:
-            st.session_state.license_type = current_license
+        st.title("🗂️ ÔN THI GPLX")
+        license = st.selectbox("Hạng bằng:", ["Ô tô (B1, B2, C...)", "Xe máy (A1, A2)"])
+        if license != st.session_state.license_type:
+            st.session_state.license_type = license
             st.session_state.current_q_index = 0
-            st.cache_data.clear()
             st.rerun()
+            
+        mode = st.radio("Chế độ:", ["📖 Học Mẹo", "📝 Luyện Thi"])
 
-        mode = st.radio("Chế độ học:", ["📖 Học Mẹo", "📝 Luyện Thi (600 câu)"])
-        st.divider()
-        st.caption("Phiên bản 5.2 - Đã sửa lỗi layout")
-
-    if mode == "📖 Học Mẹo":
-        data = load_tips_data(st.session_state.license_type)
-        render_tips_page(data, "Ô tô" in st.session_state.license_type)
+    is_oto = "Ô tô" in st.session_state.license_type
+    
+    if mode == "📝 Luyện Thi":
+        render_exam_page(is_oto)
     else:
-        render_exam_page()
+        st.info("Chế độ Học Mẹo đang được cập nhật...")
 
 if __name__ == "__main__":
     main()

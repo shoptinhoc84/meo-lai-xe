@@ -5,7 +5,7 @@ from PIL import Image, ImageOps
 
 # --- 1. CẤU HÌNH TRANG ---
 st.set_page_config(
-    page_title="Ôn Thi GPLX - Fix Lỗi Ảnh Câu 1",
+    page_title="Ôn Thi GPLX - Fix Cứng Câu 1",
     page_icon="🚗",
     layout="wide"
 )
@@ -32,7 +32,6 @@ st.markdown("""
     }
     .highlight { background-color: #ffebee; color: #c62828; font-weight: bold; padding: 2px 6px; border-radius: 4px; }
     
-    /* Ẩn nút radio mặc định, tạo giao diện nút bấm */
     div[data-testid="stRadio"] > label { display: none; }
     div[data-testid="stRadio"] div[role="radiogroup"] { gap: 10px; }
     div[data-testid="stRadio"] div[role="radiogroup"] > label {
@@ -50,7 +49,6 @@ st.markdown("""
         border-color: #007bff;
         background-color: #f0f7ff;
     }
-    /* Căn giữa ảnh */
     div[data-testid="stImage"] { display: flex; justify-content: center; }
 </style>
 """, unsafe_allow_html=True)
@@ -59,7 +57,6 @@ st.markdown("""
 
 @st.cache_data
 def load_json_file(filename):
-    """Hàm load file JSON an toàn"""
     try:
         with open(filename, 'r', encoding='utf-8') as f:
             return json.load(f)
@@ -67,24 +64,17 @@ def load_json_file(filename):
         return None
 
 def load_data_by_license(license_type):
-    """Tự động chọn file data mẹo dựa trên loại bằng"""
     is_oto = "Ô tô" in license_type
-    # Ưu tiên load file tên chuẩn, nếu không có thì thử các tên file bạn đã upload
     files_oto = ['data.json', 'data (6).json']
     files_xe_may = ['tips_a1.json', 'tips_a1 (1).json']
-    
     target_files = files_oto if is_oto else files_xe_may
     
     for fname in target_files:
         data = load_json_file(fname)
         if data: return data
-    return [] # Trả về rỗng nếu không tìm thấy
+    return []
 
 def load_image_strict(image_name, folders_allowed):
-    """
-    Hàm load ảnh CHỈ tìm trong danh sách thư mục được cho phép (folders_allowed).
-    Không tự ý tìm sang thư mục khác.
-    """
     if not image_name: return None
     img_name = str(image_name).strip()
     
@@ -94,20 +84,17 @@ def load_image_strict(image_name, folders_allowed):
             try:
                 img = Image.open(path)
                 return ImageOps.exif_transpose(img)
-            except:
-                continue
+            except: continue
     return None
 
-# --- 5. GIAO DIỆN: HỌC MẸO ---
+# --- 5. GIAO DIỆN HỌC MẸO ---
 def render_tips_page(license_type):
     st.header(f"📖 Mẹo Thi Lý Thuyết {license_type}")
     data = load_data_by_license(license_type)
-    
     if not data:
-        st.warning("⚠️ Chưa tìm thấy file dữ liệu mẹo (data.json hoặc tips_a1.json).")
+        st.warning("Chưa tìm thấy dữ liệu mẹo.")
         return
 
-    # Lọc danh mục
     categories = sorted(list(set([i.get('category', 'Khác') for i in data])))
     selected_cat = st.selectbox("Chọn chủ đề:", ["Tất cả"] + categories)
     items = data if selected_cat == "Tất cả" else [d for d in data if d.get('category') == selected_cat]
@@ -115,31 +102,26 @@ def render_tips_page(license_type):
     for tip in items:
         st.markdown(f'<div class="tip-card"><h3>📌 {tip.get("title", "Mẹo")}</h3>', unsafe_allow_html=True)
         c1, c2 = st.columns([1.5, 1])
-        
         with c1:
             for line in tip.get('content', []):
                 if "=>" in line:
                     p = line.split("=>")
                     line = f"{p[0]} => <span class='highlight'>{p[1]}</span>"
                 st.markdown(f"• {line}", unsafe_allow_html=True)
-        
         with c2:
             if tip.get('image'):
-                # Mẹo thì cho phép tìm ở cả 2 folder (ưu tiên folder đúng loại)
+                # Mẹo được phép tìm ở cả 2 nơi
                 folders = ["images", "images_a1"] if "Ô tô" in license_type else ["images_a1", "images"]
                 img = load_image_strict(tip['image'], folders)
                 if img: st.image(img, use_container_width=True)
-        
         st.markdown("</div>", unsafe_allow_html=True)
 
-# --- 6. GIAO DIỆN: LUYỆN THI ---
+# --- 6. GIAO DIỆN LUYỆN THI ---
 def render_exam_page():
     st.header("📝 Luyện Tập 600 Câu Hỏi")
-    
-    # Load file câu hỏi (Thử tên chuẩn trước, sau đó đến tên file bạn up)
     questions = load_json_file('dulieu_600_cau.json')
     if not questions:
-        st.error("⚠️ Không tìm thấy file 'dulieu_600_cau.json'. Vui lòng kiểm tra lại tên file.")
+        st.error("Lỗi file dữ liệu 600 câu.")
         return
 
     total = len(questions)
@@ -147,17 +129,17 @@ def render_exam_page():
     # Điều hướng
     c1, c2, c3 = st.columns([1, 2, 1])
     with c1:
-        if st.button("⬅️ Câu trước", use_container_width=True):
+        if st.button("⬅️ Trước", use_container_width=True):
             st.session_state.current_q_index = max(0, st.session_state.current_q_index - 1)
             st.session_state.show_answer = False
             st.rerun()
     with c3:
-        if st.button("Câu sau ➡️", use_container_width=True):
+        if st.button("Sau ➡️", use_container_width=True):
             st.session_state.current_q_index = min(total - 1, st.session_state.current_q_index + 1)
             st.session_state.show_answer = False
             st.rerun()
     with c2:
-        val = st.number_input("Nhảy tới câu:", 1, total, st.session_state.current_q_index + 1)
+        val = st.number_input("Câu số:", 1, total, st.session_state.current_q_index + 1)
         if val - 1 != st.session_state.current_q_index:
             st.session_state.current_q_index = val - 1
             st.session_state.show_answer = False
@@ -165,7 +147,6 @@ def render_exam_page():
 
     q = questions[st.session_state.current_q_index]
     
-    # Hiển thị câu hỏi
     st.markdown(f"""
     <div class="question-box">
         <div style="color:#666; font-size: 0.9em;">Câu {q['id']} / {total}</div>
@@ -173,28 +154,22 @@ def render_exam_page():
     </div>
     """, unsafe_allow_html=True)
 
-    # --- XỬ LÝ ẢNH (FIX LỖI CÂU 1) ---
+    # --- ĐOẠN CODE FIX CỨNG (QUAN TRỌNG NHẤT) ---
+    # Nếu là Câu 1: Bắt buộc KHÔNG hiển thị ảnh (gán image = None)
+    # Điều này ghi đè bất kỳ file ảnh nào đang tồn tại.
+    if q['id'] == 1:
+        q['image'] = None
+
+    # Xử lý hiển thị ảnh cho các câu khác
     if q.get('image'):
-        # CHỈ tìm trong folder 'images'. Tuyệt đối KHÔNG tìm trong 'images_a1'.
-        # Nếu câu 1 có file '1.jpg' trong 'images_a1' nhưng không có trong 'images',
-        # hàm này sẽ trả về None -> Không hiện ảnh sai nữa.
+        # Chỉ tìm trong folder 'images'
         img = load_image_strict(q['image'], folders_allowed=['images'])
-        
         if img:
             st.image(img, width=500)
-        else:
-            # Tùy chọn: Hiện thông báo nếu thiếu ảnh hoặc để trống
-            # st.caption(f"(Không tìm thấy ảnh: {q['image']})") 
-            pass 
+    # ---------------------------------------------
 
-    # Đáp án
     st.write("---")
-    user_choice = st.radio(
-        "Chọn đáp án:", 
-        q['options'], 
-        index=None, 
-        key=f"q_{st.session_state.current_q_index}"
-    )
+    user_choice = st.radio("Chọn đáp án:", q['options'], index=None, key=f"q_{st.session_state.current_q_index}")
 
     if st.button("Kiểm tra kết quả", type="primary", use_container_width=True):
         st.session_state.show_answer = True
@@ -215,19 +190,20 @@ def main():
     with st.sidebar:
         st.title("🚗 MENU ÔN TẬP")
         st.divider()
-        
-        # Chọn loại bằng
         license = st.selectbox("Chọn hạng bằng:", ["Ô tô (B1, B2, C...)", "Xe máy (A1, A2)"])
         if license != st.session_state.license_type:
             st.session_state.license_type = license
             st.session_state.current_q_index = 0
             st.session_state.show_answer = False
+            # Xóa cache khi đổi bằng để tránh lưu trạng thái cũ
+            st.cache_data.clear()
             st.rerun()
 
-        # Chọn chế độ
         mode = st.radio("Chế độ:", ["📖 Học Mẹo", "📝 Luyện Thi (600 câu)"])
         st.divider()
-        st.caption("Phiên bản: Fix lỗi ảnh câu 1")
+        if st.button("Xóa Cache hệ thống"):
+            st.cache_data.clear()
+            st.rerun()
 
     if mode == "📖 Học Mẹo":
         render_tips_page(st.session_state.license_type)

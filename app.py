@@ -3,9 +3,9 @@ import json
 import os
 from PIL import Image, ImageOps
 
-# --- 1. CẤU HÌNH TRANG (MOBILE FIRST) ---
+# --- 1. CẤU HÌNH TRANG ---
 st.set_page_config(
-    page_title="GPLX Pro - Mobile V12",
+    page_title="GPLX Pro - V15 Thumb Friendly",
     page_icon="🚗",
     layout="wide",
     initial_sidebar_state="collapsed"
@@ -19,64 +19,87 @@ if 'current_q_index' not in st.session_state:
 if 'exam_category' not in st.session_state:
     st.session_state.exam_category = "Tất cả"
 
-# --- 3. CSS TỐI ƯU UI/UX ---
+# --- 3. CSS TỐI ƯU ---
 st.markdown("""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+    html, body, [class*="css"] { font-family: 'Inter', sans-serif; }
+    .stApp { background-color: #f3f4f6; }
     
-    html, body, [class*="css"] {
-        font-family: 'Inter', sans-serif;
-    }
-    .stApp { background-color: #f0f2f5; }
-    
-    /* Tinh chỉnh khoảng cách trên cùng cho điện thoại */
     .block-container {
-        padding-top: 1rem !important;
-        padding-bottom: 5rem !important;
+        padding-top: 0.5rem !important;
+        padding-bottom: 6rem !important;
     }
 
-    /* CARD CÂU HỎI (To, Rõ, Đẹp) */
+    /* THANH ĐIỀU HƯỚNG TRÊN CÙNG */
+    .top-nav-container {
+        background: white;
+        padding: 10px;
+        border-radius: 12px;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        margin-bottom: 15px;
+        border: 1px solid #e5e7eb;
+    }
+
+    /* KHUNG CHỌN CHỦ ĐỀ (Dời xuống dưới) */
+    .filter-container {
+        background: #f8fafc; /* Màu nền khác biệt chút */
+        padding: 12px;
+        border-radius: 12px;
+        border: 1px solid #e2e8f0;
+        margin-bottom: 15px;
+    }
+    .filter-label {
+        font-size: 0.85rem;
+        font-weight: 700;
+        color: #64748b;
+        text-transform: uppercase;
+        margin-bottom: 8px;
+        display: block;
+    }
+
+    /* TAB CHỌN CHỦ ĐỀ */
+    div[data-testid="stRadio"] div[role="radiogroup"][aria-orientation="horizontal"] {
+        flex-wrap: wrap;
+        gap: 8px;
+        justify-content: flex-start; /* Căn trái cho dễ nhìn */
+    }
+    div[data-testid="stRadio"] div[role="radiogroup"][aria-orientation="horizontal"] > label {
+        background-color: white;
+        border: 1px solid #cbd5e1;
+        padding: 6px 14px;
+        border-radius: 20px;
+        font-size: 0.9rem;
+        font-weight: 600;
+        color: #475569;
+        box-shadow: 0 1px 2px rgba(0,0,0,0.02);
+    }
+    div[data-testid="stRadio"] div[role="radiogroup"][aria-orientation="horizontal"] > label[data-checked="true"] {
+        background-color: #2563eb !important;
+        color: white !important;
+        border-color: #2563eb;
+        box-shadow: 0 2px 5px rgba(37, 99, 235, 0.2);
+    }
+
+    /* CARD CÂU HỎI */
     .content-card {
-        background: white; 
-        padding: 25px; 
-        border-radius: 16px;
-        box-shadow: 0 4px 15px rgba(0,0,0,0.05);
-        border: 1px solid #e1e4e8; 
-        margin-bottom: 20px;
+        background: white; padding: 25px; border-radius: 16px;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.03);
+        border: 1px solid #e2e8f0; margin-bottom: 15px;
     }
-    
     .q-text { 
-        font-size: 1.35rem; /* Chữ to ~21px */
-        font-weight: 700; 
-        color: #1a202c; 
-        line-height: 1.5; 
-        margin-top: 8px;
-    }
-    
-    .badge {
-        background: #e0f2fe; color: #0284c7; 
-        padding: 4px 12px; border-radius: 20px; 
-        font-weight: 700; font-size: 0.9rem;
+        font-size: 1.35rem; font-weight: 700; color: #1e293b; 
+        line-height: 1.5; margin-top: 5px; 
     }
 
-    /* ĐÁP ÁN (Dạng thẻ bấm lớn) */
+    /* ĐÁP ÁN */
     div[data-testid="stRadio"] > label { display: none; }
     div[role="radiogroup"] { gap: 12px; display: flex; flex-direction: column; }
-    
     div[data-testid="stRadio"] div[role="radiogroup"] > label {
-        background: white; 
-        border: 2px solid #e2e8f0; 
-        padding: 16px; /* Vùng bấm lớn */
-        border-radius: 12px; 
-        width: 100%; 
-        cursor: pointer;
-        display: flex; align-items: center; 
-        color: #475569;
-        font-size: 1.1rem; /* Chữ đáp án to */
-        font-weight: 500;
-        transition: all 0.15s;
+        background: white; border: 2px solid #e2e8f0; padding: 16px; 
+        border-radius: 12px; width: 100%; cursor: pointer;
+        display: flex; align-items: center; color: #334155; font-weight: 500;
     }
-    
     div[data-testid="stRadio"] div[role="radiogroup"] > label:hover {
         border-color: #3b82f6; background: #eff6ff;
     }
@@ -85,15 +108,9 @@ st.markdown("""
         color: #1e40af !important; font-weight: 700;
     }
 
-    /* ẢNH MINH HỌA */
-    div[data-testid="stImage"] {
-        display: flex; justify-content: center;
-        margin: 15px 0; background: #fff; padding: 10px; border-radius: 12px;
-    }
+    div[data-testid="stImage"] { display: flex; justify-content: center; margin: 10px 0; }
     div[data-testid="stImage"] img { border-radius: 8px; max-height: 350px; object-fit: contain; }
-
-    /* NÚT BẤM TO */
-    div[data-testid="stButton"] button { width: 100%; border-radius: 8px; height: 3rem; }
+    div[data-testid="stButton"] button { width: 100%; border-radius: 8px; font-weight: 600; height: 3rem; }
 </style>
 """, unsafe_allow_html=True)
 
@@ -133,15 +150,20 @@ def render_tips_page(license_type):
         return
 
     cats = sorted(list(set([i.get('category', 'Khác') for i in data])))
-    selected_cat = st.selectbox("Chọn chủ đề:", ["Tất cả"] + cats)
+    
+    # Khu vực chọn chủ đề mẹo (Cũng dời xuống cho dễ bấm)
+    st.markdown('<div class="filter-label">📂 CHỌN CHỦ ĐỀ MẸO:</div>', unsafe_allow_html=True)
+    selected_cat = st.radio("Chủ đề:", ["Tất cả"] + cats, horizontal=True, label_visibility="collapsed")
     
     items = data if selected_cat == "Tất cả" else [d for d in data if d.get('category') == selected_cat]
+
+    st.write("---")
 
     for tip in items:
         st.markdown(f"""
         <div class="content-card" style="border-left: 5px solid #d63384;">
-            <div style="font-size:0.9rem; color:#d63384; font-weight:700;">{tip.get('category', 'Mẹo')}</div>
-            <div style="font-weight:700; font-size:1.2rem; margin-top:5px;">📌 {tip.get('title', 'Mẹo')}</div>
+            <div style="font-size:0.85rem; color:#d63384; font-weight:700;">{tip.get('category', 'Mẹo')}</div>
+            <div style="font-weight:700; font-size:1.1rem; margin-top:5px;">📌 {tip.get('title', 'Mẹo')}</div>
         </div>
         """, unsafe_allow_html=True)
         
@@ -157,47 +179,64 @@ def render_tips_page(license_type):
             if img: st.image(img, use_container_width=True)
         st.write("---")
 
-# --- 6. GIAO DIỆN LUYỆN THI (LAYOUT MỚI) ---
+# --- 6. GIAO DIỆN LUYỆN THI (THUMB FRIENDLY) ---
 def render_exam_page():
     all_qs = load_json_file('dulieu_600_cau.json')
     if not all_qs: return
 
     cats = sorted(list(set([q.get('category', 'Khác') for q in all_qs])))
     
-    # 1. BỘ LỌC (Nằm trên cùng, tách biệt)
-    sel_cat = st.selectbox("📂 Chọn chủ đề ôn tập:", ["Tất cả"] + cats, label_visibility="collapsed")
-
-    if sel_cat != st.session_state.exam_category:
-        st.session_state.exam_category = sel_cat
-        st.session_state.current_q_index = 0
-        st.rerun()
-
-    filtered = all_qs if sel_cat == "Tất cả" else [q for q in all_qs if q.get('category') == sel_cat]
+    # --- LOGIC LỌC DỮ LIỆU ---
+    # Ta lấy session state hiện tại để lọc câu hỏi
+    current_cat = st.session_state.exam_category
+    filtered = all_qs if current_cat == "Tất cả" else [q for q in all_qs if q.get('category') == current_cat]
     total = len(filtered)
     
+    # Đảm bảo index an toàn
     if st.session_state.current_q_index >= total: st.session_state.current_q_index = 0
     q = filtered[st.session_state.current_q_index]
 
-    st.markdown("---") # Kẻ ngang tách biệt
+    # 1. THANH ĐIỀU HƯỚNG TRÊN (Đặt Lên Cao Nhất)
+    # Lý do: Để bạn nhìn thấy số câu và bấm qua lại ngay lập tức
+    with st.container():
+        st.markdown('<div class="top-nav-container">', unsafe_allow_html=True)
+        c1, c2, c3 = st.columns([1, 2, 1])
+        with c1:
+            if st.button("⬅️", key="top_prev"):
+                st.session_state.current_q_index = max(0, st.session_state.current_q_index - 1)
+                st.rerun()
+        with c2:
+            st.markdown(f"<div style='text-align:center; font-weight:800; padding-top:10px; font-size:1.1rem; color:#1e293b'>Câu {st.session_state.current_q_index + 1}/{total}</div>", unsafe_allow_html=True)
+        with c3:
+            if st.button("➡️", key="top_next", type="primary"):
+                st.session_state.current_q_index = min(total - 1, st.session_state.current_q_index + 1)
+                st.rerun()
+        st.markdown('</div>', unsafe_allow_html=True)
 
-    # 2. THANH ĐIỀU HƯỚNG TRÊN CÙNG (GIẢI QUYẾT VẤN ĐỀ CỦA BẠN)
-    # Nút bấm nằm ngay trên câu hỏi, không cần cuộn
-    col_t1, col_t2, col_t3 = st.columns([1, 2, 1])
-    with col_t1:
-        if st.button("⬅️", key="top_prev"):
-            st.session_state.current_q_index = max(0, st.session_state.current_q_index - 1)
+    # 2. KHUNG CHỌN CHỦ ĐỀ (Dời xuống dưới thanh điều hướng)
+    # Vị trí này gần ngón cái hơn so với việc đặt tít trên nóc
+    with st.container():
+        st.markdown('<div class="filter-label">📂 LỌC THEO CHỦ ĐỀ:</div>', unsafe_allow_html=True)
+        sel_cat = st.radio(
+            "Bộ lọc chủ đề", 
+            ["Tất cả"] + cats, 
+            horizontal=True, 
+            label_visibility="collapsed",
+            index=0 if current_cat == "Tất cả" else (cats.index(current_cat) + 1 if current_cat in cats else 0)
+        )
+
+        # Logic đổi chủ đề
+        if sel_cat != st.session_state.exam_category:
+            st.session_state.exam_category = sel_cat
+            st.session_state.current_q_index = 0
             st.rerun()
-    with col_t2:
-        st.markdown(f"<div style='text-align:center; font-weight:bold; padding-top:10px; font-size:1.1rem'>Câu {st.session_state.current_q_index + 1}/{total}</div>", unsafe_allow_html=True)
-    with col_t3:
-        if st.button("➡️", key="top_next", type="primary"):
-            st.session_state.current_q_index = min(total - 1, st.session_state.current_q_index + 1)
-            st.rerun()
+
+    st.markdown('<div style="margin-bottom: 20px;"></div>', unsafe_allow_html=True)
 
     # 3. NỘI DUNG CÂU HỎI
     st.markdown(f"""
     <div class="content-card" style="border-left: 6px solid #2563eb;">
-        <div style="font-size:0.85rem; color:#64748b; text-transform:uppercase; margin-bottom:5px;">{q.get('category','Chung')}</div>
+        <div style="font-size:0.8rem; color:#64748b; text-transform:uppercase; margin-bottom:5px;">{q.get('category','Chung')}</div>
         <div class="q-text">{q['question']}</div>
     </div>
     """, unsafe_allow_html=True)
@@ -218,7 +257,7 @@ def render_exam_page():
         else:
             st.error(f"❌ SAI: Đáp án là {correct}")
 
-    # 4. THANH ĐIỀU HƯỚNG DƯỚI CÙNG (Dự phòng)
+    # 4. THANH ĐIỀU HƯỚNG DƯỚI (STICKY)
     st.markdown("---")
     st.markdown('<div style="height:30px"></div>', unsafe_allow_html=True)
     
@@ -250,7 +289,7 @@ def main():
         
         mode = st.radio("Chế độ:", ["📝 Luyện Thi", "📖 Học Mẹo"])
         st.divider()
-        st.info("V12: Có nút điều hướng trên đầu trang.")
+        st.info("V15: Đã dời bộ lọc xuống dưới để dễ bấm.")
 
     if mode == "📖 Học Mẹo":
         render_tips_page(st.session_state.license_type)

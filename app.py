@@ -5,7 +5,7 @@ from PIL import Image, ImageOps
 
 # --- 1. CẤU HÌNH TRANG (MOBILE FIRST) ---
 st.set_page_config(
-    page_title="GPLX Pro - V13 Layout Fix",
+    page_title="GPLX Pro - Mobile V12",
     page_icon="🚗",
     layout="wide",
     initial_sidebar_state="collapsed"
@@ -19,73 +19,99 @@ if 'current_q_index' not in st.session_state:
 if 'exam_category' not in st.session_state:
     st.session_state.exam_category = "Tất cả"
 
-# --- 3. CSS TỐI ƯU ---
+# --- 3. CSS TỐI ƯU CHO ĐIỆN THOẠI ---
 st.markdown("""
 <style>
-    html, body, [class*="css"] { font-family: 'Segoe UI', sans-serif; }
+    /* Font chữ dễ đọc */
+    html, body, [class*="css"] {
+        font-family: 'Segoe UI', Helvetica, Arial, sans-serif;
+    }
     .stApp { background-color: #f0f2f5; }
     
-    /* Tinh chỉnh khoảng cách đầu trang */
+    /* Thu gọn khoảng cách trên cùng để tiết kiệm diện tích */
     .block-container {
         padding-top: 1rem !important;
-        padding-bottom: 6rem !important;
+        padding-bottom: 5rem !important;
     }
 
-    /* KHUNG CHỨA BỘ LỌC (FILTER ZONE) */
-    .filter-container {
-        background: white;
-        padding: 10px 15px;
-        border-radius: 10px;
-        margin-bottom: 10px;
-        border: 1px solid #dee2e6;
-    }
-
-    /* THANH ĐIỀU HƯỚNG TRÊN (TOP NAV) */
+    /* THANH ĐIỀU HƯỚNG TRÊN (QUAN TRỌNG) */
     .top-nav {
-        display: flex; justify-content: space-between; align-items: center;
-        background: white; padding: 8px 12px;
-        border-radius: 10px; margin-bottom: 15px;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        background: white;
+        padding: 10px;
+        border-radius: 12px;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        margin-bottom: 15px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border: 1px solid #dee2e6;
     }
 
     /* CARD CÂU HỎI */
     .content-card {
-        background: white; padding: 20px; border-radius: 16px;
+        background: white; 
+        padding: 20px; 
+        border-radius: 16px;
         box-shadow: 0 4px 6px rgba(0,0,0,0.02);
-        border: 1px solid #e1e4e8; margin-bottom: 15px;
+        border: 1px solid #e1e4e8; 
+        margin-bottom: 15px;
     }
+    
     .q-text { 
-        font-size: 1.3rem; font-weight: 600; 
-        color: #1a202c; line-height: 1.5; margin-top: 5px; 
+        font-size: 1.25rem; /* Chữ to vừa phải */
+        font-weight: 600; 
+        color: #1a202c; 
+        line-height: 1.5;
+        margin-top: 5px;
     }
 
-    /* ĐÁP ÁN DẠNG THẺ */
+    /* ĐÁP ÁN DẠNG THẺ (Dễ bấm) */
     div[data-testid="stRadio"] > label { display: none; }
-    div[role="radiogroup"] { gap: 12px; display: flex; flex-direction: column; }
+    div[role="radiogroup"] { gap: 10px; display: flex; flex-direction: column; }
+    
     div[data-testid="stRadio"] div[role="radiogroup"] > label {
-        background: white; border: 2px solid #e2e8f0; padding: 16px; 
-        border-radius: 12px; width: 100%; cursor: pointer;
-        display: flex; align-items: center; color: #4a5568; font-weight: 500;
+        background: white; 
+        border: 2px solid #e2e8f0; 
+        padding: 15px; 
+        border-radius: 12px; 
+        width: 100%; 
+        cursor: pointer;
+        display: flex; align-items: center; 
+        color: #4a5568;
+        font-weight: 500;
         transition: all 0.15s;
     }
-    div[data-testid="stRadio"] div[role="radiogroup"] > label:hover {
-        border-color: #3b82f6; background: #eff6ff;
-    }
+    
+    /* Active State */
     div[data-testid="stRadio"] div[role="radiogroup"] > label[data-checked="true"] {
-        border-color: #2563eb !important; background: #eff6ff !important;
-        color: #1e40af !important; font-weight: 700;
+        border-color: #2563eb !important; 
+        background: #eff6ff !important;
+        color: #1e40af !important; 
+        font-weight: 700;
     }
 
-    /* ẢNH */
-    div[data-testid="stImage"] { display: flex; justify-content: center; margin: 10px 0; }
-    div[data-testid="stImage"] img { border-radius: 8px; max-height: 350px; object-fit: contain; }
-    
-    /* CUSTOM BUTTON FULL WIDTH */
-    div[data-testid="stButton"] button { width: 100%; border-radius: 8px; }
+    /* ẢNH MINH HỌA */
+    div[data-testid="stImage"] {
+        display: flex; justify-content: center;
+        margin: 10px 0;
+    }
+    div[data-testid="stImage"] img {
+        border-radius: 8px;
+        max-height: 300px; /* Giới hạn chiều cao ảnh để không chiếm hết màn hình */
+        object-fit: contain;
+    }
+
+    /* Custom Button Styles */
+    div[data-testid="stButton"] button {
+        width: 100%;
+        border-radius: 8px;
+        font-weight: 600;
+    }
 </style>
 """, unsafe_allow_html=True)
 
 # --- 4. HÀM XỬ LÝ DỮ LIỆU ---
+
 @st.cache_data
 def load_json_file(filename):
     try:
@@ -117,12 +143,11 @@ def render_tips_page(license_type):
     st.markdown(f"### 📖 Mẹo: {license_type}")
     data = load_data_by_license(license_type)
     if not data:
-        st.error("Thiếu dữ liệu mẹo.")
+        st.error("Thiếu file dữ liệu mẹo.")
         return
 
     cats = sorted(list(set([i.get('category', 'Khác') for i in data])))
-    selected_cat = st.selectbox("Chọn chủ đề:", ["Tất cả"] + cats)
-    
+    selected_cat = st.selectbox("Chủ đề:", ["Tất cả"] + cats)
     items = data if selected_cat == "Tất cả" else [d for d in data if d.get('category') == selected_cat]
 
     for tip in items:
@@ -145,16 +170,17 @@ def render_tips_page(license_type):
             if img: st.image(img, use_container_width=True)
         st.write("---")
 
-# --- 6. GIAO DIỆN LUYỆN THI (LAYOUT MỚI) ---
+# --- 6. GIAO DIỆN LUYỆN THI (DUAL NAVIGATION) ---
 def render_exam_page():
     all_qs = load_json_file('dulieu_600_cau.json')
     if not all_qs: return
 
     cats = sorted(list(set([q.get('category', 'Khác') for q in all_qs])))
     
-    # 1. KHU VỰC CHỌN CHỦ ĐỀ (Nằm riêng biệt trên cùng)
-    st.markdown("##### 📂 Bộ lọc câu hỏi")
-    sel_cat = st.selectbox("Chọn chủ đề ôn tập:", ["Tất cả"] + cats, label_visibility="collapsed")
+    # Header nhỏ
+    c1, c2 = st.columns([1.5, 1])
+    with c1: st.markdown("#### 📝 Thi 600 Câu")
+    with c2: sel_cat = st.selectbox("Lọc:", ["Tất cả"] + cats, label_visibility="collapsed")
 
     if sel_cat != st.session_state.exam_category:
         st.session_state.exam_category = sel_cat
@@ -167,23 +193,21 @@ def render_exam_page():
     if st.session_state.current_q_index >= total: st.session_state.current_q_index = 0
     q = filtered[st.session_state.current_q_index]
 
-    st.markdown("---") # Đường kẻ tách biệt
-
-    # 2. THANH ĐIỀU HƯỚNG TRÊN (Tách biệt khỏi bộ lọc)
-    # Giúp bấm qua câu nhanh mà không bị dính vào Selectbox
-    c1, c2, c3 = st.columns([1, 2, 1])
-    with c1:
-        if st.button("⬅️", key="top_prev"):
+    # --- THANH ĐIỀU HƯỚNG TRÊN (TOP NAV) ---
+    # Giúp bạn bấm qua câu ngay khi vừa load trang mà không cần cuộn
+    col_t1, col_t2, col_t3 = st.columns([1, 2, 1])
+    with col_t1:
+        if st.button("⬅️", key="prev_top"):
             st.session_state.current_q_index = max(0, st.session_state.current_q_index - 1)
             st.rerun()
-    with c2:
-        st.markdown(f"<div style='text-align:center; font-weight:bold; padding-top:8px; font-size:1.1rem'>Câu {st.session_state.current_q_index + 1}/{total}</div>", unsafe_allow_html=True)
-    with c3:
-        if st.button("➡️", key="top_next", type="primary"):
+    with col_t2:
+        st.markdown(f"<div style='text-align:center; font-weight:bold; padding-top:8px;'>Câu {st.session_state.current_q_index + 1}/{total}</div>", unsafe_allow_html=True)
+    with col_t3:
+        if st.button("➡️", key="next_top", type="primary"):
             st.session_state.current_q_index = min(total - 1, st.session_state.current_q_index + 1)
             st.rerun()
 
-    # 3. NỘI DUNG CÂU HỎI
+    # --- NỘI DUNG CÂU HỎI ---
     st.markdown(f"""
     <div class="content-card">
         <div style="font-size:0.8rem; color:#718096; text-transform:uppercase; margin-bottom:5px;">{q.get('category','Chung')}</div>
@@ -198,7 +222,7 @@ def render_exam_page():
         if img: st.image(img, use_container_width=True)
 
     # Đáp án
-    user_choice = st.radio("Lựa chọn:", q['options'], index=None, key=f"q_{q['id']}")
+    user_choice = st.radio("Chọn:", q['options'], index=None, key=f"q_{q['id']}")
 
     if user_choice:
         correct = q['correct_answer'].strip()
@@ -207,22 +231,21 @@ def render_exam_page():
         else:
             st.error(f"❌ SAI: Đáp án là {correct}")
 
-    # 4. THANH ĐIỀU HƯỚNG DƯỚI (STICKY ĐÁY MÀN HÌNH)
+    # --- THANH ĐIỀU HƯỚNG DƯỚI (BOTTOM NAV) ---
+    # Dành cho khi bạn đã cuộn xuống để chọn đáp án
     st.write("---")
-    # Tạo khoảng trống để nút không che nội dung cuối
-    st.markdown('<div style="height:60px"></div>', unsafe_allow_html=True)
-    
     col_b1, col_b2, col_b3 = st.columns([1, 1, 1])
     with col_b1:
-        if st.button("⬅️ Trước", key="bot_prev", use_container_width=True):
+        if st.button("⬅️ Trước", key="prev_bot", use_container_width=True):
             st.session_state.current_q_index = max(0, st.session_state.current_q_index - 1)
             st.rerun()
     with col_b3:
-        if st.button("Tiếp theo ➡️", key="bot_next", type="primary", use_container_width=True):
+        if st.button("Tiếp theo ➡️", key="next_bot", type="primary", use_container_width=True):
             st.session_state.current_q_index = min(total - 1, st.session_state.current_q_index + 1)
             st.rerun()
+    
+    # Nhảy câu nhanh
     with col_b2:
-         # Ô nhảy trang
          new_idx = st.number_input("Tới câu:", 1, total, st.session_state.current_q_index + 1, label_visibility="collapsed")
          if new_idx - 1 != st.session_state.current_q_index:
              st.session_state.current_q_index = new_idx - 1
@@ -241,7 +264,7 @@ def main():
         
         mode = st.radio("Chế độ:", ["📝 Luyện Thi", "📖 Học Mẹo"])
         st.divider()
-        st.info("V13: Layout tách biệt, dễ bấm.")
+        st.info("💡 V12: Đã thêm nút điều hướng trên đầu trang.")
 
     if mode == "📖 Học Mẹo":
         render_tips_page(st.session_state.license_type)

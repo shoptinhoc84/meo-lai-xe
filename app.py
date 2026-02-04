@@ -5,7 +5,7 @@ from PIL import Image, ImageOps
 
 # --- 1. CẤU HÌNH TRANG ---
 st.set_page_config(
-    page_title="Ôn Thi GPLX - Fix Lỗi Ảnh",
+    page_title="Ôn Thi GPLX - Bản Full Fix",
     page_icon="🚗",
     layout="wide"
 )
@@ -18,7 +18,7 @@ if 'current_q_index' not in st.session_state:
 if 'show_answer' not in st.session_state:
     st.session_state.show_answer = False
 
-# --- 3. CSS GIAO DIỆN (ĐÃ TỐI ƯU CHỐNG XÉO) ---
+# --- 3. CSS GIAO DIỆN (CHỐNG LỆCH HÀNG & CĂN CHỈNH CHUẨN) ---
 st.markdown("""
 <style>
     .tip-card {
@@ -27,8 +27,8 @@ st.markdown("""
         border: 1px solid #f0f0f0;
     }
     .question-box {
-        background-color: #f8f9fa; border-radius: 10px; padding: 20px;
-        border-left: 5px solid #007bff; margin-bottom: 20px;
+        background-color: #f8f9fa; border-radius: 10px; padding: 25px;
+        border-left: 6px solid #007bff; margin-bottom: 20px;
     }
     .highlight { background-color: #ffebee; color: #c62828; font-weight: bold; padding: 2px 6px; border-radius: 4px; }
     
@@ -38,13 +38,14 @@ st.markdown("""
     div[data-testid="stRadio"] div[role="radiogroup"] > label {
         background-color: #ffffff;
         border: 1px solid #dee2e6;
-        padding: 12px 20px;
+        padding: 15px 20px;
         border-radius: 8px;
         width: 100%;
         display: flex;
-        align-items: center; /* Căn giữa theo chiều dọc */
+        align-items: center; 
         margin: 0;
         cursor: pointer;
+        transition: all 0.2s;
     }
     div[data-testid="stRadio"] div[role="radiogroup"] > label:hover {
         border-color: #007bff;
@@ -56,7 +57,7 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-# --- 4. HÀM XỬ LÝ DỮ LIỆU & ẢNH THÔNG MINH ---
+# --- 4. HÀM XỬ LÝ DỮ LIỆU & ẢNH ---
 
 @st.cache_data
 def load_tips_data(license_type):
@@ -73,31 +74,33 @@ def load_600_questions():
             return json.load(f)
     except: return None
 
-def load_image_smart(image_name, is_oto):
-    """Tìm ảnh thông minh: Ưu tiên folder theo hạng, nếu không thấy tìm folder khác"""
+def load_image_smart(image_name, is_oto, is_exam_mode=False):
+    """Tìm ảnh thông minh, tránh lấy nhầm ảnh mẹo cho câu hỏi thi"""
     if not image_name: return None
     
-    # Danh sách các nơi có thể chứa ảnh (ưu tiên theo hạng bằng)
-    if is_oto:
+    # Ưu tiên tìm trong folder theo chế độ
+    if is_exam_mode:
+        # Luyện thi: Phải tìm trong folder images (600 câu) trước
         search_paths = ["images", "images_a1", ""]
     else:
-        search_paths = ["images_a1", "images", ""]
+        # Học mẹo: Tìm theo hạng bằng
+        search_paths = ["images", "images_a1", ""] if is_oto else ["images_a1", "images", ""]
         
     for folder in search_paths:
         path = os.path.join(folder, image_name) if folder else image_name
-        if os.path.exists(path):
+        if os.path.exists(path) and os.path.isfile(path):
             try:
                 img = Image.open(path)
                 return ImageOps.exif_transpose(img)
             except: continue
     return None
 
-# --- 5. GIAO DIỆN: HỌC MẸO (KHÔI PHỤC TỪ BẢN GỐC) ---
+# --- 5. GIAO DIỆN: HỌC MẸO ---
 def render_tips_page(data, is_oto):
     st.header(f"📖 Mẹo Thi Lý Thuyết {'Ô Tô' if is_oto else 'Xe Máy'}")
     
     if not data:
-        st.warning("Không tìm thấy dữ liệu mẹo (.json).")
+        st.warning("Chưa có dữ liệu mẹo. Vui lòng kiểm tra file data.json hoặc tips_a1.json")
         return
 
     categories = sorted(list(set([item.get('category', 'Khác') for item in data])))
@@ -116,11 +119,11 @@ def render_tips_page(data, is_oto):
                 st.markdown(f"• {line}", unsafe_allow_html=True)
         with cols[1]:
             if tip.get('image'):
-                img_obj = load_image_smart(tip['image'], is_oto)
+                img_obj = load_image_smart(tip['image'], is_oto, is_exam_mode=False)
                 if img_obj: 
                     st.image(img_obj, use_container_width=True)
                 else: 
-                    st.caption(f"(⚠️ Không tìm thấy file ảnh: {tip['image']})")
+                    st.caption(f"(⚠️ Không tìm thấy ảnh: {tip['image']})")
         st.markdown("</div>", unsafe_allow_html=True)
 
 # --- 6. GIAO DIỆN: LUYỆN THI 600 CÂU ---
@@ -128,7 +131,7 @@ def render_exam_page(is_oto):
     st.header(f"📝 Luyện Tập 600 Câu - {'Hạng Ô Tô' if is_oto else 'Hạng Xe Máy'}")
     questions = load_600_questions()
     if not questions:
-        st.error("Lỗi: Thiếu file dulieu_600_cau.json")
+        st.error("Lỗi: Không tìm thấy file dulieu_600_cau.json")
         return
 
     total_q = len(questions)
@@ -156,7 +159,8 @@ def render_exam_page(is_oto):
     st.markdown(f"""<div class="question-box"><h4>Câu {q['id']}: {q['question']}</h4></div>""", unsafe_allow_html=True)
 
     if q.get('image'):
-        img_obj = load_image_smart(q['image'], is_oto)
+        # is_exam_mode=True để ưu tiên lấy ảnh từ folder 'images' chuẩn của 600 câu
+        img_obj = load_image_smart(q['image'], is_oto, is_exam_mode=True)
         if img_obj: 
             st.image(img_obj, width=450)
 
@@ -181,11 +185,12 @@ def main():
         if license_type != st.session_state.license_type:
             st.session_state.license_type = license_type
             st.session_state.current_q_index = 0
+            st.session_state.show_answer = False
             st.rerun()
 
         mode = st.radio("Chế độ:", ["📖 Học Mẹo", "📝 Luyện Thi (600 câu)"])
         st.divider()
-        st.caption("Phiên bản 9.0 - Đã sửa lỗi ảnh và layout")
+        st.caption("Phiên bản 10.0 - Full & Final Fix")
 
     is_oto = "Ô tô" in st.session_state.license_type
     if mode == "📖 Học Mẹo":

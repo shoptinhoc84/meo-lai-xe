@@ -5,7 +5,7 @@ from PIL import Image, ImageOps
 
 # --- 1. CẤU HÌNH TRANG ---
 st.set_page_config(
-    page_title="GPLX Pro - V22 Mobile Fixed",
+    page_title="GPLX Pro - V23 Dropdown",
     page_icon="🚗",
     layout="wide",
     initial_sidebar_state="collapsed"
@@ -19,7 +19,7 @@ if 'current_q_index' not in st.session_state:
 if 'exam_category' not in st.session_state:
     st.session_state.exam_category = "Tất cả"
 
-# --- 3. CSS TỐI ƯU (FIX LỖI DỌC & MẤT ĐÁP ÁN) ---
+# --- 3. CSS GIAO DIỆN SẠCH (CLEAN UI) ---
 st.markdown("""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
@@ -31,117 +31,57 @@ st.markdown("""
         padding-bottom: 6rem !important;
     }
 
-    /* ================================================================= */
-    /* PHẦN 1: ÉP BUỘC THANH CHỦ ĐỀ NẰM NGANG (HORIZONTAL SCROLL)      */
-    /* ================================================================= */
-    
-    /* Target vào Radio Group có thuộc tính horizontal */
-    div[data-testid="stRadio"] div[role="radiogroup"][aria-orientation="horizontal"] {
-        display: flex !important;
-        flex-direction: row !important;
-        flex-wrap: nowrap !important; /* QUAN TRỌNG: Cấm xuống dòng */
-        overflow-x: auto !important;  /* Cho phép cuộn ngang */
-        width: 100% !important;
-        gap: 8px !important;
-        padding-bottom: 8px !important;
-        -webkit-overflow-scrolling: touch;
-        scrollbar-width: none; /* Ẩn thanh cuộn Firefox */
-    }
-    
-    /* Ẩn thanh cuộn Chrome/Safari */
-    div[data-testid="stRadio"] div[role="radiogroup"][aria-orientation="horizontal"]::-webkit-scrollbar {
-        display: none; 
-    }
-
-    /* Style cho từng nút bấm chủ đề */
-    div[data-testid="stRadio"] div[role="radiogroup"][aria-orientation="horizontal"] label {
-        flex: 0 0 auto !important; /* QUAN TRỌNG: Không co giãn */
-        background-color: white !important;
-        border: 1px solid #cbd5e1 !important;
-        padding: 8px 16px !important;
-        border-radius: 50px !important;
-        white-space: nowrap !important; /* Chữ luôn thẳng hàng */
-        font-weight: 600 !important;
-        color: #64748b !important;
-        font-size: 0.85rem !important;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.02) !important;
-        margin: 0 !important;
-        min-width: 80px !important; /* Chiều rộng tối thiểu */
-        text-align: center !important;
-        justify-content: center !important;
-    }
-
-    /* Hiệu ứng khi chọn chủ đề (Active) */
-    div[data-testid="stRadio"] div[role="radiogroup"][aria-orientation="horizontal"] label[data-checked="true"] {
-        background-color: #2563eb !important;
-        color: white !important;
-        border-color: #2563eb !important;
-        box-shadow: 0 4px 10px rgba(37, 99, 235, 0.3) !important;
-    }
-
-    /* ================================================================= */
-    /* PHẦN 2: ĐÁP ÁN CÂU HỎI (VERTICAL - DỌC)                         */
-    /* ================================================================= */
-    
-    /* Target vào Radio Group KHÔNG có thuộc tính horizontal */
-    div[data-testid="stRadio"] div[role="radiogroup"]:not([aria-orientation="horizontal"]) {
-        display: flex !important;
-        flex-direction: column !important;
-        gap: 12px !important;
-        flex-wrap: wrap !important; /* Cho phép xuống dòng nội dung bên trong */
-    }
-
-    /* Style cho từng nút đáp án */
-    div[data-testid="stRadio"] div[role="radiogroup"]:not([aria-orientation="horizontal"]) label {
-        display: flex !important;
-        width: 100% !important;
-        background-color: white !important;
-        border: 2px solid #e2e8f0 !important;
-        padding: 16px !important;
-        border-radius: 12px !important;
-        align-items: center !important;
-        white-space: normal !important; /* Cho phép text dài xuống dòng */
-        height: auto !important;
-        cursor: pointer !important;
-    }
-    
-    /* Hiệu ứng chọn đáp án */
-    div[data-testid="stRadio"] div[role="radiogroup"]:not([aria-orientation="horizontal"]) label[data-checked="true"] {
-        border-color: #2563eb !important;
-        background-color: #eff6ff !important;
-        color: #1e40af !important;
-        font-weight: 700 !important;
-    }
-
-    /* Ẩn tiêu đề mặc định của Radio để tự custom */
-    div[data-testid="stRadio"] > label {
-        display: none !important;
-    }
-
-    /* ================================================================= */
-    /* CÁC THÀNH PHẦN KHÁC */
-    /* ================================================================= */
+    /* THANH ĐIỀU HƯỚNG TRÊN */
     .top-nav-container {
-        background: white; padding: 10px; border-radius: 12px;
-        box-shadow: 0 2px 5px rgba(0,0,0,0.05); margin-bottom: 10px;
+        background: white; padding: 8px; border-radius: 12px;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.05); margin-bottom: 15px;
         border: 1px solid #e5e7eb;
     }
-    .filter-label {
-        font-size: 0.75rem; font-weight: 800; color: #94a3b8; text-transform: uppercase; margin-bottom: 5px; letter-spacing: 0.5px;
-    }
+
+    /* CARD CÂU HỎI */
     .content-card {
         background: white; padding: 25px; border-radius: 16px;
         box-shadow: 0 4px 6px rgba(0,0,0,0.03);
         border: 1px solid #e2e8f0; margin-bottom: 15px;
     }
     .q-text { 
-        font-size: 1.35rem; font-weight: 700; color: #1e293b; 
+        font-size: 1.3rem; font-weight: 700; color: #1e293b; 
         line-height: 1.5; margin-top: 5px; 
     }
+
+    /* ĐÁP ÁN (Dạng thẻ bấm lớn) */
+    div[data-testid="stRadio"] > label { display: none; }
+    div[role="radiogroup"] { gap: 12px; display: flex; flex-direction: column; }
+    div[data-testid="stRadio"] div[role="radiogroup"] > label {
+        background: white; border: 2px solid #e2e8f0; padding: 16px; 
+        border-radius: 12px; width: 100%; cursor: pointer;
+        display: flex; align-items: center; color: #334155; font-weight: 500;
+        transition: all 0.15s;
+    }
+    
+    /* Hiệu ứng chọn */
+    div[data-testid="stRadio"] div[role="radiogroup"] > label:hover {
+        border-color: #3b82f6; background: #eff6ff;
+    }
+    div[data-testid="stRadio"] div[role="radiogroup"] > label[data-checked="true"] {
+        border-color: #2563eb !important; background: #eff6ff !important;
+        color: #1e40af !important; font-weight: 700;
+    }
+
+    /* Tùy chỉnh Selectbox (Hộp chọn) cho đẹp hơn */
+    div[data-testid="stSelectbox"] > div > div {
+        background-color: white;
+        border-radius: 10px;
+        border: 1px solid #cbd5e1;
+    }
+
     div[data-testid="stImage"] { display: flex; justify-content: center; margin: 10px 0; }
     div[data-testid="stImage"] img { border-radius: 8px; max-height: 350px; object-fit: contain; }
     div[data-testid="stButton"] button { width: 100%; border-radius: 8px; font-weight: 600; height: 3rem; }
-
+    
+    .filter-label {
+        font-size: 0.8rem; font-weight: 700; color: #64748b; margin-bottom: 5px; text-transform: uppercase;
+    }
 </style>
 """, unsafe_allow_html=True)
 
@@ -182,8 +122,9 @@ def render_tips_page(license_type):
 
     cats = sorted(list(set([i.get('category', 'Khác') for i in data])))
     
-    st.markdown('<div class="filter-label">👉 CHỌN CHỦ ĐỀ (VUỐT NGANG):</div>', unsafe_allow_html=True)
-    selected_cat = st.radio("Chủ đề:", ["Tất cả"] + cats, horizontal=True, label_visibility="collapsed", key="tips_key")
+    # Selectbox cho Mẹo
+    st.markdown('<div class="filter-label">📂 CHỌN CHỦ ĐỀ MẸO:</div>', unsafe_allow_html=True)
+    selected_cat = st.selectbox("Chọn chủ đề mẹo:", ["Tất cả"] + cats, label_visibility="collapsed")
     
     items = data if selected_cat == "Tất cả" else [d for d in data if d.get('category') == selected_cat]
 
@@ -208,7 +149,7 @@ def render_tips_page(license_type):
             if img: st.image(img, use_container_width=True)
         st.write("---")
 
-# --- 6. GIAO DIỆN LUYỆN THI (V22) ---
+# --- 6. GIAO DIỆN LUYỆN THI (DROPDOWN) ---
 def render_exam_page():
     all_qs = load_json_file('dulieu_600_cau.json')
     if not all_qs: return
@@ -222,7 +163,7 @@ def render_exam_page():
     if st.session_state.current_q_index >= total: st.session_state.current_q_index = 0
     q = filtered[st.session_state.current_q_index]
 
-    # 1. THANH ĐIỀU HƯỚNG TRÊN
+    # 1. THANH ĐIỀU HƯỚNG TRÊN (Luôn hiển thị đầu tiên)
     with st.container():
         st.markdown('<div class="top-nav-container">', unsafe_allow_html=True)
         c1, c2, c3 = st.columns([1, 2, 1])
@@ -238,16 +179,21 @@ def render_exam_page():
                 st.rerun()
         st.markdown('</div>', unsafe_allow_html=True)
 
-    # 2. KHUNG CHỌN CHỦ ĐỀ (PILLS SCROLL)
-    st.markdown('<div class="filter-label">📂 CHỦ ĐỀ (VUỐT NGANG ↔️):</div>', unsafe_allow_html=True)
+    # 2. KHUNG CHỌN CHỦ ĐỀ (SELECTBOX - XỔ XUỐNG)
+    st.markdown('<div class="filter-label">📂 LỌC CHỦ ĐỀ CÂU HỎI:</div>', unsafe_allow_html=True)
     
-    sel_cat = st.radio(
+    # Dùng Selectbox chuẩn của Streamlit -> Chạy tốt trên mọi thiết bị
+    index_val = 0
+    if current_cat in cats:
+        index_val = cats.index(current_cat) + 1 # +1 vì có mục "Tất cả" ở đầu
+    elif current_cat == "Tất cả":
+        index_val = 0
+
+    sel_cat = st.selectbox(
         "Bộ lọc chủ đề", 
         ["Tất cả"] + cats, 
-        horizontal=True, 
-        label_visibility="collapsed",
-        key="exam_cat_radio",
-        index=0 if current_cat == "Tất cả" else (cats.index(current_cat) + 1 if current_cat in cats else 0)
+        index=index_val,
+        label_visibility="collapsed"
     )
 
     if sel_cat != st.session_state.exam_category:
@@ -270,13 +216,8 @@ def render_exam_page():
         img = load_image_strict(q['image'], ['images'])
         if img: st.image(img, use_container_width=True)
 
-    # 4. ĐÁP ÁN (DỌC)
-    user_choice = st.radio(
-        "Lựa chọn:", 
-        q['options'], 
-        index=None, 
-        key=f"q_radio_{q['id']}"
-    )
+    # Đáp án
+    user_choice = st.radio("Lựa chọn:", q['options'], index=None, key=f"q_{q['id']}")
 
     if user_choice:
         correct = q['correct_answer'].strip()
@@ -285,7 +226,7 @@ def render_exam_page():
         else:
             st.error(f"❌ SAI: Đáp án là {correct}")
 
-    # 5. THANH ĐIỀU HƯỚNG DƯỚI
+    # 4. THANH ĐIỀU HƯỚNG DƯỚI
     st.markdown("---")
     st.markdown('<div style="height:30px"></div>', unsafe_allow_html=True)
     
@@ -317,7 +258,7 @@ def main():
         
         mode = st.radio("Chế độ:", ["📝 Luyện Thi", "📖 Học Mẹo"])
         st.divider()
-        if st.button("🔄 Xóa Cache CSS"):
+        if st.button("🔄 Làm Mới App"):
             st.cache_data.clear()
             st.rerun()
 

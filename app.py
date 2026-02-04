@@ -5,7 +5,7 @@ from PIL import Image, ImageOps
 
 # --- 1. CẤU HÌNH TRANG ---
 st.set_page_config(
-    page_title="GPLX Pro - V19 Final CSS Fix",
+    page_title="GPLX Pro - V20 Final Stable",
     page_icon="🚗",
     layout="wide",
     initial_sidebar_state="collapsed"
@@ -19,7 +19,7 @@ if 'current_q_index' not in st.session_state:
 if 'exam_category' not in st.session_state:
     st.session_state.exam_category = "Tất cả"
 
-# --- 3. CSS "CƯỠNG CHẾ" GIAO DIỆN NGANG (V19) ---
+# --- 3. CSS TỐI ƯU (ĐÃ FIX LỖI MẤT ĐÁP ÁN) ---
 st.markdown("""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
@@ -31,61 +31,86 @@ st.markdown("""
         padding-bottom: 6rem !important;
     }
 
-    /* --- SỬA LỖI HÀNG DỌC (QUAN TRỌNG NHẤT) --- */
+    /* --- PHẦN 1: THANH CHỌN CHỦ ĐỀ (HORIZONTAL) --- */
+    /* Chỉ tác động đến Radio có key là 'filter_topic' (Ta sẽ gán key này ở dưới) */
+    div[data-testid="stRadio"] > label { display: none; } /* Ẩn label mặc định */
     
-    /* 1. Can thiệp vào container chính của Radio Button */
-    div[data-testid="stRadio"] > div[role="radiogroup"] {
+    /* CSS cho vùng cuộn ngang */
+    .horizontal-scroll-container {
+        display: flex;
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        gap: 10px;
+        padding-bottom: 10px;
+        -webkit-overflow-scrolling: touch;
+    }
+    
+    /* Vì Streamlit không cho gán class trực tiếp vào Radio, ta dùng selector đặc biệt cho Horizontal */
+    div[data-testid="stRadio"] div[role="radiogroup"][aria-orientation="horizontal"] {
         display: flex !important;
         flex-direction: row !important;
-        flex-wrap: nowrap !important; /* Cấm tuyệt đối xuống dòng */
-        overflow-x: auto !important;  /* Cho phép cuộn ngang */
-        width: 100% !important;
-        gap: 10px !important;
-        padding-bottom: 10px !important;
-        align-items: center !important;
-        -webkit-overflow-scrolling: touch; /* Cuộn mượt trên iPhone */
+        flex-wrap: nowrap !important;
+        overflow-x: auto !important;
+        gap: 8px !important;
     }
-
-    /* 2. Style cho từng nút bấm (Label) */
-    div[data-testid="stRadio"] > div[role="radiogroup"] > label {
-        flex: 0 0 auto !important; /* Không được co nhỏ */
-        min-width: 100px !important; /* Chiều rộng tối thiểu để không bị bẹp */
-        background-color: white !important;
+    
+    /* Style nút bấm chủ đề */
+    div[data-testid="stRadio"] div[role="radiogroup"][aria-orientation="horizontal"] label {
+        flex: 0 0 auto !important;
+        background: white !important;
         border: 1px solid #cbd5e1 !important;
-        padding: 10px 20px !important;
-        border-radius: 30px !important;
-        font-size: 0.9rem !important;
+        padding: 6px 16px !important;
+        border-radius: 20px !important;
+        white-space: nowrap !important;
         font-weight: 600 !important;
         color: #475569 !important;
-        text-align: center !important;
-        white-space: nowrap !important; /* Chữ luôn nằm trên 1 dòng */
-        margin: 0 !important;
-        transition: all 0.2s;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.02) !important;
     }
-
-    /* 3. Hiệu ứng Hover */
-    div[data-testid="stRadio"] > div[role="radiogroup"] > label:hover {
-        border-color: #3b82f6 !important;
-        background-color: #eff6ff !important;
-        color: #0284c7 !important;
-        transform: translateY(-2px);
-    }
-
-    /* 4. Khi được chọn (Active) */
-    div[data-testid="stRadio"] > div[role="radiogroup"] > label[data-checked="true"] {
+    
+    /* Active State (Chủ đề) */
+    div[data-testid="stRadio"] div[role="radiogroup"][aria-orientation="horizontal"] label[data-checked="true"] {
         background: #2563eb !important;
         color: white !important;
         border-color: #2563eb !important;
-        box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3) !important;
     }
 
-    /* 5. Ẩn thanh cuộn xấu xí */
-    div[data-testid="stRadio"] > div[role="radiogroup"]::-webkit-scrollbar {
-        height: 0px; 
-        background: transparent; 
+    /* --- PHẦN 2: ĐÁP ÁN CÂU HỎI (VERTICAL) --- */
+    /* Selector này chỉ tác động đến Radio Dọc (không có aria-orientation="horizontal") */
+    div[data-testid="stRadio"] div[role="radiogroup"]:not([aria-orientation="horizontal"]) {
+        display: flex !important;
+        flex-direction: column !important;
+        gap: 12px !important;
+    }
+    
+    /* Style nút đáp án */
+    div[data-testid="stRadio"] div[role="radiogroup"]:not([aria-orientation="horizontal"]) label {
+        display: flex !important;
+        width: 100% !important;
+        background: white !important;
+        border: 2px solid #e2e8f0 !important;
+        padding: 16px !important;
+        border-radius: 12px !important;
+        align-items: center !important;
+        cursor: pointer !important;
+        white-space: normal !important; /* Cho phép xuống dòng nếu đáp án dài */
+        height: auto !important;
+    }
+    
+    /* Hover đáp án */
+    div[data-testid="stRadio"] div[role="radiogroup"]:not([aria-orientation="horizontal"]) label:hover {
+        border-color: #3b82f6 !important;
+        background: #eff6ff !important;
+    }
+    
+    /* Active đáp án */
+    div[data-testid="stRadio"] div[role="radiogroup"]:not([aria-orientation="horizontal"]) label[data-checked="true"] {
+        border-color: #2563eb !important;
+        background: #eff6ff !important;
+        color: #1e40af !important;
+        font-weight: 700 !important;
     }
 
-    /* --- CÁC PHẦN KHÁC GIỮ NGUYÊN --- */
+    /* --- CÁC PHẦN KHÁC --- */
     .top-nav-container {
         background: white; padding: 10px; border-radius: 12px;
         box-shadow: 0 2px 5px rgba(0,0,0,0.05); margin-bottom: 10px;
@@ -103,14 +128,6 @@ st.markdown("""
         font-size: 1.35rem; font-weight: 700; color: #1e293b; 
         line-height: 1.5; margin-top: 5px; 
     }
-
-    /* Đáp án dọc (Loại trừ cái ngang ở trên ra) */
-    div[data-testid="stRadio"] > label { display: none; }
-    /* Selector này chỉ tác động đến radio đáp án (dọc) */
-    div[role="radiogroup"]:not([style*="flex-direction: row"]) > label {
-        display: flex; width: 100%; margin-bottom: 10px;
-    }
-
     div[data-testid="stImage"] { display: flex; justify-content: center; margin: 10px 0; }
     div[data-testid="stImage"] img { border-radius: 8px; max-height: 350px; object-fit: contain; }
     div[data-testid="stButton"] button { width: 100%; border-radius: 8px; font-weight: 600; height: 3rem; }
@@ -156,8 +173,8 @@ def render_tips_page(license_type):
     
     st.markdown('<div class="filter-label">👉 VUỐT NGANG ĐỂ CHỌN CHỦ ĐỀ:</div>', unsafe_allow_html=True)
     
-    # Ép buộc horizontal=True
-    selected_cat = st.radio("Chủ đề:", ["Tất cả"] + cats, horizontal=True, label_visibility="collapsed")
+    # Key riêng cho Mẹo
+    selected_cat = st.radio("Chủ đề:", ["Tất cả"] + cats, horizontal=True, label_visibility="collapsed", key="tips_filter")
     
     items = data if selected_cat == "Tất cả" else [d for d in data if d.get('category') == selected_cat]
 
@@ -182,7 +199,7 @@ def render_tips_page(license_type):
             if img: st.image(img, use_container_width=True)
         st.write("---")
 
-# --- 6. GIAO DIỆN LUYỆN THI (V19 CSS FIX) ---
+# --- 6. GIAO DIỆN LUYỆN THI (V20 FINAL) ---
 def render_exam_page():
     all_qs = load_json_file('dulieu_600_cau.json')
     if not all_qs: return
@@ -212,15 +229,16 @@ def render_exam_page():
                 st.rerun()
         st.markdown('</div>', unsafe_allow_html=True)
 
-    # 2. KHUNG CHỌN CHỦ ĐỀ (Dời xuống dưới)
+    # 2. KHUNG CHỌN CHỦ ĐỀ (HORIZONTAL)
     st.markdown('<div class="filter-label">📂 LỌC CHỦ ĐỀ (VUỐT NGANG ↔️):</div>', unsafe_allow_html=True)
     
-    # Quan trọng: horizontal=True
+    # Key riêng cho Exam Filter
     sel_cat = st.radio(
         "Bộ lọc chủ đề", 
         ["Tất cả"] + cats, 
         horizontal=True, 
         label_visibility="collapsed",
+        key="exam_filter_radio", # Key này giúp CSS nhận diện
         index=0 if current_cat == "Tất cả" else (cats.index(current_cat) + 1 if current_cat in cats else 0)
     )
 
@@ -244,8 +262,15 @@ def render_exam_page():
         img = load_image_strict(q['image'], ['images'])
         if img: st.image(img, use_container_width=True)
 
-    # Đáp án
-    user_choice = st.radio("Lựa chọn:", q['options'], index=None, key=f"q_{q['id']}")
+    # 4. ĐÁP ÁN (VERTICAL - QUAN TRỌNG)
+    # Streamlit sẽ tự động render vertical vì không có tham số horizontal=True
+    # CSS của ta đã dùng :not([aria-orientation="horizontal"]) để style riêng cho cái này
+    user_choice = st.radio(
+        "Lựa chọn:", 
+        q['options'], 
+        index=None, 
+        key=f"q_radio_{q['id']}" # Key riêng cho từng câu hỏi
+    )
 
     if user_choice:
         correct = q['correct_answer'].strip()
@@ -254,7 +279,7 @@ def render_exam_page():
         else:
             st.error(f"❌ SAI: Đáp án là {correct}")
 
-    # 4. THANH ĐIỀU HƯỚNG DƯỚI
+    # 5. THANH ĐIỀU HƯỚNG DƯỚI
     st.markdown("---")
     st.markdown('<div style="height:30px"></div>', unsafe_allow_html=True)
     
@@ -286,7 +311,7 @@ def main():
         
         mode = st.radio("Chế độ:", ["📝 Luyện Thi", "📖 Học Mẹo"])
         st.divider()
-        if st.button("🔄 Fix Lỗi Giao Diện"):
+        if st.button("🔄 Reload App"):
             st.cache_data.clear()
             st.rerun()
 

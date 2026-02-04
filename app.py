@@ -5,7 +5,7 @@ from PIL import Image, ImageOps
 
 # --- 1. CẤU HÌNH TRANG ---
 st.set_page_config(
-    page_title="GPLX Pro - V17 Hover Effect",
+    page_title="GPLX Pro - V18 Force Horizontal",
     page_icon="🚗",
     layout="wide",
     initial_sidebar_state="collapsed"
@@ -19,7 +19,7 @@ if 'current_q_index' not in st.session_state:
 if 'exam_category' not in st.session_state:
     st.session_state.exam_category = "Tất cả"
 
-# --- 3. CSS TỐI ƯU (HIỆU ỨNG HOVER ĐẸP MẮT) ---
+# --- 3. CSS "CƯỠNG CHẾ" GIAO DIỆN NGANG ---
 st.markdown("""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
@@ -31,67 +31,68 @@ st.markdown("""
         padding-bottom: 6rem !important;
     }
 
-    /* THANH ĐIỀU HƯỚNG TRÊN */
-    .top-nav-container {
-        background: white; padding: 10px; border-radius: 12px;
-        box-shadow: 0 2px 5px rgba(0,0,0,0.05); margin-bottom: 15px;
-        border: 1px solid #e5e7eb;
+    /* --- PHẦN QUAN TRỌNG NHẤT: ÉP NẰM NGANG --- */
+    /* Target chính xác vào Radio Group nằm ngang */
+    div[data-testid="stRadio"] > div[role="radiogroup"][aria-orientation="horizontal"] {
+        display: flex !important;
+        flex-direction: row !important; /* Bắt buộc hàng ngang */
+        flex-wrap: nowrap !important;   /* CẤM xuống dòng */
+        overflow-x: auto !important;    /* Cho phép cuộn ngang */
+        gap: 10px !important;
+        padding-bottom: 10px !important;
+        align-items: center !important;
+        width: 100% !important;
+        justify-content: flex-start !important;
     }
 
-    /* --- CSS CHO THANH CHỦ ĐỀ NẰM NGANG & HOVER --- */
-    
-    /* 1. Ép nằm ngang và cho phép cuộn */
-    div[data-testid="stRadio"] div[role="radiogroup"][aria-orientation="horizontal"] {
-        display: flex;
-        flex-wrap: nowrap !important; /* Không xuống dòng */
-        overflow-x: auto; /* Cuộn ngang nếu dài */
-        gap: 10px;
-        padding: 5px 2px;
-        scrollbar-width: none; /* Ẩn thanh cuộn (Firefox) */
-    }
-    div[data-testid="stRadio"] div[role="radiogroup"][aria-orientation="horizontal"]::-webkit-scrollbar {
-        display: none; /* Ẩn thanh cuộn (Chrome) */
-    }
-
-    /* 2. Style cơ bản cho từng nút */
-    div[data-testid="stRadio"] div[role="radiogroup"][aria-orientation="horizontal"] > label {
-        flex: 0 0 auto; /* Giữ kích thước thật */
+    /* Style cho từng nút bấm trong hàng ngang */
+    div[data-testid="stRadio"] > div[role="radiogroup"][aria-orientation="horizontal"] > label {
+        flex: 0 0 auto !important; /* Không được co nhỏ, giữ nguyên kích thước */
+        min-width: fit-content !important;
         background-color: white;
         border: 1px solid #cbd5e1;
-        padding: 8px 18px;
-        border-radius: 25px; /* Bo tròn kiểu viên thuốc */
-        font-size: 0.9rem;
-        font-weight: 600;
+        padding: 8px 20px !important;
+        border-radius: 50px !important;
+        font-size: 0.95rem !important;
+        font-weight: 600 !important;
         color: #64748b;
-        cursor: pointer;
-        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); /* Hiệu ứng chuyển động mượt */
-        box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+        white-space: nowrap !important; /* Chữ không được ngắt dòng */
+        transition: all 0.2s;
     }
 
-    /* 3. HIỆU ỨNG RÊ CHUỘT (HOVER) - PHẦN BẠN CẦN */
-    div[data-testid="stRadio"] div[role="radiogroup"][aria-orientation="horizontal"] > label:hover {
-        background-color: #e0f2fe; /* Nền xanh nhạt */
-        border-color: #3b82f6;     /* Viền xanh dương */
-        color: #0284c7;            /* Chữ xanh đậm */
-        transform: translateY(-3px); /* Nổi lên trên 3px */
-        box-shadow: 0 4px 12px rgba(59, 130, 246, 0.25); /* Đổ bóng xanh */
+    /* Hiệu ứng Hover */
+    div[data-testid="stRadio"] > div[role="radiogroup"][aria-orientation="horizontal"] > label:hover {
+        border-color: #3b82f6 !important;
+        background-color: #e0f2fe !important;
+        color: #0284c7 !important;
+        transform: translateY(-2px);
     }
 
-    /* 4. Khi được chọn (Active) */
-    div[data-testid="stRadio"] div[role="radiogroup"][aria-orientation="horizontal"] > label[data-checked="true"] {
-        background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%) !important; /* Màu Gradient */
+    /* Khi được chọn (Active) */
+    div[data-testid="stRadio"] > div[role="radiogroup"][aria-orientation="horizontal"] > label[data-checked="true"] {
+        background: #2563eb !important;
         color: white !important;
-        border-color: #1d4ed8;
-        font-weight: 700;
-        box-shadow: 0 4px 10px rgba(37, 99, 235, 0.3);
-        transform: scale(1.05); /* Phóng to nhẹ */
+        border-color: #2563eb !important;
+        box-shadow: 0 4px 10px rgba(37, 99, 235, 0.3) !important;
     }
 
-    /* --- CÁC PHẦN KHÁC --- */
+    /* Ẩn thanh cuộn nhưng vẫn cuộn được */
+    div[data-testid="stRadio"] > div[role="radiogroup"][aria-orientation="horizontal"]::-webkit-scrollbar {
+        height: 4px; /* Hiện thanh cuộn nhỏ xíu để biết là cuộn được */
+    }
+    div[data-testid="stRadio"] > div[role="radiogroup"][aria-orientation="horizontal"]::-webkit-scrollbar-thumb {
+        background: #cbd5e1; border-radius: 10px;
+    }
+
+    /* --- CÁC THÀNH PHẦN KHÁC --- */
+    .top-nav-container {
+        background: white; padding: 10px; border-radius: 12px;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.05); margin-bottom: 10px;
+        border: 1px solid #e5e7eb;
+    }
     .filter-label {
-        font-size: 0.8rem; font-weight: 700; color: #94a3b8; text-transform: uppercase; margin-bottom: 5px; letter-spacing: 0.5px;
+        font-size: 0.8rem; font-weight: 800; color: #94a3b8; margin-bottom: 5px; letter-spacing: 0.5px;
     }
-
     .content-card {
         background: white; padding: 25px; border-radius: 16px;
         box-shadow: 0 4px 6px rgba(0,0,0,0.03);
@@ -102,21 +103,18 @@ st.markdown("""
         line-height: 1.5; margin-top: 5px; 
     }
 
-    /* Đáp án */
+    /* Đáp án dọc */
     div[data-testid="stRadio"] > label { display: none; }
-    div[role="radiogroup"] { gap: 12px; display: flex; flex-direction: column; }
-    
-    /* Style cho đáp án dọc */
-    div[data-testid="stRadio"] div[role="radiogroup"]:not([aria-orientation="horizontal"]) > label {
+    div[role="radiogroup"]:not([aria-orientation="horizontal"]) { gap: 12px; display: flex; flex-direction: column; }
+    div[role="radiogroup"]:not([aria-orientation="horizontal"]) > label {
         background: white; border: 2px solid #e2e8f0; padding: 16px; 
         border-radius: 12px; width: 100%; cursor: pointer;
         display: flex; align-items: center; color: #334155; font-weight: 500;
-        transition: all 0.2s;
     }
-    div[data-testid="stRadio"] div[role="radiogroup"]:not([aria-orientation="horizontal"]) > label:hover {
+    div[role="radiogroup"]:not([aria-orientation="horizontal"]) > label:hover {
         border-color: #3b82f6; background: #eff6ff;
     }
-    div[data-testid="stRadio"] div[role="radiogroup"]:not([aria-orientation="horizontal"]) > label[data-checked="true"] {
+    div[role="radiogroup"]:not([aria-orientation="horizontal"]) > label[data-checked="true"] {
         border-color: #2563eb !important; background: #eff6ff !important;
         color: #1e40af !important; font-weight: 700;
     }
@@ -164,7 +162,7 @@ def render_tips_page(license_type):
 
     cats = sorted(list(set([i.get('category', 'Khác') for i in data])))
     
-    st.markdown('<div class="filter-label">👉 CHỌN CHỦ ĐỀ:</div>', unsafe_allow_html=True)
+    st.markdown('<div class="filter-label">👉 VUỐT NGANG ĐỂ CHỌN CHỦ ĐỀ:</div>', unsafe_allow_html=True)
     selected_cat = st.radio("Chủ đề:", ["Tất cả"] + cats, horizontal=True, label_visibility="collapsed")
     
     items = data if selected_cat == "Tất cả" else [d for d in data if d.get('category') == selected_cat]
@@ -190,7 +188,7 @@ def render_tips_page(license_type):
             if img: st.image(img, use_container_width=True)
         st.write("---")
 
-# --- 6. GIAO DIỆN LUYỆN THI (V17 HOVER FX) ---
+# --- 6. GIAO DIỆN LUYỆN THI (V18 FORCE HORIZONTAL) ---
 def render_exam_page():
     all_qs = load_json_file('dulieu_600_cau.json')
     if not all_qs: return
@@ -220,8 +218,10 @@ def render_exam_page():
                 st.rerun()
         st.markdown('</div>', unsafe_allow_html=True)
 
-    # 2. KHUNG CHỌN CHỦ ĐỀ (HOVER ĐỔI MÀU)
-    st.markdown('<div class="filter-label">📂 LỌC CHỦ ĐỀ (RÊ CHUỘT ĐỂ XEM HIỆU ỨNG):</div>', unsafe_allow_html=True)
+    # 2. KHUNG CHỌN CHỦ ĐỀ (Dời xuống dưới)
+    st.markdown('<div class="filter-label">📂 LỌC CHỦ ĐỀ (VUỐT NGANG ↔️):</div>', unsafe_allow_html=True)
+    
+    # Ép buộc horizontal=True ở đây để kích hoạt CSS
     sel_cat = st.radio(
         "Bộ lọc chủ đề", 
         ["Tất cả"] + cats, 
@@ -292,7 +292,12 @@ def main():
         
         mode = st.radio("Chế độ:", ["📝 Luyện Thi", "📖 Học Mẹo"])
         st.divider()
-        st.info("V17: Hiệu ứng Hover sống động.")
+        st.info("Phiên bản V18: Đã fix lỗi hiển thị dọc.")
+        
+        # Nút quan trọng để xóa Cache
+        if st.button("🔄 Xóa Cache & Làm mới"):
+            st.cache_data.clear()
+            st.rerun()
 
     if mode == "📖 Học Mẹo":
         render_tips_page(st.session_state.license_type)

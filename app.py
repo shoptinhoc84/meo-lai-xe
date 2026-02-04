@@ -6,7 +6,7 @@ from PIL import Image, ImageOps
 
 # --- 1. CẤU HÌNH TRANG ---
 st.set_page_config(
-    page_title="GPLX Pro - V33 Cheat Mode",
+    page_title="GPLX Pro - V34 Speed Control",
     page_icon="🚗",
     layout="wide",
     initial_sidebar_state="collapsed"
@@ -222,7 +222,7 @@ def render_tips_page():
             if img: st.image(img, use_container_width=True)
         st.write("---")
 
-# --- 7. GIAO DIỆN LUYỆN THI (SHOW ANSWER + AUTO NEXT) ---
+# --- 7. GIAO DIỆN LUYỆN THI (WITH SPEED CONTROL) ---
 def render_exam_page():
     c_home, c_title = st.columns([1, 4])
     with c_home:
@@ -236,15 +236,16 @@ def render_exam_page():
     if not all_qs: return
     cats = sorted(list(set([q.get('category', 'Khác') for q in all_qs])))
     
-    # FILTER AREA
+    # FILTER & SETTINGS AREA
     with st.container():
         st.markdown('<div class="filter-area">', unsafe_allow_html=True)
-        # Chia cột: Search | Category | Auto Next | Show Answer
-        c1, c2, c3, c4 = st.columns([1, 1, 0.6, 0.6])
+        # Bố cục 4 cột
+        c1, c2, c3, c4 = st.columns([1, 1, 0.8, 0.8])
         
         with c1:
             st.markdown('<div style="font-size:0.8rem; font-weight:700; color:#64748b;">🔍 TÌM KIẾM:</div>', unsafe_allow_html=True)
             search_query = st.text_input("Search", placeholder="Từ khóa...", label_visibility="collapsed")
+        
         with c2:
             st.markdown('<div style="font-size:0.8rem; font-weight:700; color:#64748b;">📂 CHỦ ĐỀ:</div>', unsafe_allow_html=True)
             idx = 0
@@ -255,10 +256,15 @@ def render_exam_page():
                 st.session_state.current_q_index = 0
                 st.rerun()
         
-        # Nút chức năng nâng cao
+        # --- CÀI ĐẶT TỰ ĐỘNG ---
         with c3:
-            st.markdown('<div style="font-size:0.8rem; font-weight:700; color:#64748b;">⚡ TỰ ĐỘNG:</div>', unsafe_allow_html=True)
-            auto_next_mode = st.toggle("Auto Next", key="auto_next_toggle")
+            st.markdown('<div style="font-size:0.8rem; font-weight:700; color:#64748b;">⚡ AUTO NEXT:</div>', unsafe_allow_html=True)
+            auto_next_mode = st.toggle("Tự qua câu", key="auto_next_toggle")
+            
+            # THANH CHỈNH TỐC ĐỘ (Chỉ hiện khi bật Auto)
+            delay_seconds = 3 # Mặc định 3s
+            if auto_next_mode:
+                delay_seconds = st.slider("Chờ (giây):", 1, 10, 3, label_visibility="collapsed")
         
         with c4:
             st.markdown('<div style="font-size:0.8rem; font-weight:700; color:#64748b;">👀 HỌC THUỘC:</div>', unsafe_allow_html=True)
@@ -310,29 +316,17 @@ def render_exam_page():
         img = load_image_strict(q['image'], ['images'])
         if img: st.image(img, use_container_width=True)
 
-    # --- XỬ LÝ VIỆC CHỌN ĐÁP ÁN ---
+    # CHỌN ĐÁP ÁN
     default_index = None
-    
-    # Nếu bật chế độ "Học thuộc" -> Tự tìm index của đáp án đúng
     if show_answer_mode:
         try:
-            # Tìm vị trí của đáp án đúng trong danh sách options
-            # Dùng strip() để xóa khoảng trắng thừa cho chắc chắn
             clean_ops = [opt.strip() for opt in q['options']]
             clean_correct = q['correct_answer'].strip()
             default_index = clean_ops.index(clean_correct)
-        except:
-            default_index = None
+        except: default_index = None
 
-    # Render Radio Button
-    user_choice = st.radio(
-        "Lựa chọn:", 
-        q['options'], 
-        index=default_index,  # Tự động chọn nếu bật mode
-        key=f"q_{q['id']}"
-    )
+    user_choice = st.radio("Lựa chọn:", q['options'], index=default_index, key=f"q_{q['id']}")
 
-    # Xử lý kết quả
     if user_choice:
         correct = q['correct_answer'].strip()
         if user_choice.strip() == correct:
@@ -340,11 +334,11 @@ def render_exam_page():
         else:
             st.error(f"❌ SAI: Đáp án là {correct}")
 
-        # --- LOGIC AUTO NEXT ---
-        # Nếu bật Auto Next VÀ (đang ở chế độ Học thuộc HOẶC người dùng tự bấm đúng)
+        # LOGIC AUTO NEXT (VỚI DELAY)
         if auto_next_mode:
             if st.session_state.current_q_index < total - 1:
-                time.sleep(1.0) # Chờ 1 giây cho dễ nhìn
+                # Dùng thời gian từ thanh Slider
+                time.sleep(delay_seconds) 
                 st.session_state.current_q_index += 1
                 st.rerun()
 

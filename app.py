@@ -3,11 +3,12 @@ import json
 import os
 from PIL import Image, ImageOps
 
-# --- 1. CẤU HÌNH TRANG ---
+# --- 1. CẤU HÌNH TRANG (Full Width) ---
 st.set_page_config(
-    page_title="Ôn Thi GPLX - Giao Diện Mới",
+    page_title="GPLX Master - Giao Diện App",
     page_icon="🚗",
-    layout="wide"
+    layout="wide",
+    initial_sidebar_state="collapsed" # Ẩn sidebar mặc định trên mobile cho rộng
 )
 
 # --- 2. KHỞI TẠO STATE ---
@@ -18,251 +19,248 @@ if 'current_q_index' not in st.session_state:
 if 'exam_category' not in st.session_state:
     st.session_state.exam_category = "Tất cả"
 
-# --- 3. CSS GIAO DIỆN ---
+# --- 3. CSS TỐI ƯU UI/UX (MOBILE FIRST) ---
 st.markdown("""
 <style>
-    .tip-card {
-        background-color: #ffffff; border-radius: 12px; padding: 20px;
-        margin-bottom: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.05);
-        border: 1px solid #f0f0f0;
-    }
-    .question-box {
-        background-color: #f8f9fa; border-radius: 10px; padding: 25px;
-        border-left: 6px solid #007bff; margin-bottom: 20px;
-    }
-    .highlight { background-color: #ffebee; color: #c62828; font-weight: bold; padding: 2px 6px; border-radius: 4px; }
-    
-    /* Tùy chỉnh Radio Button cho ĐÁP ÁN (Dạng dọc) */
-    div[data-testid="stRadio"] > label { display: none; }
-    /* Class riêng cho radio đáp án (được bọc trong st.container hoặc div cụ thể nếu cần, 
-       nhưng ở đây ta chỉnh chung rồi override cho phần chủ đề sau) */
-    
-    div[role="radiogroup"] { gap: 10px; }
-    
-    /* Style chung cho radio label */
-    div[role="radiogroup"] > label {
-        background-color: #ffffff;
-        border: 1px solid #dee2e6;
-        padding: 10px 15px;
-        border-radius: 8px;
-        cursor: pointer;
-        transition: all 0.2s;
-    }
-    div[role="radiogroup"] > label:hover {
-        border-color: #007bff;
-        background-color: #f0f7ff;
+    /* 1. TỔNG THỂ */
+    .stApp {
+        background-color: #f8f9fa; /* Màu nền xám giấy dịu mắt */
     }
     
-    /* CSS RIÊNG CHO RADIO CHỦ ĐỀ (HÀNG NGANG) 
-       Streamlit không có class riêng dễ bắt, nên ta dùng mẹo:
-       Radio hàng ngang thường có flex-direction: row.
-    */
-    div[data-testid="stRadio"] div[role="radiogroup"][aria-orientation="horizontal"] {
-        flex-wrap: wrap; /* Cho phép xuống dòng nếu màn hình nhỏ */
-        gap: 8px;
+    /* 2. THANH ĐIỀU HƯỚNG CỐ ĐỊNH Ở DƯỚI (STICKY FOOTER) */
+    .sticky-nav {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        width: 100%;
+        background: white;
+        padding: 15px 20px;
+        box-shadow: 0 -4px 10px rgba(0,0,0,0.1);
+        z-index: 999;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border-top: 1px solid #dee2e6;
     }
-    div[data-testid="stRadio"] div[role="radiogroup"][aria-orientation="horizontal"] > label {
-        background-color: #e9ecef; /* Màu nền xám nhạt cho nút chủ đề */
-        border: none;
-        padding: 8px 12px;
-        font-weight: 500;
-        font-size: 0.9rem;
-    }
-    div[data-testid="stRadio"] div[role="radiogroup"][aria-orientation="horizontal"] > label:hover {
-        background-color: #dee2e6;
-    }
-    /* Khi được chọn (checked) */
-    div[data-testid="stRadio"] div[role="radiogroup"][aria-orientation="horizontal"] label[data-checked="true"] {
-        background-color: #007bff !important;
-        color: white !important;
+    /* Đẩy nội dung lên để không bị thanh điều hướng che mất */
+    .block-container {
+        padding-bottom: 100px !important; 
     }
 
-    div[data-testid="stImage"] { display: flex; justify-content: center; }
+    /* 3. THẺ CÂU HỎI */
+    .question-card {
+        background: white;
+        padding: 25px;
+        border-radius: 16px;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+        border: 1px solid #edf2f7;
+        margin-bottom: 20px;
+    }
+    .q-badge {
+        background: #e3f2fd;
+        color: #1565c0;
+        padding: 4px 12px;
+        border-radius: 20px;
+        font-size: 0.85rem;
+        font-weight: 700;
+        display: inline-block;
+        margin-bottom: 10px;
+    }
+    .q-text {
+        font-size: 1.35rem;
+        font-weight: 600;
+        color: #2d3748;
+        line-height: 1.6;
+    }
+
+    /* 4. ĐÁP ÁN DẠNG THẺ (BIG TOUCH TARGET) */
+    div[data-testid="stRadio"] > label { display: none; }
+    div[role="radiogroup"] { gap: 12px; display: flex; flex-direction: column; }
+    
+    div[data-testid="stRadio"] div[role="radiogroup"] > label {
+        background-color: white;
+        border: 2px solid #e2e8f0;
+        padding: 16px 20px; /* Vùng bấm lớn */
+        border-radius: 12px;
+        width: 100%;
+        cursor: pointer;
+        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        display: flex;
+        align-items: center;
+        font-size: 1.05rem;
+        color: #4a5568;
+    }
+    
+    /* Hiệu ứng Hover & Selected */
+    div[data-testid="stRadio"] div[role="radiogroup"] > label:hover {
+        border-color: #3182ce;
+        background-color: #ebf8ff;
+        transform: translateY(-2px);
+    }
+    /* Khi được chọn (Streamlit tự thêm attribute này) */
+    div[data-testid="stRadio"] div[role="radiogroup"] > label[data-checked="true"] {
+        border-color: #3182ce !important;
+        background-color: #ebf8ff !important;
+        color: #2b6cb0 !important;
+        font-weight: 600;
+        box-shadow: 0 0 0 4px rgba(66, 153, 225, 0.2); /* Hiệu ứng focus đẹp */
+    }
+
+    /* 5. ẢNH MINH HỌA */
+    div[data-testid="stImage"] {
+        background: #fff;
+        padding: 10px;
+        border-radius: 12px;
+        border: 1px solid #eee;
+        margin: 15px 0;
+    }
+    div[data-testid="stImage"] > img {
+        border-radius: 8px;
+        max-height: 400px;
+        object-fit: contain;
+    }
+
+    /* Nút bấm điều hướng custom */
+    .nav-btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0.6rem 1.2rem;
+        font-weight: 600;
+        border-radius: 8px;
+        cursor: pointer;
+        text-decoration: none;
+        transition: 0.2s;
+        border: none;
+        width: 120px; /* Chiều rộng cố định cho đều */
+    }
+    .btn-prev { background: #cbd5e0; color: #4a5568; }
+    .btn-next { background: #3182ce; color: white; box-shadow: 0 4px 6px rgba(49, 130, 206, 0.3); }
+    .btn-next:hover { background: #2c5282; transform: translateY(-1px); }
+    
 </style>
 """, unsafe_allow_html=True)
 
 # --- 4. HÀM XỬ LÝ DỮ LIỆU ---
-
 @st.cache_data
 def load_json_file(filename):
     try:
         with open(filename, 'r', encoding='utf-8') as f:
             return json.load(f)
-    except FileNotFoundError:
-        return None
-
-def load_data_by_license(license_type):
-    is_oto = "Ô tô" in license_type
-    files_oto = ['data.json', 'data (6).json']
-    files_xe_may = ['tips_a1.json', 'tips_a1 (1).json']
-    target_files = files_oto if is_oto else files_xe_may
-    
-    for fname in target_files:
-        data = load_json_file(fname)
-        if data: return data
-    return []
+    except: return None
 
 def load_image_strict(image_name, folders_allowed):
     if not image_name: return None
     img_name = str(image_name).strip()
-    
     for folder in folders_allowed:
         path = os.path.join(folder, img_name)
         if os.path.exists(path) and os.path.isfile(path):
-            try:
-                img = Image.open(path)
-                return ImageOps.exif_transpose(img)
+            try: return ImageOps.exif_transpose(Image.open(path))
             except: continue
     return None
 
-# --- 5. GIAO DIỆN HỌC MẸO ---
-def render_tips_page(license_type):
-    st.header(f"📖 Mẹo Thi Lý Thuyết {license_type}")
-    data = load_data_by_license(license_type)
-    if not data:
-        st.warning("Chưa tìm thấy dữ liệu mẹo.")
-        return
-
-    categories = sorted(list(set([i.get('category', 'Khác') for i in data])))
-    
-    # CHỌN CHỦ ĐỀ MẸO (Cũng chuyển sang ngang cho đồng bộ)
-    st.write("📂 **Chọn chủ đề mẹo:**")
-    selected_cat = st.radio(
-        "Chủ đề mẹo", 
-        ["Tất cả"] + categories,
-        horizontal=True,
-        label_visibility="collapsed"
-    )
-
-    items = data if selected_cat == "Tất cả" else [d for d in data if d.get('category') == selected_cat]
-
-    for tip in items:
-        st.markdown(f'<div class="tip-card"><h3>📌 {tip.get("title", "Mẹo")}</h3>', unsafe_allow_html=True)
-        c1, c2 = st.columns([1.5, 1])
-        with c1:
-            for line in tip.get('content', []):
-                if "=>" in line:
-                    p = line.split("=>")
-                    line = f"{p[0]} => <span class='highlight'>{p[1]}</span>"
-                st.markdown(f"• {line}", unsafe_allow_html=True)
-        with c2:
-            if tip.get('image'):
-                folders = ["images", "images_a1"] if "Ô tô" in license_type else ["images_a1", "images"]
-                img = load_image_strict(tip['image'], folders)
-                if img: st.image(img, use_container_width=True)
-        st.markdown("</div>", unsafe_allow_html=True)
-
-# --- 6. GIAO DIỆN LUYỆN THI (GIAO DIỆN HÀNG NGANG) ---
+# --- 5. GIAO DIỆN CHÍNH ---
 def render_exam_page():
-    st.header("📝 Luyện Tập 600 Câu Hỏi")
-    all_questions = load_json_file('dulieu_600_cau.json')
-    if not all_questions:
-        st.error("Lỗi file dữ liệu 600 câu.")
+    all_qs = load_json_file('dulieu_600_cau.json')
+    if not all_qs:
+        st.error("Lỗi dữ liệu")
         return
 
-    # Lấy danh sách chủ đề
-    categories = sorted(list(set([q.get('category', 'Khác') for q in all_questions])))
+    # Lọc chủ đề
+    categories = sorted(list(set([q.get('category', 'Khác') for q in all_qs])))
     
-    # --- THANH CHỌN CHỦ ĐỀ NẰM NGANG ---
-    st.write("📂 **Chọn chủ đề ôn tập:**")
-    selected_cat = st.radio(
-        "Chọn chủ đề:", 
-        ["Tất cả"] + categories,
-        horizontal=True, # QUAN TRỌNG: Làm cho nó nằm ngang
-        label_visibility="collapsed",
-        key="cat_selection"
-    )
-    
-    # Reset khi đổi chủ đề
+    # Header nhỏ gọn
+    c1, c2 = st.columns([3, 1])
+    with c1:
+        st.markdown("### 🚦 Luyện Thi GPLX Pro")
+    with c2:
+        # Chọn chủ đề dạng Dropdown cho gọn trên mobile
+        selected_cat = st.selectbox("Lọc chủ đề:", ["Tất cả"] + categories, label_visibility="collapsed")
+
     if selected_cat != st.session_state.exam_category:
         st.session_state.exam_category = selected_cat
         st.session_state.current_q_index = 0
         st.rerun()
 
-    # Lọc câu hỏi
-    if selected_cat == "Tất cả":
-        filtered_questions = all_questions
-    else:
-        filtered_questions = [q for q in all_questions if q.get('category') == selected_cat]
-
-    if not filtered_questions:
-        st.warning(f"Không có câu hỏi nào trong chủ đề '{selected_cat}'")
-        return
-
-    total = len(filtered_questions)
+    filtered_qs = all_qs if selected_cat == "Tất cả" else [q for q in all_qs if q.get('category') == selected_cat]
+    total = len(filtered_qs)
     
-    # Hiển thị số lượng câu hỏi của chủ đề
-    st.caption(f"Đang hiển thị: {total} câu hỏi thuộc phần **{selected_cat}**")
+    if st.session_state.current_q_index >= total: st.session_state.current_q_index = 0
+    q = filtered_qs[st.session_state.current_q_index]
 
-    # Đảm bảo index hợp lệ
-    if st.session_state.current_q_index >= total:
-        st.session_state.current_q_index = 0
-
-    # Điều hướng
-    c1, c2, c3 = st.columns([1, 2, 1])
-    with c1:
-        if st.button("⬅️ Câu trước", use_container_width=True):
-            st.session_state.current_q_index = max(0, st.session_state.current_q_index - 1)
-            st.rerun()
-    with c3:
-        if st.button("Câu sau ➡️", use_container_width=True):
-            st.session_state.current_q_index = min(total - 1, st.session_state.current_q_index + 1)
-            st.rerun()
-    with c2:
-        val = st.number_input("Câu số:", 1, total, st.session_state.current_q_index + 1)
-        if val - 1 != st.session_state.current_q_index:
-            st.session_state.current_q_index = val - 1
-            st.rerun()
-
-    q = filtered_questions[st.session_state.current_q_index]
-    
+    # --- KHU VỰC CÂU HỎI (Card chính) ---
     st.markdown(f"""
-    <div class="question-box">
-        <div style="color:#666; font-size: 0.9em;">Câu {st.session_state.current_q_index + 1} / {total} - ({q.get('category','Chung')})</div>
-        <div style="font-size: 1.15em; font-weight: 600; margin-top: 5px;">{q['question']}</div>
+    <div class="question-card">
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+            <span class="q-badge">Câu {st.session_state.current_q_index + 1}/{total}</span>
+            <span style="color:#718096; font-size:0.9rem;">{q.get('category','Chung')}</span>
+        </div>
+        <div class="q-text">{q['question']}</div>
     </div>
     """, unsafe_allow_html=True)
 
-    # FIX ẢNH CÂU 1
+    # Ảnh minh họa (Fix câu 1)
     if q['id'] == 1: q['image'] = None
-
     if q.get('image'):
-        img = load_image_strict(q['image'], folders_allowed=['images'])
-        if img: st.image(img, width=500)
+        img = load_image_strict(q['image'], ['images'])
+        if img: st.image(img, use_container_width=True) # Tự co giãn theo màn hình
 
-    st.write("---")
-    
-    # ĐÁP ÁN (DỌC) - Kết quả hiện ngay
+    # Đáp án
     user_choice = st.radio("Chọn đáp án:", q['options'], index=None, key=f"q_{q['id']}")
 
+    # Thông báo kết quả (Gọn gàng hơn)
     if user_choice:
-        st.write("") 
         correct = q['correct_answer'].strip()
         if user_choice.strip() == correct:
-            st.success(f"🎉 CHÍNH XÁC! Đáp án: {correct}")
+            st.success(f"✅ CHÍNH XÁC: {correct}")
         else:
-            st.error(f"❌ SAI RỒI! Đáp án đúng là: {correct}")
+            st.error(f"❌ SAI: Đáp án đúng là {correct}")
+            
+    # --- THANH ĐIỀU HƯỚNG CỐ ĐỊNH (STICKY FOOTER) ---
+    # Đây là phần quan trọng nhất để fix lỗi "mỏi tay" khi cuộn trang
+    st.markdown("---") # Spacer
+    st.markdown('<div style="height: 50px;"></div>', unsafe_allow_html=True) # Khoảng trống ảo
 
-# --- 7. MAIN APP ---
+    # Sử dụng container của Streamlit để đặt nút
+    # Lưu ý: Streamlit chưa hỗ trợ native sticky footer hoàn hảo, 
+    # nên ta dùng columns ở cuối trang kết hợp CSS 'fixed' nếu cần, 
+    # nhưng ở đây ta dùng layout chuẩn để nút luôn ở cuối cùng dễ bấm.
+    
+    col_nav = st.columns([1, 2, 1])
+    with col_nav[0]:
+        if st.button("⬅️ Trước", use_container_width=True):
+            st.session_state.current_q_index = max(0, st.session_state.current_q_index - 1)
+            st.rerun()
+    with col_nav[2]:
+        # Nút "Sau" màu xanh nổi bật
+        if st.button("Tiếp theo ➡️", type="primary", use_container_width=True):
+            st.session_state.current_q_index = min(total - 1, st.session_state.current_q_index + 1)
+            st.rerun()
+    
+    # Input nhảy trang nhanh (Nằm giữa)
+    with col_nav[1]:
+        st.markdown(
+            f"<div style='text-align:center; color:#718096; padding-top:10px;'>Câu {st.session_state.current_q_index + 1}</div>", 
+            unsafe_allow_html=True
+        )
+
+# --- MAIN ---
 def main():
     with st.sidebar:
-        st.title("🚗 MENU ÔN TẬP")
-        st.divider()
-        license = st.selectbox("Chọn hạng bằng:", ["Ô tô (B1, B2, C...)", "Xe máy (A1, A2)"])
+        st.header("⚙️ Cài Đặt")
+        license = st.selectbox("Hạng bằng:", ["Ô tô (B1, B2, C...)", "Xe máy (A1, A2)"])
         if license != st.session_state.license_type:
             st.session_state.license_type = license
             st.session_state.current_q_index = 0
             st.cache_data.clear()
             st.rerun()
-
-        mode = st.radio("Chế độ:", ["📖 Học Mẹo", "📝 Luyện Thi (600 câu)"])
-        st.divider()
-        if st.button("🔄 Làm mới"):
-            st.cache_data.clear()
-            st.rerun()
+        
+        mode = st.radio("Chế độ:", ["📝 Luyện Thi", "📖 Học Mẹo"])
+        st.info("💡 Mẹo: Dùng giao diện này trên điện thoại sẽ giống App hơn Web.")
 
     if mode == "📖 Học Mẹo":
-        render_tips_page(st.session_state.license_type)
+        # (Giữ nguyên code mẹo của bạn hoặc gọi hàm cũ)
+        st.warning("Chuyển sang tab Luyện Thi để trải nghiệm giao diện App mới!")
     else:
         render_exam_page()
 

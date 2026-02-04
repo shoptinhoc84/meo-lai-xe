@@ -6,7 +6,7 @@ from PIL import Image, ImageOps
 
 # --- 1. CẤU HÌNH TRANG ---
 st.set_page_config(
-    page_title="GPLX Pro - V35 Highlight Answer",
+    page_title="GPLX Pro - V36 Direct Fill",
     page_icon="🚗",
     layout="wide",
     initial_sidebar_state="collapsed"
@@ -22,10 +22,10 @@ if 'current_q_index' not in st.session_state:
 if 'exam_category' not in st.session_state:
     st.session_state.exam_category = "Tất cả"
 
-# --- 3. CSS GIAO DIỆN (HIGHLIGHT MẠNH) ---
+# --- 3. CSS TÔ MÀU TRỰC TIẾP ---
 st.markdown("""
 <style>
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap');
     html, body, [class*="css"] { font-family: 'Inter', sans-serif; }
     .stApp { background-color: #f8fafc; }
     
@@ -34,28 +34,7 @@ st.markdown("""
         padding-bottom: 6rem !important;
     }
 
-    /* HERO & CARDS */
-    .hero-card {
-        background: linear-gradient(135deg, #4f46e5 0%, #3b82f6 100%);
-        padding: 30px; border-radius: 24px; color: white;
-        text-align: center; margin-bottom: 30px;
-        box-shadow: 0 10px 25px -5px rgba(79, 70, 229, 0.4);
-    }
-    .hero-title { font-size: 2rem; font-weight: 800; margin-bottom: 10px; }
-    .hero-subtitle { font-size: 1.1rem; opacity: 0.9; font-weight: 500; }
-
-    .action-card {
-        background: white; padding: 25px; border-radius: 20px;
-        border: 1px solid #e2e8f0; text-align: center; cursor: pointer;
-        transition: all 0.3s ease; height: 100%;
-        display: flex; flex-direction: column; align-items: center; justify-content: center;
-    }
-    .action-card:hover { transform: translateY(-5px); border-color: #6366f1; }
-    .icon { font-size: 3rem; margin-bottom: 15px; }
-    .card-title { font-size: 1.2rem; font-weight: 700; color: #1e293b; }
-    .card-desc { font-size: 0.9rem; color: #64748b; }
-
-    /* UI ELEMENTS */
+    /* --- CÁC THÀNH PHẦN UI CŨ --- */
     .top-nav-container {
         background: white; padding: 10px; border-radius: 12px;
         box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); margin-bottom: 15px;
@@ -75,8 +54,20 @@ st.markdown("""
         font-size: 1.35rem !important; font-weight: 700 !important; 
         color: #0f172a !important; line-height: 1.5 !important; margin-top: 5px !important;
     }
-    
-    /* --- RADIO BUTTONS (ĐÁP ÁN HIGHLIGHT) --- */
+    .hero-card {
+        background: linear-gradient(135deg, #4f46e5 0%, #3b82f6 100%);
+        padding: 30px; border-radius: 24px; color: white;
+        text-align: center; margin-bottom: 30px;
+    }
+    .action-card {
+        background: white; padding: 25px; border-radius: 20px;
+        border: 1px solid #e2e8f0; text-align: center; cursor: pointer;
+        transition: all 0.3s ease; height: 100%;
+        display: flex; flex-direction: column; align-items: center; justify-content: center;
+    }
+    .action-card:hover { transform: translateY(-5px); border-color: #6366f1; }
+
+    /* --- RADIO BUTTONS (TÔ MÀU NỀN) --- */
     div[data-testid="stRadio"] > label { display: none; }
     div[role="radiogroup"] { gap: 16px; display: flex; flex-direction: column; }
     
@@ -84,7 +75,7 @@ st.markdown("""
     div[data-testid="stRadio"] div[role="radiogroup"] > label {
         background: white; 
         border: 2px solid #e2e8f0; 
-        padding: 24px 20px !important;
+        padding: 20px 20px !important;
         border-radius: 16px; 
         width: 100%; 
         cursor: pointer;
@@ -94,29 +85,29 @@ st.markdown("""
     
     /* Chữ bình thường */
     div[data-testid="stRadio"] div[role="radiogroup"] > label p {
-        font-size: 1.6rem !important; 
+        font-size: 1.5rem !important; 
         font-weight: 500 !important;
-        color: #64748b !important; /* Màu xám nhạt khi chưa chọn */
+        color: #64748b !important;
         line-height: 1.5 !important;
     }
 
     /* Hover */
     div[data-testid="stRadio"] div[role="radiogroup"] > label:hover {
-        border-color: #10b981; background: #ecfdf5; transform: translateY(-2px);
+        border-color: #10b981; background: #f0fdf4;
     }
 
-    /* --- TRẠNG THÁI ĐƯỢC CHỌN (ĐÁP ÁN ĐÚNG KHI AUTO) --- */
+    /* --- TRẠNG THÁI ĐƯỢC CHỌN (ĐÁP ÁN ĐÚNG) --- */
+    /* Đây là phần bạn cần: Tô màu nền bên trong */
     div[data-testid="stRadio"] div[role="radiogroup"] > label[data-checked="true"] {
-        border-color: #059669 !important; /* Viền xanh lá đậm */
-        background-color: #d1fae5 !important; /* Nền xanh mint */
-        box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3); /* Đổ bóng xanh */
-        border-width: 3px !important;
+        background-color: #d1fae5 !important; /* MÀU XANH NGỌC (MINT) */
+        border: 3px solid #059669 !important; /* VIỀN XANH LÁ ĐẬM */
+        box-shadow: 0 4px 15px rgba(16, 185, 129, 0.4); /* Đổ bóng sáng */
     }
     
-    /* Chữ khi được chọn -> ĐẬM VÀ ĐEN/XANH */
+    /* Chữ khi được chọn */
     div[data-testid="stRadio"] div[role="radiogroup"] > label[data-checked="true"] p {
-        color: #065f46 !important; /* Chữ xanh đậm (gần như đen xanh) */
-        font-weight: 900 !important; /* Siêu đậm */
+        color: #064e3b !important; /* Chữ xanh rêu đậm */
+        font-weight: 800 !important; /* Siêu đậm */
     }
 
     div[data-testid="stButton"] button { width: 100%; border-radius: 12px; font-weight: 700; height: 3.5rem; font-size: 1.2rem !important; }
@@ -166,8 +157,8 @@ def get_category_border(category):
 def render_home_page():
     st.markdown("""
     <div class="hero-card">
-        <div class="hero-title">🚗 GPLX MASTER PRO</div>
-        <div class="hero-subtitle">Ôn thi lý thuyết lái xe hiệu quả</div>
+        <h2 style='margin:0'>🚗 GPLX MASTER PRO</h2>
+        <p style='margin:0; opacity:0.9'>Ôn thi lý thuyết lái xe hiệu quả</p>
     </div>
     """, unsafe_allow_html=True)
 
@@ -185,27 +176,14 @@ def render_home_page():
             st.rerun()
 
     st.markdown("---")
-    st.markdown(f"### 2. Bắt đầu học ({st.session_state.license_type})")
     c1, c2 = st.columns(2)
     with c1:
-        st.markdown("""
-        <div class="action-card">
-            <div class="icon">📝</div>
-            <div class="card-title">Luyện Thi</div>
-            <div class="card-desc">Chế độ thi thử & Học thuộc</div>
-        </div>
-        """, unsafe_allow_html=True)
+        st.markdown("""<div class="action-card"><h3>📝 Luyện Thi</h3><p>600 câu trắc nghiệm</p></div>""", unsafe_allow_html=True)
         if st.button("Vào Thi ➡️", key="btn_go_exam", use_container_width=True):
             st.session_state.page = "exam"
             st.rerun()
     with c2:
-        st.markdown("""
-        <div class="action-card">
-            <div class="icon">💡</div>
-            <div class="card-title">Học Mẹo</div>
-            <div class="card-desc">Các mẹo ghi nhớ nhanh</div>
-        </div>
-        """, unsafe_allow_html=True)
+        st.markdown("""<div class="action-card"><h3>💡 Học Mẹo</h3><p>Mẹo ghi nhớ nhanh</p></div>""", unsafe_allow_html=True)
         if st.button("Xem Mẹo ➡️", key="btn_go_tips", use_container_width=True):
             st.session_state.page = "tips"
             st.rerun()
@@ -215,12 +193,11 @@ def render_tips_page():
     if st.button("🏠 Về Trang Chủ"):
         st.session_state.page = "home"
         st.rerun()
-    license_type = st.session_state.license_type
-    st.markdown(f"### 📖 Mẹo: {license_type}")
-    data = load_data_by_license(license_type)
+    st.markdown(f"### 📖 Mẹo: {st.session_state.license_type}")
+    data = load_data_by_license(st.session_state.license_type)
     if not data: return
     cats = sorted(list(set([i.get('category', 'Khác') for i in data])))
-    st.markdown('<div style="font-size:0.9rem; font-weight:700; color:#64748b; margin-bottom:5px;">CHỌN CHỦ ĐỀ:</div>', unsafe_allow_html=True)
+    st.markdown('<div style="font-size:0.9rem; font-weight:700; color:#64748b;">CHỌN CHỦ ĐỀ:</div>', unsafe_allow_html=True)
     selected_cat = st.selectbox("Mẹo:", ["Tất cả"] + cats, label_visibility="collapsed")
     border = get_category_border(selected_cat)
     items = data if selected_cat == "Tất cả" else [d for d in data if d.get('category') == selected_cat]
@@ -237,12 +214,12 @@ def render_tips_page():
             if "<b>" in line: line += "</b>"
             st.markdown(f"<div style='font-size:1.25rem; margin-bottom:10px;'>• {line}</div>", unsafe_allow_html=True)
         if tip.get('image'):
-            folders = ["images", "images_a1"] if "Ô tô" in license_type else ["images_a1", "images"]
+            folders = ["images", "images_a1"] if "Ô tô" in st.session_state.license_type else ["images_a1", "images"]
             img = load_image_strict(tip['image'], folders)
             if img: st.image(img, use_container_width=True)
         st.write("---")
 
-# --- 7. GIAO DIỆN LUYỆN THI (HIGHLIGHT) ---
+# --- 7. GIAO DIỆN LUYỆN THI (TÔ MÀU TRONG Ô) ---
 def render_exam_page():
     c_home, c_title = st.columns([1, 4])
     with c_home:
@@ -256,16 +233,15 @@ def render_exam_page():
     if not all_qs: return
     cats = sorted(list(set([q.get('category', 'Khác') for q in all_qs])))
     
-    # FILTER AREA
+    # FILTER
     with st.container():
         st.markdown('<div class="filter-area">', unsafe_allow_html=True)
         c1, c2, c3, c4 = st.columns([1, 1, 0.8, 0.8])
-        
         with c1:
-            st.markdown('<div style="font-size:0.8rem; font-weight:700; color:#64748b;">🔍 TÌM KIẾM:</div>', unsafe_allow_html=True)
+            st.markdown('<div style="font-size:0.9rem; font-weight:700; color:#64748b;">🔍 TÌM KIẾM:</div>', unsafe_allow_html=True)
             search_query = st.text_input("Search", placeholder="Từ khóa...", label_visibility="collapsed")
         with c2:
-            st.markdown('<div style="font-size:0.8rem; font-weight:700; color:#64748b;">📂 CHỦ ĐỀ:</div>', unsafe_allow_html=True)
+            st.markdown('<div style="font-size:0.9rem; font-weight:700; color:#64748b;">📂 CHỦ ĐỀ:</div>', unsafe_allow_html=True)
             idx = 0
             if st.session_state.exam_category in cats: idx = cats.index(st.session_state.exam_category) + 1
             sel_cat = st.selectbox("Category", ["Tất cả"] + cats, index=idx, label_visibility="collapsed")
@@ -274,16 +250,16 @@ def render_exam_page():
                 st.session_state.current_q_index = 0
                 st.rerun()
         
+        # SETTINGS
         with c3:
-            st.markdown('<div style="font-size:0.8rem; font-weight:700; color:#64748b;">⚡ AUTO NEXT:</div>', unsafe_allow_html=True)
+            st.markdown('<div style="font-size:0.9rem; font-weight:700; color:#64748b;">⚡ TỰ ĐỘNG:</div>', unsafe_allow_html=True)
             auto_next_mode = st.toggle("Tự qua câu", key="auto_next_toggle")
-            # Slider chỉ hiện khi bật Auto Next
             delay_seconds = 3
             if auto_next_mode:
                 delay_seconds = st.slider("Chờ (s):", 1, 10, 3, label_visibility="collapsed")
         
         with c4:
-            st.markdown('<div style="font-size:0.8rem; font-weight:700; color:#64748b;">👀 HỌC THUỘC:</div>', unsafe_allow_html=True)
+            st.markdown('<div style="font-size:0.9rem; font-weight:700; color:#64748b;">👀 HỌC THUỘC:</div>', unsafe_allow_html=True)
             show_answer_mode = st.toggle("Hiện đáp án", key="show_answer_toggle")
 
         st.markdown('</div>', unsafe_allow_html=True)
@@ -332,7 +308,7 @@ def render_exam_page():
         img = load_image_strict(q['image'], ['images'])
         if img: st.image(img, use_container_width=True)
 
-    # CHỌN ĐÁP ÁN (HIGHLIGHT STYLE)
+    # --- CHỌN ĐÁP ÁN (LOGIC QUAN TRỌNG) ---
     default_index = None
     if show_answer_mode:
         try:
@@ -341,14 +317,22 @@ def render_exam_page():
             default_index = clean_ops.index(clean_correct)
         except: default_index = None
 
+    # Biến tấu danh sách đáp án để thêm icon ✅ nếu cần (Tùy chọn)
+    # Nhưng ta dùng CSS tô màu nền là đủ rồi.
+    
     user_choice = st.radio("Lựa chọn:", q['options'], index=default_index, key=f"q_{q['id']}")
 
+    # --- XỬ LÝ KẾT QUẢ ---
+    # Nếu ở chế độ Học Thuộc (Show Answer) -> Không cần hiện thêm bảng thông báo ở dưới
+    # Vì màu xanh trên nút đã là thông báo rồi.
     if user_choice:
-        correct = q['correct_answer'].strip()
-        if user_choice.strip() == correct:
-            st.success(f"✅ CHÍNH XÁC: {correct}")
-        else:
-            st.error(f"❌ SAI: Đáp án là {correct}")
+        # Nếu TẮT chế độ học thuộc thì mới hiện thông báo Đúng/Sai ở dưới
+        if not show_answer_mode:
+            correct = q['correct_answer'].strip()
+            if user_choice.strip() == correct:
+                st.success(f"✅ CHÍNH XÁC: {correct}")
+            else:
+                st.error(f"❌ SAI: Đáp án đúng là {correct}")
 
         if auto_next_mode:
             if st.session_state.current_q_index < total - 1:

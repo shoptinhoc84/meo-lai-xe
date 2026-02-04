@@ -5,7 +5,7 @@ from PIL import Image, ImageOps
 
 # --- 1. CẤU HÌNH TRANG ---
 st.set_page_config(
-    page_title="GPLX Pro - V12 Final Fix",
+    page_title="GPLX Pro - V13 Hard Fix",
     page_icon="🚗",
     layout="wide"
 )
@@ -70,33 +70,29 @@ def load_600_questions():
             return json.load(f)
     except: return None
 
-def load_image_v12(image_name, is_exam, question_id=None):
+def load_image_v13(image_name, mode_type):
     """
-    Hàm load ảnh cưỡng bức để sửa lỗi câu 1
+    mode_type: 'EXAM' hoặc 'TIP'
     """
     if not image_name: return None
     img_name = str(image_name).strip()
     
-    # Ưu tiên folder theo chế độ
-    if is_exam:
-        # Nếu là câu 1 của phần thi, ép buộc tìm trong folder 'images' trước
-        # và TUYỆT ĐỐI không nhìn vào folder 'images_a1' hay thư mục mẹo
-        search_order = ["images", ""] 
-        if question_id == 1:
-            # Fix cứng cho câu 1: Nếu thấy file ở images thì lấy luôn, không tìm chỗ khác
-            path = os.path.join("images", img_name)
-            if os.path.exists(path):
-                return ImageOps.exif_transpose(Image.open(path))
+    # THIẾT LẬP RÀO CHẮN THƯ MỤC TUYỆT ĐỐI
+    if mode_type == 'EXAM':
+        # Chế độ luyện thi: CHỈ cho phép tìm trong folder 'images'
+        # Loại bỏ hoàn toàn folder 'images_a1' khỏi tầm mắt để không bao giờ lấy nhầm ảnh mẹo
+        full_path = os.path.join("images", img_name)
     else:
-        # Nếu là học mẹo
-        search_order = ["images_a1", "images", ""]
-        
-    for folder in search_order:
-        full_path = os.path.join(folder, img_name) if folder else img_name
-        if os.path.exists(full_path) and os.path.isfile(full_path):
-            try:
-                return ImageOps.exif_transpose(Image.open(full_path))
-            except: continue
+        # Chế độ học mẹo: Ưu tiên folder mẹo xe máy
+        full_path = os.path.join("images_a1", img_name)
+        # Nếu không thấy trong folder mẹo, mới tìm ở folder images
+        if not os.path.exists(full_path):
+            full_path = os.path.join("images", img_name)
+
+    if os.path.exists(full_path) and os.path.isfile(full_path):
+        try:
+            return ImageOps.exif_transpose(Image.open(full_path))
+        except: return None
     return None
 
 # --- 5. GIAO DIỆN: HỌC MẸO ---
@@ -119,12 +115,12 @@ def render_tips_page(data, is_oto):
                 st.markdown(f"• {line}", unsafe_allow_html=True)
         with c2:
             if tip.get('image'):
-                img = load_image_v12(tip['image'], is_exam=False)
+                img = load_image_v13(tip['image'], mode_type='TIP')
                 if img: st.image(img, use_container_width=True)
         st.markdown("</div>", unsafe_allow_html=True)
 
 # --- 6. GIAO DIỆN: LUYỆN THI ---
-def render_exam_page(is_oto):
+def render_exam_page():
     st.header("📝 Luyện Tập 600 Câu Hỏi")
     questions = load_600_questions()
     if not questions: return
@@ -152,12 +148,12 @@ def render_exam_page(is_oto):
     st.markdown(f'<div class="question-box"><h4>Câu {q["id"]}: {q["question"]}</h4></div>', unsafe_allow_html=True)
 
     if q.get('image'):
-        # Truyền q['id'] vào để hàm load ảnh biết đây là câu số mấy
-        img = load_image_v12(q['image'], is_exam=True, question_id=q['id'])
+        # ÉP BUỘC CHẾ ĐỘ 'EXAM' - CHỈ TÌM TRONG FOLDER IMAGES
+        img = load_image_v13(q['image'], mode_type='EXAM')
         if img:
             st.image(img, width=450)
         else:
-            st.caption(f"Ảnh câu hỏi: {q['image']}")
+            st.caption(f"Đang tìm ảnh '{q['image']}' trong thư mục /images/...")
 
     ans = st.radio("Lựa chọn", q['options'], index=None, key=f"ans_{st.session_state.current_q_index}")
     if st.button("Kiểm tra kết quả", type="primary"):
@@ -174,7 +170,7 @@ def render_exam_page(is_oto):
 # --- 7. MAIN ---
 def main():
     with st.sidebar:
-        st.title("🚗 GPLX Pro V12")
+        st.title("🚗 GPLX Pro V13")
         license = st.selectbox("Hạng bằng:", ["Ô tô (B1, B2, C...)", "Xe máy (A1, A2)"])
         if license != st.session_state.license_type:
             st.session_state.license_type = license
@@ -185,7 +181,7 @@ def main():
     if mode == "📖 Học Mẹo":
         render_tips_page(load_tips_data(st.session_state.license_type), "Ô tô" in st.session_state.license_type)
     else:
-        render_exam_page("Ô tô" in st.session_state.license_type)
+        render_exam_page()
 
 if __name__ == "__main__":
     main()

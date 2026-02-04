@@ -5,7 +5,7 @@ from PIL import Image, ImageOps
 
 # --- 1. CẤU HÌNH TRANG ---
 st.set_page_config(
-    page_title="GPLX Pro - V28 Super Clear",
+    page_title="GPLX Pro - V29 Giant Mode",
     page_icon="🚗",
     layout="wide",
     initial_sidebar_state="collapsed"
@@ -33,87 +33,93 @@ def get_category_border(category):
     }
     return borders.get(category, "#94a3b8")
 
-# --- 4. CSS TỐI ƯU (FONT CHỮ CỰC ĐẠI) ---
+# --- 4. CSS CỰC ĐẠI (GIANT FONT) ---
 st.markdown("""
 <style>
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap');
     html, body, [class*="css"] { font-family: 'Inter', sans-serif; }
     .stApp { background-color: #f8fafc; }
     
     .block-container {
         padding-top: 0.5rem !important;
-        padding-bottom: 6rem !important;
+        padding-bottom: 8rem !important; /* Chừa chỗ nhiều hơn ở dưới */
     }
 
     /* THANH ĐIỀU HƯỚNG */
     .top-nav-container {
-        background: white; padding: 10px; border-radius: 12px;
-        box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); margin-bottom: 15px;
+        background: white; padding: 15px; border-radius: 16px;
+        box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); margin-bottom: 20px;
         border: 1px solid #e2e8f0;
     }
 
     /* KHUNG TÌM KIẾM */
     .filter-area {
-        background: white; padding: 15px; border-radius: 16px;
-        border: 1px solid #e2e8f0; margin-bottom: 20px;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+        background: white; padding: 20px; border-radius: 20px;
+        border: 1px solid #e2e8f0; margin-bottom: 25px;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.03);
     }
 
-    /* CARD CÂU HỎI */
+    /* CÂU HỎI (FONT 32px) */
     .content-card {
-        background: white; padding: 25px; border-radius: 20px;
-        box-shadow: 0 10px 15px -3px rgba(0,0,0,0.05);
-        border: 1px solid #f1f5f9; margin-bottom: 20px;
+        background: white; padding: 30px; border-radius: 24px;
+        box-shadow: 0 10px 20px -5px rgba(0,0,0,0.05);
+        border: 1px solid #f1f5f9; margin-bottom: 25px;
     }
     .q-text { 
-        font-size: 1.6rem !important; /* ~26px: Cực to */
-        font-weight: 700 !important; 
+        font-size: 2rem !important; /* ~32px: Rất to */
+        font-weight: 800 !important; /* Siêu đậm */
         color: #0f172a !important; 
-        line-height: 1.5 !important; 
-        margin-top: 5px !important;
+        line-height: 1.4 !important; 
+        margin-top: 10px !important;
     }
 
-    /* --- ĐÁP ÁN (PHẦN QUAN TRỌNG NHẤT) --- */
+    /* --- ĐÁP ÁN (FONT 28px) --- */
     div[data-testid="stRadio"] > label { display: none; }
-    div[role="radiogroup"] { gap: 16px; display: flex; flex-direction: column; }
+    div[role="radiogroup"] { gap: 20px; display: flex; flex-direction: column; }
     
     div[data-testid="stRadio"] div[role="radiogroup"] > label {
         background: white; 
-        border: 2px solid #e2e8f0; 
-        padding: 24px 20px !important; /* Tăng padding trên dưới cho thoáng */
-        border-radius: 16px; 
+        border: 3px solid #e2e8f0; /* Viền dày hơn */
+        padding: 30px 25px !important; /* Padding cực rộng */
+        border-radius: 20px; 
         width: 100%; 
         cursor: pointer;
         display: flex; align-items: center; 
         transition: all 0.2s ease;
     }
 
-    /* Can thiệp trực tiếp vào thẻ p chứa chữ đáp án */
+    /* Can thiệp vào chữ đáp án */
     div[data-testid="stRadio"] div[role="radiogroup"] > label p {
-        font-size: 1.45rem !important; /* ~23px: To và Rõ */
-        font-weight: 600 !important;    /* Đậm hơn bình thường */
-        color: #334155 !important;      /* Màu xám đen dễ đọc */
-        line-height: 1.6 !important;    /* Giãn dòng tốt */
+        font-size: 1.8rem !important; /* ~29px */
+        font-weight: 700 !important;  /* Đậm */
+        color: #334155 !important;
+        line-height: 1.5 !important;
     }
 
-    /* Hiệu ứng khi chọn */
+    /* Hiệu ứng chọn */
     div[data-testid="stRadio"] div[role="radiogroup"] > label:hover {
-        border-color: #6366f1; background: #eef2ff; transform: translateY(-2px);
+        border-color: #6366f1; background: #eef2ff;
     }
     div[data-testid="stRadio"] div[role="radiogroup"] > label[data-checked="true"] {
         border-color: #4f46e5 !important; background: #eef2ff !important;
-        box-shadow: 0 4px 10px rgba(79, 70, 229, 0.2);
+        box-shadow: 0 8px 15px rgba(79, 70, 229, 0.2);
     }
-    /* Đổi màu chữ khi được chọn cho nổi bật hẳn */
+    /* Chữ khi được chọn */
     div[data-testid="stRadio"] div[role="radiogroup"] > label[data-checked="true"] p {
         color: #4338ca !important; 
-        font-weight: 700 !important;
+        font-weight: 800 !important;
     }
 
-    /* CÁC NÚT BẤM */
-    div[data-testid="stButton"] button { width: 100%; border-radius: 12px; font-weight: 700; height: 3.5rem; font-size: 1.2rem !important; }
-    div[data-testid="stImage"] { display: flex; justify-content: center; margin: 15px 0; }
-    div[data-testid="stImage"] img { border-radius: 12px; max-height: 400px; object-fit: contain; }
+    /* NÚT BẤM KHỔNG LỒ */
+    div[data-testid="stButton"] button { 
+        width: 100%; border-radius: 16px; 
+        font-weight: 800; height: 4.5rem; /* Nút cao hơn */
+        font-size: 1.5rem !important; /* Chữ trong nút cũng to */
+    }
+    
+    /* ẢNH MINH HỌA */
+    div[data-testid="stImage"] { display: flex; justify-content: center; margin: 20px 0; }
+    div[data-testid="stImage"] img { border-radius: 16px; max-height: 450px; object-fit: contain; }
 
 </style>
 """, unsafe_allow_html=True)
@@ -155,7 +161,7 @@ def render_tips_page(license_type):
 
     cats = sorted(list(set([i.get('category', 'Khác') for i in data])))
     
-    st.markdown('<div style="font-size:0.9rem; font-weight:700; color:#64748b; margin-bottom:5px;">CHỌN CHỦ ĐỀ MẸO:</div>', unsafe_allow_html=True)
+    st.markdown('<div style="font-size:1rem; font-weight:800; color:#64748b; margin-bottom:5px;">CHỌN CHỦ ĐỀ MẸO:</div>', unsafe_allow_html=True)
     selected_cat = st.selectbox("Mẹo:", ["Tất cả"] + cats, label_visibility="collapsed")
     
     border = get_category_border(selected_cat)
@@ -164,17 +170,17 @@ def render_tips_page(license_type):
     st.write("---")
     for tip in items:
         st.markdown(f"""
-        <div style="background:white; padding:25px; border-radius:16px; border-left:8px solid {border}; box-shadow:0 4px 10px rgba(0,0,0,0.05); margin-bottom:20px;">
-            <div style="font-size:0.9rem; color:{border}; font-weight:800;">{tip.get('category', 'Mẹo')}</div>
-            <div style="font-weight:800; font-size:1.4rem; margin-top:8px; line-height:1.4;">📌 {tip.get('title', 'Mẹo')}</div>
+        <div style="background:white; padding:30px; border-radius:20px; border-left:10px solid {border}; box-shadow:0 4px 10px rgba(0,0,0,0.05); margin-bottom:25px;">
+            <div style="font-size:1.1rem; color:{border}; font-weight:800;">{tip.get('category', 'Mẹo')}</div>
+            <div style="font-weight:800; font-size:1.6rem; margin-top:10px; line-height:1.4;">📌 {tip.get('title', 'Mẹo')}</div>
         </div>
         """, unsafe_allow_html=True)
         
         for line in tip.get('content', []):
-            line = line.replace("=>", "👉 <b>").replace("(", "<br><span style='color:#718096; font-size:1.1rem'>(")
+            line = line.replace("=>", "👉 <b>").replace("(", "<br><span style='color:#718096; font-size:1.3rem'>(")
             if "<b>" in line: line += "</b>"
             if "<span" in line: line += "</span>"
-            st.markdown(f"<div style='font-size:1.25rem; margin-bottom:10px; line-height:1.6;'>• {line}</div>", unsafe_allow_html=True)
+            st.markdown(f"<div style='font-size:1.5rem; margin-bottom:12px; line-height:1.6;'>• {line}</div>", unsafe_allow_html=True)
             
         if tip.get('image'):
             folders = ["images", "images_a1"] if "Ô tô" in license_type else ["images_a1", "images"]
@@ -182,22 +188,22 @@ def render_tips_page(license_type):
             if img: st.image(img, use_container_width=True)
         st.write("---")
 
-# --- 7. GIAO DIỆN LUYỆN THI ---
+# --- 7. GIAO DIỆN LUYỆN THI (GIANT MODE) ---
 def render_exam_page():
     all_qs = load_json_file('dulieu_600_cau.json')
     if not all_qs: return
 
     cats = sorted(list(set([q.get('category', 'Khác') for q in all_qs])))
     
-    # KHU VỰC TÌM KIẾM
+    # FILTER AREA
     with st.container():
         st.markdown('<div class="filter-area">', unsafe_allow_html=True)
         c1, c2 = st.columns([1, 1])
         with c1:
-            st.markdown('<div style="font-size:0.8rem; font-weight:700; color:#64748b;">🔍 TÌM KIẾM:</div>', unsafe_allow_html=True)
+            st.markdown('<div style="font-size:1rem; font-weight:800; color:#64748b;">🔍 TÌM KIẾM:</div>', unsafe_allow_html=True)
             search_query = st.text_input("Search", placeholder="Nhập từ khóa...", label_visibility="collapsed")
         with c2:
-            st.markdown('<div style="font-size:0.8rem; font-weight:700; color:#64748b;">📂 CHỦ ĐỀ:</div>', unsafe_allow_html=True)
+            st.markdown('<div style="font-size:1rem; font-weight:800; color:#64748b;">📂 CHỦ ĐỀ:</div>', unsafe_allow_html=True)
             idx = 0
             if st.session_state.exam_category in cats:
                 idx = cats.index(st.session_state.exam_category) + 1
@@ -208,7 +214,7 @@ def render_exam_page():
                 st.rerun()
         st.markdown('</div>', unsafe_allow_html=True)
 
-    # LOGIC LỌC
+    # FILTER LOGIC
     if st.session_state.exam_category == "Tất cả":
         filtered = all_qs
     else:
@@ -219,16 +225,15 @@ def render_exam_page():
         filtered = [q for q in filtered if query_lower in q['question'].lower()]
 
     total = len(filtered)
-    
     if total == 0:
-        st.warning("Không tìm thấy câu hỏi nào.")
+        st.warning("Không tìm thấy câu hỏi.")
         return
 
     if st.session_state.current_q_index >= total: st.session_state.current_q_index = 0
     q = filtered[st.session_state.current_q_index]
     border_color = get_category_border(q.get('category', 'Khác'))
 
-    # THANH ĐIỀU HƯỚNG TRÊN
+    # NAVIGATION TOP
     with st.container():
         st.markdown('<div class="top-nav-container">', unsafe_allow_html=True)
         c1, c2, c3 = st.columns([1, 2, 1])
@@ -237,17 +242,17 @@ def render_exam_page():
                 st.session_state.current_q_index = max(0, st.session_state.current_q_index - 1)
                 st.rerun()
         with c2:
-            st.markdown(f"<div style='text-align:center; font-weight:800; font-size:1.2rem; color:#334155; padding-top:10px;'>Câu {st.session_state.current_q_index + 1}/{total}</div>", unsafe_allow_html=True)
+            st.markdown(f"<div style='text-align:center; font-weight:900; font-size:1.5rem; color:#334155; padding-top:15px;'>Câu {st.session_state.current_q_index + 1}/{total}</div>", unsafe_allow_html=True)
         with c3:
             if st.button("➡️", key="top_next", type="primary"):
                 st.session_state.current_q_index = min(total - 1, st.session_state.current_q_index + 1)
                 st.rerun()
         st.markdown('</div>', unsafe_allow_html=True)
 
-    # NỘI DUNG CÂU HỎI
+    # CONTENT
     st.markdown(f"""
-    <div class="content-card" style="border-left: 8px solid {border_color};">
-        <div style="font-size:0.9rem; color:{border_color}; text-transform:uppercase; margin-bottom:5px; font-weight:700;">{q.get('category','Chung')}</div>
+    <div class="content-card" style="border-left: 10px solid {border_color};">
+        <div style="font-size:1.1rem; color:{border_color}; text-transform:uppercase; margin-bottom:8px; font-weight:800;">{q.get('category','Chung')}</div>
         <div class="q-text">{q['question']}</div>
     </div>
     """, unsafe_allow_html=True)
@@ -257,7 +262,7 @@ def render_exam_page():
         img = load_image_strict(q['image'], ['images'])
         if img: st.image(img, use_container_width=True)
 
-    # ĐÁP ÁN
+    # ANSWERS (GIANT)
     user_choice = st.radio("Lựa chọn:", q['options'], index=None, key=f"q_{q['id']}")
 
     if user_choice:
@@ -267,9 +272,9 @@ def render_exam_page():
         else:
             st.error(f"❌ SAI: Đáp án là {correct}")
 
-    # THANH ĐIỀU HƯỚNG DƯỚI
+    # NAVIGATION BOTTOM
     st.markdown("---")
-    st.markdown('<div style="height:40px"></div>', unsafe_allow_html=True)
+    st.markdown('<div style="height:50px"></div>', unsafe_allow_html=True)
     
     col_b1, col_b2, col_b3 = st.columns([1, 1, 1])
     with col_b1:

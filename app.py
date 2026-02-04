@@ -5,7 +5,7 @@ from PIL import Image, ImageOps
 
 # --- 1. CẤU HÌNH TRANG ---
 st.set_page_config(
-    page_title="Ôn Thi GPLX - Kết Quả Tức Thì",
+    page_title="Ôn Thi GPLX - Lọc Theo Chủ Đề",
     page_icon="🚗",
     layout="wide"
 )
@@ -15,7 +15,9 @@ if 'license_type' not in st.session_state:
     st.session_state.license_type = "Ô tô (B1, B2, C...)"
 if 'current_q_index' not in st.session_state:
     st.session_state.current_q_index = 0
-# Bỏ biến 'show_answer' vì không cần nút bấm nữa
+# Lưu chủ đề đang chọn để reset câu hỏi khi đổi chủ đề
+if 'exam_category' not in st.session_state:
+    st.session_state.exam_category = "Tất cả"
 
 # --- 3. CSS GIAO DIỆN ---
 st.markdown("""
@@ -115,24 +117,53 @@ def render_tips_page(license_type):
                 if img: st.image(img, use_container_width=True)
         st.markdown("</div>", unsafe_allow_html=True)
 
-# --- 6. GIAO DIỆN LUYỆN THI (ĐÃ CHỈNH: HIỆN KẾT QUẢ LUÔN) ---
+# --- 6. GIAO DIỆN LUYỆN THI (ĐÃ CÓ LỌC CHỦ ĐỀ) ---
 def render_exam_page():
     st.header("📝 Luyện Tập 600 Câu Hỏi")
-    questions = load_json_file('dulieu_600_cau.json')
-    if not questions:
+    all_questions = load_json_file('dulieu_600_cau.json')
+    if not all_questions:
         st.error("Lỗi file dữ liệu 600 câu.")
         return
 
-    total = len(questions)
+    # 1. LẤY DANH SÁCH CHỦ ĐỀ TỪ DỮ LIỆU
+    categories = sorted(list(set([q.get('category', 'Khác') for q in all_questions])))
     
-    # Điều hướng
+    # 2. THANH CHỌN CHỦ ĐỀ
+    # Sử dụng columns để để selectbox gọn hơn
+    col_cat, col_info = st.columns([1, 2])
+    with col_cat:
+        selected_cat = st.selectbox("📂 Chọn chủ đề ôn tập:", ["Tất cả"] + categories)
+    
+    # Xử lý khi đổi chủ đề -> Reset về câu đầu tiên
+    if selected_cat != st.session_state.exam_category:
+        st.session_state.exam_category = selected_cat
+        st.session_state.current_q_index = 0
+        st.rerun()
+
+    # 3. LỌC CÂU HỎI
+    if selected_cat == "Tất cả":
+        filtered_questions = all_questions
+    else:
+        filtered_questions = [q for q in all_questions if q.get('category') == selected_cat]
+
+    if not filtered_questions:
+        st.warning(f"Không có câu hỏi nào trong chủ đề '{selected_cat}'")
+        return
+
+    total = len(filtered_questions)
+    
+    # Đảm bảo index không vượt quá giới hạn (trường hợp danh sách lọc ngắn hơn index cũ)
+    if st.session_state.current_q_index >= total:
+        st.session_state.current_q_index = 0
+
+    # 4. ĐIỀU HƯỚNG
     c1, c2, c3 = st.columns([1, 2, 1])
     with c1:
-        if st.button("⬅️ Trước", use_container_width=True):
+        if st.button("⬅️ Câu trước", use_container_width=True):
             st.session_state.current_q_index = max(0, st.session_state.current_q_index - 1)
             st.rerun()
     with c3:
-        if st.button("Sau ➡️", use_container_width=True):
+        if st.button("Câu sau ➡️", use_container_width=True):
             st.session_state.current_q_index = min(total - 1, st.session_state.current_q_index + 1)
             st.rerun()
     with c2:
@@ -141,12 +172,20 @@ def render_exam_page():
             st.session_state.current_q_index = val - 1
             st.rerun()
 
-    q = questions[st.session_state.current_q_index]
+    # Lấy câu hỏi từ danh sách ĐÃ LỌC
+    q = filtered_questions[st.session_state.current_q_index]
     
+    with col_info:
+        # Hiển thị thông tin thống kê nhỏ bên cạnh selectbox
+        st.info(f"Đang xem: **{selected_cat}** ({total} câu)")
+
     st.markdown(f"""
     <div class="question-box">
-        <div style="color:#666; font-size: 0.9em;">Câu {q['id']} / {total}</div>
-        <div style="font-size: 1.1em; font-weight: 600;">{q['question']}</div>
+        <div style="color:#666; font-size: 0.9em; display:flex; justify-content:space-between;">
+            <span>Câu {st.session_state.current_q_index + 1} / {total}</span>
+            <span style="background:#e9ecef; padding:2px 8px; border-radius:4px;">{q.get('category','Chung')}</span>
+        </div>
+        <div style="font-size: 1.15em; font-weight: 600; margin-top: 10px;">{q['question']}</div>
     </div>
     """, unsafe_allow_html=True)
 
@@ -162,17 +201,17 @@ def render_exam_page():
 
     st.write("---")
     
-    # LOGIC MỚI: Radio Button chọn xong là hiện kết quả
+    # RADIO BUTTON CHỌN ĐÁP ÁN (HIỆN KẾT QUẢ NGAY)
+    # Lưu ý: key phải là duy nhất, kết hợp cả id câu hỏi để tránh lỗi khi chuyển câu
     user_choice = st.radio(
         "Chọn đáp án:", 
         q['options'], 
         index=None, 
-        key=f"q_{st.session_state.current_q_index}"
+        key=f"q_{q['id']}" 
     )
 
-    # Nếu người dùng đã chọn (user_choice có dữ liệu) -> Hiện kết quả ngay
     if user_choice:
-        st.write("") # Tạo khoảng cách nhỏ
+        st.write("") 
         correct = q['correct_answer'].strip()
         
         if user_choice.strip() == correct:
@@ -194,7 +233,7 @@ def main():
 
         mode = st.radio("Chế độ:", ["📖 Học Mẹo", "📝 Luyện Thi (600 câu)"])
         st.divider()
-        if st.button("Reset / Xóa Cache"):
+        if st.button("🔄 Làm mới / Xóa Cache"):
             st.cache_data.clear()
             st.rerun()
 

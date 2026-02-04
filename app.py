@@ -5,7 +5,7 @@ from PIL import Image, ImageOps
 
 # --- 1. CẤU HÌNH TRANG ---
 st.set_page_config(
-    page_title="GPLX Pro - Bản Sửa Lỗi Tuyệt Đối",
+    page_title="GPLX Pro - V12 Final Fix",
     page_icon="🚗",
     layout="wide"
 )
@@ -18,7 +18,7 @@ if 'current_q_index' not in st.session_state:
 if 'show_answer' not in st.session_state:
     st.session_state.show_answer = False
 
-# --- 3. CSS GIAO DIỆN CHUẨN ---
+# --- 3. CSS GIAO DIỆN ---
 st.markdown("""
 <style>
     .tip-card {
@@ -50,7 +50,6 @@ st.markdown("""
         border-color: #007bff;
         background-color: #f1f8ff;
     }
-    div[data-testid="stImage"] { display: flex; justify-content: center; }
 </style>
 """, unsafe_allow_html=True)
 
@@ -71,44 +70,48 @@ def load_600_questions():
             return json.load(f)
     except: return None
 
-# ĐỔI TÊN HÀM ĐỂ XÓA CACHE CŨ CỦA STREAMLIT
-def get_final_image_fixed(image_name, is_oto, is_exam):
+def load_image_v12(image_name, is_exam, question_id=None):
+    """
+    Hàm load ảnh cưỡng bức để sửa lỗi câu 1
+    """
     if not image_name: return None
-    image_name = str(image_name).strip()
+    img_name = str(image_name).strip()
     
-    # CHIẾN THUẬT TÌM ẢNH MỚI:
+    # Ưu tiên folder theo chế độ
     if is_exam:
-        # Nếu đang Luyện thi: CHỈ tìm trong folder 'images' trước (đây là nơi chứa ảnh 600 câu)
-        # Cách này giúp câu 1 không bao giờ lấy nhầm ảnh mẹo
-        folders = ["images", "images_a1", ""]
+        # Nếu là câu 1 của phần thi, ép buộc tìm trong folder 'images' trước
+        # và TUYỆT ĐỐI không nhìn vào folder 'images_a1' hay thư mục mẹo
+        search_order = ["images", ""] 
+        if question_id == 1:
+            # Fix cứng cho câu 1: Nếu thấy file ở images thì lấy luôn, không tìm chỗ khác
+            path = os.path.join("images", img_name)
+            if os.path.exists(path):
+                return ImageOps.exif_transpose(Image.open(path))
     else:
-        # Nếu đang xem Mẹo: Tìm theo hạng bằng
-        folders = ["images", "images_a1", ""] if is_oto else ["images_a1", "images", ""]
+        # Nếu là học mẹo
+        search_order = ["images_a1", "images", ""]
         
-    for f in folders:
-        full_path = os.path.join(f, image_name) if f else image_name
+    for folder in search_order:
+        full_path = os.path.join(folder, img_name) if folder else img_name
         if os.path.exists(full_path) and os.path.isfile(full_path):
             try:
-                img = Image.open(full_path)
-                return ImageOps.exif_transpose(img)
+                return ImageOps.exif_transpose(Image.open(full_path))
             except: continue
     return None
 
 # --- 5. GIAO DIỆN: HỌC MẸO ---
 def render_tips_page(data, is_oto):
     st.header(f"📖 Mẹo Thi Lý Thuyết {'Ô Tô' if is_oto else 'Xe Máy'}")
-    if not data:
-        st.warning("Không tìm thấy dữ liệu mẹo.")
-        return
+    if not data: return
+    
+    cats = sorted(list(set([i.get('category','Khác') for i in data])))
+    sel = st.selectbox("Danh mục:", ["Tất cả"] + cats)
+    items = data if sel == "Tất cả" else [d for d in data if d.get('category') == sel]
 
-    selected_cat = st.selectbox("Chọn danh mục:", ["Tất cả"] + sorted(list(set([i.get('category','Khác') for i in data]))))
-    filtered = data if selected_cat == "Tất cả" else [d for d in data if d.get('category') == selected_cat]
-
-    for tip in filtered:
+    for tip in items:
         st.markdown(f'<div class="tip-card"><h3>{tip.get("title", "Mẹo")}</h3>', unsafe_allow_html=True)
         c1, c2 = st.columns([1, 1])
         with c1:
-            st.write("**Nội dung:**")
             for line in tip.get('content', []):
                 if "=>" in line:
                     p = line.split("=>")
@@ -116,14 +119,13 @@ def render_tips_page(data, is_oto):
                 st.markdown(f"• {line}", unsafe_allow_html=True)
         with c2:
             if tip.get('image'):
-                # Chế độ mẹo: is_exam = False
-                img = get_final_image_fixed(tip['image'], is_oto, is_exam=False)
+                img = load_image_v12(tip['image'], is_exam=False)
                 if img: st.image(img, use_container_width=True)
         st.markdown("</div>", unsafe_allow_html=True)
 
 # --- 6. GIAO DIỆN: LUYỆN THI ---
 def render_exam_page(is_oto):
-    st.header(f"📝 Luyện Tập 600 Câu - {'Hạng Ô Tô' if is_oto else 'Hạng Xe Máy'}")
+    st.header("📝 Luyện Tập 600 Câu Hỏi")
     questions = load_600_questions()
     if not questions: return
 
@@ -150,11 +152,14 @@ def render_exam_page(is_oto):
     st.markdown(f'<div class="question-box"><h4>Câu {q["id"]}: {q["question"]}</h4></div>', unsafe_allow_html=True)
 
     if q.get('image'):
-        # CHẾ ĐỘ THI: is_exam = True (Ưu tiên folder images để fix câu 1)
-        img = get_final_image_fixed(q['image'], is_oto, is_exam=True)
-        if img: st.image(img, width=450)
+        # Truyền q['id'] vào để hàm load ảnh biết đây là câu số mấy
+        img = load_image_v12(q['image'], is_exam=True, question_id=q['id'])
+        if img:
+            st.image(img, width=450)
+        else:
+            st.caption(f"Ảnh câu hỏi: {q['image']}")
 
-    ans = st.radio("Ans", q['options'], index=None, key=f"ex_{st.session_state.current_q_index}")
+    ans = st.radio("Lựa chọn", q['options'], index=None, key=f"ans_{st.session_state.current_q_index}")
     if st.button("Kiểm tra kết quả", type="primary"):
         st.session_state.show_answer = True
 
@@ -162,27 +167,25 @@ def render_exam_page(is_oto):
         st.divider()
         correct = q['correct_answer'].strip()
         if ans and ans.strip() == correct:
-            st.success(f"✅ Đúng rồi! Đáp án: {correct}")
+            st.success(f"✅ Chính xác! Đáp án: {correct}")
         else:
-            st.error(f"❌ Sai rồi! Đáp án đúng là: {correct}")
+            st.error(f"❌ Sai rồi! Đáp án đúng: {correct}")
 
 # --- 7. MAIN ---
 def main():
     with st.sidebar:
-        st.title("🗂️ ÔN THI GPLX")
-        lt = st.selectbox("Hạng bằng:", ["Ô tô (B1, B2, C...)", "Xe máy (A1, A2)"])
-        if lt != st.session_state.license_type:
-            st.session_state.license_type = lt
+        st.title("🚗 GPLX Pro V12")
+        license = st.selectbox("Hạng bằng:", ["Ô tô (B1, B2, C...)", "Xe máy (A1, A2)"])
+        if license != st.session_state.license_type:
+            st.session_state.license_type = license
             st.session_state.current_q_index = 0
             st.rerun()
         mode = st.radio("Chế độ:", ["📖 Học Mẹo", "📝 Luyện Thi (600 câu)"])
-        st.caption("Ver 11.0 - Clean Cache & Fix Image")
 
-    is_oto = "Ô tô" in st.session_state.license_type
     if mode == "📖 Học Mẹo":
-        render_tips_page(load_tips_data(st.session_state.license_type), is_oto)
+        render_tips_page(load_tips_data(st.session_state.license_type), "Ô tô" in st.session_state.license_type)
     else:
-        render_exam_page(is_oto)
+        render_exam_page("Ô tô" in st.session_state.license_type)
 
 if __name__ == "__main__":
     main()

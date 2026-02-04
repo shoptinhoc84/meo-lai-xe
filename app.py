@@ -6,7 +6,7 @@ from PIL import Image, ImageOps
 
 # --- 1. CẤU HÌNH TRANG ---
 st.set_page_config(
-    page_title="GPLX Pro - V34 Speed Control",
+    page_title="GPLX Pro - V35 Highlight Answer",
     page_icon="🚗",
     layout="wide",
     initial_sidebar_state="collapsed"
@@ -22,10 +22,10 @@ if 'current_q_index' not in st.session_state:
 if 'exam_category' not in st.session_state:
     st.session_state.exam_category = "Tất cả"
 
-# --- 3. CSS GIAO DIỆN ---
+# --- 3. CSS GIAO DIỆN (HIGHLIGHT MẠNH) ---
 st.markdown("""
 <style>
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap');
     html, body, [class*="css"] { font-family: 'Inter', sans-serif; }
     .stApp { background-color: #f8fafc; }
     
@@ -76,27 +76,47 @@ st.markdown("""
         color: #0f172a !important; line-height: 1.5 !important; margin-top: 5px !important;
     }
     
-    /* RADIO BUTTONS (ĐÁP ÁN) */
+    /* --- RADIO BUTTONS (ĐÁP ÁN HIGHLIGHT) --- */
     div[data-testid="stRadio"] > label { display: none; }
     div[role="radiogroup"] { gap: 16px; display: flex; flex-direction: column; }
+    
+    /* Trạng thái bình thường */
     div[data-testid="stRadio"] div[role="radiogroup"] > label {
-        background: white; border: 2px solid #e2e8f0; padding: 24px 20px !important;
-        border-radius: 16px; width: 100%; cursor: pointer;
-        display: flex; align-items: center; transition: all 0.2s ease;
+        background: white; 
+        border: 2px solid #e2e8f0; 
+        padding: 24px 20px !important;
+        border-radius: 16px; 
+        width: 100%; 
+        cursor: pointer;
+        display: flex; align-items: center; 
+        transition: all 0.2s ease;
     }
+    
+    /* Chữ bình thường */
     div[data-testid="stRadio"] div[role="radiogroup"] > label p {
-        font-size: 1.6rem !important; font-weight: 600 !important;
-        color: #334155 !important; line-height: 1.5 !important;
+        font-size: 1.6rem !important; 
+        font-weight: 500 !important;
+        color: #64748b !important; /* Màu xám nhạt khi chưa chọn */
+        line-height: 1.5 !important;
     }
+
+    /* Hover */
     div[data-testid="stRadio"] div[role="radiogroup"] > label:hover {
-        border-color: #6366f1; background: #eef2ff; transform: translateY(-2px);
+        border-color: #10b981; background: #ecfdf5; transform: translateY(-2px);
     }
+
+    /* --- TRẠNG THÁI ĐƯỢC CHỌN (ĐÁP ÁN ĐÚNG KHI AUTO) --- */
     div[data-testid="stRadio"] div[role="radiogroup"] > label[data-checked="true"] {
-        border-color: #4f46e5 !important; background: #eef2ff !important;
-        box-shadow: 0 4px 10px rgba(79, 70, 229, 0.2);
+        border-color: #059669 !important; /* Viền xanh lá đậm */
+        background-color: #d1fae5 !important; /* Nền xanh mint */
+        box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3); /* Đổ bóng xanh */
+        border-width: 3px !important;
     }
+    
+    /* Chữ khi được chọn -> ĐẬM VÀ ĐEN/XANH */
     div[data-testid="stRadio"] div[role="radiogroup"] > label[data-checked="true"] p {
-        color: #4338ca !important; font-weight: 800 !important;
+        color: #065f46 !important; /* Chữ xanh đậm (gần như đen xanh) */
+        font-weight: 900 !important; /* Siêu đậm */
     }
 
     div[data-testid="stButton"] button { width: 100%; border-radius: 12px; font-weight: 700; height: 3.5rem; font-size: 1.2rem !important; }
@@ -222,7 +242,7 @@ def render_tips_page():
             if img: st.image(img, use_container_width=True)
         st.write("---")
 
-# --- 7. GIAO DIỆN LUYỆN THI (WITH SPEED CONTROL) ---
+# --- 7. GIAO DIỆN LUYỆN THI (HIGHLIGHT) ---
 def render_exam_page():
     c_home, c_title = st.columns([1, 4])
     with c_home:
@@ -236,16 +256,14 @@ def render_exam_page():
     if not all_qs: return
     cats = sorted(list(set([q.get('category', 'Khác') for q in all_qs])))
     
-    # FILTER & SETTINGS AREA
+    # FILTER AREA
     with st.container():
         st.markdown('<div class="filter-area">', unsafe_allow_html=True)
-        # Bố cục 4 cột
         c1, c2, c3, c4 = st.columns([1, 1, 0.8, 0.8])
         
         with c1:
             st.markdown('<div style="font-size:0.8rem; font-weight:700; color:#64748b;">🔍 TÌM KIẾM:</div>', unsafe_allow_html=True)
             search_query = st.text_input("Search", placeholder="Từ khóa...", label_visibility="collapsed")
-        
         with c2:
             st.markdown('<div style="font-size:0.8rem; font-weight:700; color:#64748b;">📂 CHỦ ĐỀ:</div>', unsafe_allow_html=True)
             idx = 0
@@ -256,15 +274,13 @@ def render_exam_page():
                 st.session_state.current_q_index = 0
                 st.rerun()
         
-        # --- CÀI ĐẶT TỰ ĐỘNG ---
         with c3:
             st.markdown('<div style="font-size:0.8rem; font-weight:700; color:#64748b;">⚡ AUTO NEXT:</div>', unsafe_allow_html=True)
             auto_next_mode = st.toggle("Tự qua câu", key="auto_next_toggle")
-            
-            # THANH CHỈNH TỐC ĐỘ (Chỉ hiện khi bật Auto)
-            delay_seconds = 3 # Mặc định 3s
+            # Slider chỉ hiện khi bật Auto Next
+            delay_seconds = 3
             if auto_next_mode:
-                delay_seconds = st.slider("Chờ (giây):", 1, 10, 3, label_visibility="collapsed")
+                delay_seconds = st.slider("Chờ (s):", 1, 10, 3, label_visibility="collapsed")
         
         with c4:
             st.markdown('<div style="font-size:0.8rem; font-weight:700; color:#64748b;">👀 HỌC THUỘC:</div>', unsafe_allow_html=True)
@@ -272,7 +288,7 @@ def render_exam_page():
 
         st.markdown('</div>', unsafe_allow_html=True)
 
-    # LOGIC LỌC
+    # LOGIC
     if st.session_state.exam_category == "Tất cả": filtered = all_qs
     else: filtered = [q for q in all_qs if q.get('category') == st.session_state.exam_category]
     if search_query:
@@ -316,7 +332,7 @@ def render_exam_page():
         img = load_image_strict(q['image'], ['images'])
         if img: st.image(img, use_container_width=True)
 
-    # CHỌN ĐÁP ÁN
+    # CHỌN ĐÁP ÁN (HIGHLIGHT STYLE)
     default_index = None
     if show_answer_mode:
         try:
@@ -334,11 +350,9 @@ def render_exam_page():
         else:
             st.error(f"❌ SAI: Đáp án là {correct}")
 
-        # LOGIC AUTO NEXT (VỚI DELAY)
         if auto_next_mode:
             if st.session_state.current_q_index < total - 1:
-                # Dùng thời gian từ thanh Slider
-                time.sleep(delay_seconds) 
+                time.sleep(delay_seconds)
                 st.session_state.current_q_index += 1
                 st.rerun()
 

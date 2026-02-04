@@ -5,7 +5,7 @@ from PIL import Image, ImageOps
 
 # --- 1. CẤU HÌNH TRANG ---
 st.set_page_config(
-    page_title="GPLX Pro - V21 Pills Layout",
+    page_title="GPLX Pro - V22 Mobile Fixed",
     page_icon="🚗",
     layout="wide",
     initial_sidebar_state="collapsed"
@@ -19,7 +19,7 @@ if 'current_q_index' not in st.session_state:
 if 'exam_category' not in st.session_state:
     st.session_state.exam_category = "Tất cả"
 
-# --- 3. CSS TỐI ƯU (CHẾ ĐỘ PILLS - VIÊN THUỐC) ---
+# --- 3. CSS TỐI ƯU (FIX LỖI DỌC & MẤT ĐÁP ÁN) ---
 st.markdown("""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
@@ -31,78 +31,96 @@ st.markdown("""
         padding-bottom: 6rem !important;
     }
 
-    /* --- PHẦN 1: THANH CHỦ ĐỀ "VIÊN THUỐC" (PILLS) --- */
-    /* Đây là đoạn code quan trọng nhất để ép nó nằm ngang */
+    /* ================================================================= */
+    /* PHẦN 1: ÉP BUỘC THANH CHỦ ĐỀ NẰM NGANG (HORIZONTAL SCROLL)      */
+    /* ================================================================= */
     
-    /* Target chính xác vào Radio nằm ngang */
-    div[data-testid="stRadio"] > div[role="radiogroup"][aria-orientation="horizontal"] {
+    /* Target vào Radio Group có thuộc tính horizontal */
+    div[data-testid="stRadio"] div[role="radiogroup"][aria-orientation="horizontal"] {
         display: flex !important;
         flex-direction: row !important;
-        flex-wrap: nowrap !important; /* KHÔNG ĐƯỢC XUỐNG DÒNG */
-        overflow-x: auto !important;  /* CHO PHÉP CUỘN */
-        gap: 8px !important;
-        padding-bottom: 10px !important;
+        flex-wrap: nowrap !important; /* QUAN TRỌNG: Cấm xuống dòng */
+        overflow-x: auto !important;  /* Cho phép cuộn ngang */
         width: 100% !important;
-        -webkit-overflow-scrolling: touch; /* Cuộn mượt trên iPhone */
+        gap: 8px !important;
+        padding-bottom: 8px !important;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none; /* Ẩn thanh cuộn Firefox */
+    }
+    
+    /* Ẩn thanh cuộn Chrome/Safari */
+    div[data-testid="stRadio"] div[role="radiogroup"][aria-orientation="horizontal"]::-webkit-scrollbar {
+        display: none; 
     }
 
-    /* Style cho từng viên thuốc (nút bấm) */
-    div[data-testid="stRadio"] > div[role="radiogroup"][aria-orientation="horizontal"] label {
-        flex: 0 0 auto !important; /* Giữ nguyên kích thước nội dung */
+    /* Style cho từng nút bấm chủ đề */
+    div[data-testid="stRadio"] div[role="radiogroup"][aria-orientation="horizontal"] label {
+        flex: 0 0 auto !important; /* QUAN TRỌNG: Không co giãn */
         background-color: white !important;
         border: 1px solid #cbd5e1 !important;
-        padding: 6px 14px !important;
-        border-radius: 99px !important; /* Bo tròn hoàn toàn */
-        font-size: 0.85rem !important;
+        padding: 8px 16px !important;
+        border-radius: 50px !important;
+        white-space: nowrap !important; /* Chữ luôn thẳng hàng */
         font-weight: 600 !important;
         color: #64748b !important;
-        white-space: nowrap !important; /* Chữ không xuống dòng */
-        box-shadow: 0 1px 2px rgba(0,0,0,0.02) !important;
-        transition: all 0.2s !important;
-        min-height: 0px !important;
+        font-size: 0.85rem !important;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.02) !important;
+        margin: 0 !important;
+        min-width: 80px !important; /* Chiều rộng tối thiểu */
+        text-align: center !important;
+        justify-content: center !important;
     }
 
-    /* Hiệu ứng khi chọn (Active) */
-    div[data-testid="stRadio"] > div[role="radiogroup"][aria-orientation="horizontal"] label[data-checked="true"] {
+    /* Hiệu ứng khi chọn chủ đề (Active) */
+    div[data-testid="stRadio"] div[role="radiogroup"][aria-orientation="horizontal"] label[data-checked="true"] {
         background-color: #2563eb !important;
         color: white !important;
         border-color: #2563eb !important;
-        box-shadow: 0 2px 6px rgba(37, 99, 235, 0.4) !important;
+        box-shadow: 0 4px 10px rgba(37, 99, 235, 0.3) !important;
     }
 
-    /* Ẩn thanh cuộn xấu xí */
-    div[data-testid="stRadio"] > div[role="radiogroup"][aria-orientation="horizontal"]::-webkit-scrollbar {
-        height: 0px; 
-    }
-
-    /* --- PHẦN 2: ĐÁP ÁN (DỌC) --- */
-    /* Target vào Radio Dọc (không có thuộc tính horizontal) */
-    div[data-testid="stRadio"] > div[role="radiogroup"]:not([aria-orientation="horizontal"]) {
+    /* ================================================================= */
+    /* PHẦN 2: ĐÁP ÁN CÂU HỎI (VERTICAL - DỌC)                         */
+    /* ================================================================= */
+    
+    /* Target vào Radio Group KHÔNG có thuộc tính horizontal */
+    div[data-testid="stRadio"] div[role="radiogroup"]:not([aria-orientation="horizontal"]) {
         display: flex !important;
         flex-direction: column !important;
         gap: 12px !important;
+        flex-wrap: wrap !important; /* Cho phép xuống dòng nội dung bên trong */
     }
-    
-    div[data-testid="stRadio"] > div[role="radiogroup"]:not([aria-orientation="horizontal"]) label {
+
+    /* Style cho từng nút đáp án */
+    div[data-testid="stRadio"] div[role="radiogroup"]:not([aria-orientation="horizontal"]) label {
+        display: flex !important;
         width: 100% !important;
-        background: white !important;
+        background-color: white !important;
         border: 2px solid #e2e8f0 !important;
         padding: 16px !important;
         border-radius: 12px !important;
-        display: flex !important;
         align-items: center !important;
-        white-space: normal !important; /* Cho phép đáp án xuống dòng */
+        white-space: normal !important; /* Cho phép text dài xuống dòng */
+        height: auto !important;
+        cursor: pointer !important;
     }
     
-    /* Active đáp án */
-    div[data-testid="stRadio"] > div[role="radiogroup"]:not([aria-orientation="horizontal"]) label[data-checked="true"] {
+    /* Hiệu ứng chọn đáp án */
+    div[data-testid="stRadio"] div[role="radiogroup"]:not([aria-orientation="horizontal"]) label[data-checked="true"] {
         border-color: #2563eb !important;
-        background: #eff6ff !important;
+        background-color: #eff6ff !important;
         color: #1e40af !important;
         font-weight: 700 !important;
     }
 
-    /* --- CÁC PHẦN KHÁC --- */
+    /* Ẩn tiêu đề mặc định của Radio để tự custom */
+    div[data-testid="stRadio"] > label {
+        display: none !important;
+    }
+
+    /* ================================================================= */
+    /* CÁC THÀNH PHẦN KHÁC */
+    /* ================================================================= */
     .top-nav-container {
         background: white; padding: 10px; border-radius: 12px;
         box-shadow: 0 2px 5px rgba(0,0,0,0.05); margin-bottom: 10px;
@@ -123,9 +141,7 @@ st.markdown("""
     div[data-testid="stImage"] { display: flex; justify-content: center; margin: 10px 0; }
     div[data-testid="stImage"] img { border-radius: 8px; max-height: 350px; object-fit: contain; }
     div[data-testid="stButton"] button { width: 100%; border-radius: 8px; font-weight: 600; height: 3rem; }
-    
-    /* Ẩn label mặc định của Radio để tự custom */
-    div[data-testid="stRadio"] > label { display: none; }
+
 </style>
 """, unsafe_allow_html=True)
 
@@ -192,7 +208,7 @@ def render_tips_page(license_type):
             if img: st.image(img, use_container_width=True)
         st.write("---")
 
-# --- 6. GIAO DIỆN LUYỆN THI (V21 PILLS) ---
+# --- 6. GIAO DIỆN LUYỆN THI (V22) ---
 def render_exam_page():
     all_qs = load_json_file('dulieu_600_cau.json')
     if not all_qs: return
@@ -254,7 +270,7 @@ def render_exam_page():
         img = load_image_strict(q['image'], ['images'])
         if img: st.image(img, use_container_width=True)
 
-    # 4. ĐÁP ÁN (DỌC - ĐÃ FIX LỖI)
+    # 4. ĐÁP ÁN (DỌC)
     user_choice = st.radio(
         "Lựa chọn:", 
         q['options'], 
@@ -301,7 +317,7 @@ def main():
         
         mode = st.radio("Chế độ:", ["📝 Luyện Thi", "📖 Học Mẹo"])
         st.divider()
-        if st.button("🔄 Xóa Cache Lỗi"):
+        if st.button("🔄 Xóa Cache CSS"):
             st.cache_data.clear()
             st.rerun()
 

@@ -5,13 +5,15 @@ from PIL import Image, ImageOps
 
 # --- 1. CẤU HÌNH TRANG ---
 st.set_page_config(
-    page_title="GPLX Pro - V30 Perfect Balance",
+    page_title="GPLX Pro - V31 Dashboard",
     page_icon="🚗",
     layout="wide",
     initial_sidebar_state="collapsed"
 )
 
 # --- 2. KHỞI TẠO STATE ---
+if 'page' not in st.session_state:
+    st.session_state.page = "home" # home, exam, tips
 if 'license_type' not in st.session_state:
     st.session_state.license_type = "Ô tô (B1, B2, C...)"
 if 'current_q_index' not in st.session_state:
@@ -19,99 +21,100 @@ if 'current_q_index' not in st.session_state:
 if 'exam_category' not in st.session_state:
     st.session_state.exam_category = "Tất cả"
 
-# --- 3. HÀM MÀU SẮC ---
-def get_category_border(category):
-    borders = {
-        "Tất cả": "#cbd5e1",
-        "Khái niệm và quy tắc": "#2563eb",
-        "Văn hóa, đạo đức nghề nghiệp": "#db2777",
-        "Kỹ thuật lái xe": "#16a34a",
-        "Cấu tạo và sửa chữa": "#ea580c",
-        "Biển báo đường bộ": "#dc2626",
-        "Sa hình": "#ca8a04",
-        "Nghiệp vụ vận tải": "#7c3aed"
-    }
-    return borders.get(category, "#94a3b8")
-
-# --- 4. CSS TỐI ƯU (CÂU HỎI VỪA - ĐÁP ÁN TO) ---
+# --- 3. CSS GIAO DIỆN HIỆN ĐẠI (DASHBOARD UI) ---
 st.markdown("""
 <style>
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap');
     html, body, [class*="css"] { font-family: 'Inter', sans-serif; }
     .stApp { background-color: #f8fafc; }
     
     .block-container {
-        padding-top: 0.5rem !important;
+        padding-top: 1rem !important;
         padding-bottom: 6rem !important;
     }
 
-    /* THANH ĐIỀU HƯỚNG */
+    /* --- HERO SECTION (TRANG CHỦ) --- */
+    .hero-card {
+        background: linear-gradient(135deg, #4f46e5 0%, #3b82f6 100%);
+        padding: 30px;
+        border-radius: 24px;
+        color: white;
+        text-align: center;
+        margin-bottom: 30px;
+        box-shadow: 0 10px 25px -5px rgba(79, 70, 229, 0.4);
+    }
+    .hero-title { font-size: 2rem; font-weight: 800; margin-bottom: 10px; }
+    .hero-subtitle { font-size: 1.1rem; opacity: 0.9; font-weight: 500; }
+
+    /* --- ACTION CARDS (NÚT BẤM TO) --- */
+    .action-card {
+        background: white;
+        padding: 25px;
+        border-radius: 20px;
+        border: 1px solid #e2e8f0;
+        box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
+        text-align: center;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+    }
+    .action-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 15px 30px -5px rgba(0,0,0,0.1);
+        border-color: #6366f1;
+    }
+    .icon { font-size: 3rem; margin-bottom: 15px; }
+    .card-title { font-size: 1.2rem; font-weight: 700; color: #1e293b; margin-bottom: 5px; }
+    .card-desc { font-size: 0.9rem; color: #64748b; }
+
+    /* --- CÁC THÀNH PHẦN CŨ (GIỮ NGUYÊN CSS TỐI ƯU) --- */
     .top-nav-container {
         background: white; padding: 10px; border-radius: 12px;
         box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); margin-bottom: 15px;
         border: 1px solid #e2e8f0;
     }
-
-    /* KHUNG TÌM KIẾM */
     .filter-area {
         background: white; padding: 15px; border-radius: 16px;
         border: 1px solid #e2e8f0; margin-bottom: 20px;
         box-shadow: 0 2px 4px rgba(0,0,0,0.02);
     }
-
-    /* CÂU HỎI (FONT CHUẨN - KHÔNG QUÁ TO) */
     .content-card {
         background: white; padding: 25px; border-radius: 20px;
         box-shadow: 0 10px 15px -3px rgba(0,0,0,0.05);
         border: 1px solid #f1f5f9; margin-bottom: 20px;
     }
     .q-text { 
-        font-size: 1.35rem !important; /* ~21px: Vừa vặn, dễ đọc */
-        font-weight: 700 !important; 
-        color: #0f172a !important; 
-        line-height: 1.5 !important; 
-        margin-top: 5px !important;
+        font-size: 1.35rem !important; font-weight: 700 !important; 
+        color: #0f172a !important; line-height: 1.5 !important; margin-top: 5px !important;
     }
-
-    /* --- ĐÁP ÁN (FONT CỰC TO & VÙNG BẤM RỘNG) --- */
+    
+    /* ĐÁP ÁN TO RÕ */
     div[data-testid="stRadio"] > label { display: none; }
     div[role="radiogroup"] { gap: 16px; display: flex; flex-direction: column; }
-    
     div[data-testid="stRadio"] div[role="radiogroup"] > label {
-        background: white; 
-        border: 2px solid #e2e8f0; 
-        padding: 24px 20px !important; /* Padding rộng để dễ bấm */
-        border-radius: 16px; 
-        width: 100%; 
-        cursor: pointer;
-        display: flex; align-items: center; 
-        transition: all 0.2s ease;
+        background: white; border: 2px solid #e2e8f0; padding: 24px 20px !important;
+        border-radius: 16px; width: 100%; cursor: pointer;
+        display: flex; align-items: center; transition: all 0.2s ease;
     }
-
-    /* CHỮ ĐÁP ÁN: TO HƠN CÂU HỎI */
     div[data-testid="stRadio"] div[role="radiogroup"] > label p {
-        font-size: 1.6rem !important; /* ~26px: Cực to */
-        font-weight: 600 !important;
-        color: #334155 !important;
-        line-height: 1.5 !important;
+        font-size: 1.6rem !important; font-weight: 600 !important;
+        color: #334155 !important; line-height: 1.5 !important;
     }
-
-    /* Hiệu ứng Hover */
     div[data-testid="stRadio"] div[role="radiogroup"] > label:hover {
         border-color: #6366f1; background: #eef2ff; transform: translateY(-2px);
     }
-    
-    /* Hiệu ứng khi chọn */
     div[data-testid="stRadio"] div[role="radiogroup"] > label[data-checked="true"] {
         border-color: #4f46e5 !important; background: #eef2ff !important;
         box-shadow: 0 4px 10px rgba(79, 70, 229, 0.2);
     }
     div[data-testid="stRadio"] div[role="radiogroup"] > label[data-checked="true"] p {
-        color: #4338ca !important; 
-        font-weight: 800 !important; /* Đậm hơn khi chọn */
+        color: #4338ca !important; font-weight: 800 !important;
     }
 
-    /* NÚT BẤM TO */
     div[data-testid="stButton"] button { width: 100%; border-radius: 12px; font-weight: 700; height: 3.5rem; font-size: 1.2rem !important; }
     div[data-testid="stImage"] { display: flex; justify-content: center; margin: 15px 0; }
     div[data-testid="stImage"] img { border-radius: 12px; max-height: 400px; object-fit: contain; }
@@ -119,7 +122,7 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-# --- 5. HÀM XỬ LÝ DỮ LIỆU ---
+# --- 4. HÀM XỬ LÝ DỮ LIỆU ---
 @st.cache_data
 def load_json_file(filename):
     try:
@@ -146,10 +149,93 @@ def load_image_strict(image_name, folders_allowed):
             except: continue
     return None
 
+def get_category_border(category):
+    borders = {
+        "Tất cả": "#cbd5e1", "Khái niệm và quy tắc": "#2563eb",
+        "Văn hóa, đạo đức nghề nghiệp": "#db2777", "Kỹ thuật lái xe": "#16a34a",
+        "Cấu tạo và sửa chữa": "#ea580c", "Biển báo đường bộ": "#dc2626",
+        "Sa hình": "#ca8a04", "Nghiệp vụ vận tải": "#7c3aed"
+    }
+    return borders.get(category, "#94a3b8")
+
+# --- 5. GIAO DIỆN TRANG CHỦ (DASHBOARD) ---
+def render_home_page():
+    # Hero Section
+    st.markdown("""
+    <div class="hero-card">
+        <div class="hero-title">🚗 GPLX MASTER PRO</div>
+        <div class="hero-subtitle">Ứng dụng ôn thi lý thuyết lái xe hiện đại nhất</div>
+    </div>
+    """, unsafe_allow_html=True)
+
+    # Chọn loại bằng (Dạng Radio nhưng style đẹp hơn)
+    st.markdown("### 1. Chọn loại bằng của bạn")
+    col_l1, col_l2 = st.columns(2)
+    
+    # Nút bấm giả lập để chọn bằng
+    with col_l1:
+        is_oto = "Ô tô" in st.session_state.license_type
+        btn_oto = st.button("🚗 Ô TÔ (B1, B2, C)", type="primary" if is_oto else "secondary", use_container_width=True)
+        if btn_oto: 
+            st.session_state.license_type = "Ô tô (B1, B2, C...)"
+            st.rerun()
+            
+    with col_l2:
+        is_xm = "Xe máy" in st.session_state.license_type
+        btn_xm = st.button("🛵 XE MÁY (A1, A2)", type="primary" if is_xm else "secondary", use_container_width=True)
+        if btn_xm: 
+            st.session_state.license_type = "Xe máy (A1, A2)"
+            st.rerun()
+
+    st.markdown("---")
+    
+    # Chọn chế độ học (Dạng Card lớn)
+    st.markdown(f"### 2. Bắt đầu học ({st.session_state.license_type})")
+    
+    c1, c2 = st.columns(2)
+    
+    with c1:
+        st.markdown("""
+        <div class="action-card">
+            <div class="icon">📝</div>
+            <div class="card-title">Luyện Thi 600 Câu</div>
+            <div class="card-desc">Làm bài trắc nghiệm, có đáp án và giải thích.</div>
+        </div>
+        """, unsafe_allow_html=True)
+        if st.button("Vào Luyện Thi ➡️", key="btn_go_exam", use_container_width=True):
+            st.session_state.page = "exam"
+            st.rerun()
+
+    with c2:
+        st.markdown("""
+        <div class="action-card">
+            <div class="icon">💡</div>
+            <div class="card-title">Học Mẹo Ghi Nhớ</div>
+            <div class="card-desc">Các mẹo chọn nhanh đáp án đúng không cần học vẹt.</div>
+        </div>
+        """, unsafe_allow_html=True)
+        if st.button("Xem Mẹo ➡️", key="btn_go_tips", use_container_width=True):
+            st.session_state.page = "tips"
+            st.rerun()
+
+    # Thống kê giả lập (Để giao diện đẹp hơn)
+    st.markdown("---")
+    st.markdown("### 📊 Tiến độ của bạn")
+    k1, k2, k3 = st.columns(3)
+    k1.metric("Câu đã làm", f"{st.session_state.current_q_index}", "+1")
+    k2.metric("Chính xác", "85%", "Cao")
+    k3.metric("Trạng thái", "Đang học", "Tốt")
+
 # --- 6. GIAO DIỆN HỌC MẸO ---
-def render_tips_page(license_type):
+def render_tips_page():
+    if st.button("🏠 Về Trang Chủ"):
+        st.session_state.page = "home"
+        st.rerun()
+        
+    license_type = st.session_state.license_type
     st.markdown(f"### 📖 Mẹo: {license_type}")
     data = load_data_by_license(license_type)
+    
     if not data:
         st.error("Thiếu dữ liệu mẹo.")
         return
@@ -167,7 +253,7 @@ def render_tips_page(license_type):
         st.markdown(f"""
         <div style="background:white; padding:25px; border-radius:16px; border-left:8px solid {border}; box-shadow:0 4px 10px rgba(0,0,0,0.05); margin-bottom:20px;">
             <div style="font-size:1rem; color:{border}; font-weight:800;">{tip.get('category', 'Mẹo')}</div>
-            <div style="font-weight:800; font-size:1.3rem; margin-top:8px; line-height:1.4;">📌 {tip.get('title', 'Mẹo')}</div>
+            <div style="font-weight:800; font-size:1.4rem; margin-top:8px; line-height:1.4;">📌 {tip.get('title', 'Mẹo')}</div>
         </div>
         """, unsafe_allow_html=True)
         
@@ -175,7 +261,7 @@ def render_tips_page(license_type):
             line = line.replace("=>", "👉 <b>").replace("(", "<br><span style='color:#718096; font-size:1.1rem'>(")
             if "<b>" in line: line += "</b>"
             if "<span" in line: line += "</span>"
-            st.markdown(f"<div style='font-size:1.2rem; margin-bottom:10px; line-height:1.6;'>• {line}</div>", unsafe_allow_html=True)
+            st.markdown(f"<div style='font-size:1.25rem; margin-bottom:10px; line-height:1.6;'>• {line}</div>", unsafe_allow_html=True)
             
         if tip.get('image'):
             folders = ["images", "images_a1"] if "Ô tô" in license_type else ["images_a1", "images"]
@@ -185,12 +271,21 @@ def render_tips_page(license_type):
 
 # --- 7. GIAO DIỆN LUYỆN THI ---
 def render_exam_page():
+    # Nút Home trên cùng
+    c_home, c_title = st.columns([1, 4])
+    with c_home:
+        if st.button("🏠 Home"):
+            st.session_state.page = "home"
+            st.rerun()
+    with c_title:
+        st.markdown(f"**Đang luyện thi: {st.session_state.license_type}**")
+
     all_qs = load_json_file('dulieu_600_cau.json')
     if not all_qs: return
 
     cats = sorted(list(set([q.get('category', 'Khác') for q in all_qs])))
     
-    # FILTER & SEARCH
+    # FILTER AREA
     with st.container():
         st.markdown('<div class="filter-area">', unsafe_allow_html=True)
         c1, c2 = st.columns([1, 1])
@@ -209,7 +304,7 @@ def render_exam_page():
                 st.rerun()
         st.markdown('</div>', unsafe_allow_html=True)
 
-    # LOGIC
+    # FILTER LOGIC
     if st.session_state.exam_category == "Tất cả":
         filtered = all_qs
     else:
@@ -244,7 +339,7 @@ def render_exam_page():
                 st.rerun()
         st.markdown('</div>', unsafe_allow_html=True)
 
-    # NỘI DUNG CÂU HỎI (NORMAL SIZE)
+    # CONTENT
     st.markdown(f"""
     <div class="content-card" style="border-left: 8px solid {border_color};">
         <div style="font-size:0.9rem; color:{border_color}; text-transform:uppercase; margin-bottom:5px; font-weight:700;">{q.get('category','Chung')}</div>
@@ -257,7 +352,7 @@ def render_exam_page():
         img = load_image_strict(q['image'], ['images'])
         if img: st.image(img, use_container_width=True)
 
-    # ĐÁP ÁN (GIANT SIZE)
+    # ANSWERS
     user_choice = st.radio("Lựa chọn:", q['options'], index=None, key=f"q_{q['id']}")
 
     if user_choice:
@@ -288,24 +383,12 @@ def render_exam_page():
 
 # --- MAIN ---
 def main():
-    with st.sidebar:
-        st.header("Cài Đặt")
-        lc = st.selectbox("Hạng bằng:", ["Ô tô (B1, B2, C...)", "Xe máy (A1, A2)"])
-        if lc != st.session_state.license_type:
-            st.session_state.license_type = lc
-            st.session_state.current_q_index = 0
-            st.cache_data.clear()
-            st.rerun()
-        
-        mode = st.radio("Chế độ:", ["📝 Luyện Thi", "📖 Học Mẹo"])
-        st.divider()
-        if st.button("🔄 Làm mới"):
-            st.cache_data.clear()
-            st.rerun()
-
-    if mode == "📖 Học Mẹo":
-        render_tips_page(st.session_state.license_type)
-    else:
+    # Điều hướng trang
+    if st.session_state.page == "home":
+        render_home_page()
+    elif st.session_state.page == "tips":
+        render_tips_page()
+    elif st.session_state.page == "exam":
         render_exam_page()
 
 if __name__ == "__main__":

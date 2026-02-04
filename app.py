@@ -5,7 +5,7 @@ from PIL import Image, ImageOps
 
 # --- 1. CẤU HÌNH TRANG ---
 st.set_page_config(
-    page_title="GPLX Master - Ôn Thi App",
+    page_title="GPLX Pro - Font Chuẩn",
     page_icon="🚗",
     layout="wide",
     initial_sidebar_state="collapsed"
@@ -19,60 +19,117 @@ if 'current_q_index' not in st.session_state:
 if 'exam_category' not in st.session_state:
     st.session_state.exam_category = "Tất cả"
 
-# --- 3. CSS UI/UX (MOBILE FIRST) ---
+# --- 3. CSS UI/UX (FONT CHỮ TO & RÕ) ---
 st.markdown("""
 <style>
-    /* Tổng thể */
-    .stApp { background-color: #f8f9fa; }
+    /* NHÚNG FONT GOOGLE (Tùy chọn, nếu muốn đẹp hơn nữa) */
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+    /* TỔNG THỂ */
+    html, body, [class*="css"] {
+        font-family: 'Inter', 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; /* Font hiện đại */
+    }
+    .stApp { background-color: #f4f6f8; }
     
-    /* Sticky Footer (Thanh điều hướng dính đáy) */
+    /* CARD CÂU HỎI (To và Rõ) */
+    .content-card {
+        background: white; 
+        padding: 30px; /* Tăng padding */
+        border-radius: 20px;
+        box-shadow: 0 8px 30px rgba(0,0,0,0.08);
+        border: 1px solid #e1e4e8; 
+        margin-bottom: 25px;
+    }
+    
+    /* CÂU HỎI: Chữ to, đậm, dễ đọc */
+    .q-text { 
+        font-size: 1.4rem; /* ~22px */
+        font-weight: 700; 
+        color: #1a202c; 
+        line-height: 1.6; /* Giãn dòng thoáng */
+        margin-top: 10px;
+        letter-spacing: -0.01em;
+    }
+    
+    /* BADGE (Số thứ tự câu) */
+    .badge {
+        background: #e0f2fe; color: #0284c7; 
+        padding: 6px 14px;
+        border-radius: 30px; 
+        font-size: 0.95rem; 
+        font-weight: 700;
+        display: inline-block;
+        border: 1px solid #bae6fd;
+    }
+
+    /* ĐÁP ÁN (Dạng thẻ bấm lớn) */
+    div[data-testid="stRadio"] > label { display: none; }
+    div[role="radiogroup"] { gap: 15px; display: flex; flex-direction: column; }
+    
+    div[data-testid="stRadio"] div[role="radiogroup"] > label {
+        background: white; 
+        border: 2px solid #e2e8f0; 
+        padding: 18px 22px; /* Vùng bấm cực rộng */
+        border-radius: 14px; 
+        width: 100%; 
+        cursor: pointer;
+        display: flex; 
+        align-items: center; 
+        color: #475569;
+        font-size: 1.15rem; /* ~18px (Chữ đáp án to) */
+        font-weight: 500;
+        line-height: 1.5;
+        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+    }
+    
+    /* Hiệu ứng khi di chuột */
+    div[data-testid="stRadio"] div[role="radiogroup"] > label:hover {
+        border-color: #3b82f6; 
+        background: #eff6ff;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(59, 130, 246, 0.15);
+    }
+    
+    /* Khi được chọn (Active) */
+    div[data-testid="stRadio"] div[role="radiogroup"] > label[data-checked="true"] {
+        border-color: #2563eb !important; 
+        background: #eff6ff !important;
+        color: #1e40af !important; 
+        font-weight: 700;
+        box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.2);
+    }
+
+    /* ẢNH MINH HỌA */
+    div[data-testid="stImage"] {
+        background: #fff; 
+        padding: 12px; 
+        border-radius: 16px; 
+        border: 1px solid #f1f5f9;
+        margin: 20px 0;
+        display: flex; justify-content: center;
+    }
+    div[data-testid="stImage"] img {
+        border-radius: 10px;
+        max-width: 100%;
+        height: auto;
+    }
+
+    /* THANH ĐIỀU HƯỚNG DƯỚI CÙNG */
     .sticky-nav {
         position: fixed; bottom: 0; left: 0; width: 100%;
-        background: white; padding: 10px;
-        box-shadow: 0 -2px 10px rgba(0,0,0,0.1); z-index: 999;
+        background: rgba(255, 255, 255, 0.95); 
+        backdrop-filter: blur(10px);
+        padding: 15px;
+        border-top: 1px solid #e2e8f0;
+        box-shadow: 0 -4px 20px rgba(0,0,0,0.06); 
+        z-index: 9999;
     }
-    .block-container { padding-bottom: 80px !important; }
+    .block-container { padding-bottom: 100px !important; }
 
-    /* Card (Khung nội dung) */
-    .content-card {
-        background: white; padding: 20px; border-radius: 16px;
-        box-shadow: 0 4px 15px rgba(0,0,0,0.05);
-        border: 1px solid #edf2f7; margin-bottom: 20px;
-    }
+    /* Nút bấm điều hướng */
+    .btn-nav { font-size: 1.1rem; font-weight: 600; padding: 0.5rem 1rem; }
     
-    /* Badges */
-    .badge {
-        background: #e3f2fd; color: #1565c0; padding: 4px 12px;
-        border-radius: 20px; font-size: 0.85rem; font-weight: 700;
-        display: inline-block; margin-bottom: 8px;
-    }
-    
-    /* Text Styles */
-    .q-text { font-size: 1.3rem; font-weight: 600; color: #2d3748; line-height: 1.5; }
-    .tip-highlight { color: #d63384; font-weight: bold; background: #fff0f6; padding: 0 4px; border-radius: 4px; }
-
-    /* Radio Button (Đáp án dạng thẻ bấm) */
-    div[data-testid="stRadio"] > label { display: none; }
-    div[role="radiogroup"] { gap: 10px; display: flex; flex-direction: column; }
-    div[data-testid="stRadio"] div[role="radiogroup"] > label {
-        background: white; border: 2px solid #e2e8f0; padding: 15px;
-        border-radius: 12px; width: 100%; cursor: pointer;
-        display: flex; align-items: center; color: #4a5568;
-        transition: all 0.2s;
-    }
-    div[data-testid="stRadio"] div[role="radiogroup"] > label:hover {
-        border-color: #3182ce; background: #ebf8ff;
-    }
-    div[data-testid="stRadio"] div[role="radiogroup"] > label[data-checked="true"] {
-        border-color: #3182ce !important; background: #ebf8ff !important;
-        color: #2b6cb0 !important; font-weight: 600;
-    }
-
-    /* Ảnh */
-    div[data-testid="stImage"] {
-        display: flex; justify-content: center;
-        background: #fff; padding: 10px; border-radius: 12px; margin: 10px 0;
-    }
 </style>
 """, unsafe_allow_html=True)
 
@@ -85,12 +142,9 @@ def load_json_file(filename):
     except: return None
 
 def load_data_by_license(license_type):
-    """Load dữ liệu mẹo dựa trên loại bằng"""
     is_oto = "Ô tô" in license_type
-    # Danh sách tên file có thể có (bao gồm cả tên file gốc và tên file bạn up lên)
     files_oto = ['data.json', 'data (6).json']
     files_xm = ['tips_a1.json', 'tips_a1 (1).json']
-    
     target = files_oto if is_oto else files_xm
     for f in target:
         d = load_json_file(f)
@@ -107,52 +161,45 @@ def load_image_strict(image_name, folders_allowed):
             except: continue
     return None
 
-# --- 5. GIAO DIỆN HỌC MẸO (ĐÃ KHÔI PHỤC & NÂNG CẤP) ---
+# --- 5. GIAO DIỆN HỌC MẸO ---
 def render_tips_page(license_type):
     st.markdown(f"### 📖 Mẹo Thi: {license_type}")
     data = load_data_by_license(license_type)
     
     if not data:
-        st.error("⚠️ Không tìm thấy file dữ liệu mẹo (data.json hoặc tips_a1.json).")
+        st.error("⚠️ Không tìm thấy file dữ liệu mẹo.")
         return
 
-    # Filter Chủ đề (Dạng ngang)
     categories = sorted(list(set([i.get('category', 'Khác') for i in data])))
     selected_cat = st.selectbox("Chọn chủ đề mẹo:", ["Tất cả"] + categories)
     
     items = data if selected_cat == "Tất cả" else [d for d in data if d.get('category') == selected_cat]
 
     for tip in items:
-        # Sử dụng Card giao diện mới
         st.markdown(f"""
-        <div class="content-card" style="border-left: 5px solid #e83e8c;">
-            <div class="badge">{tip.get('category', 'Mẹo')}</div>
-            <h3 style="margin:0; color:#2d3748;">📌 {tip.get('title', 'Mẹo ghi nhớ')}</h3>
+        <div class="content-card" style="border-left: 6px solid #e83e8c;">
+            <div class="badge" style="background:#fce7f3; color:#db2777; border-color:#fbcfe8;">{tip.get('category', 'Mẹo')}</div>
+            <div class="q-text" style="font-size:1.2rem; margin-top:5px;">📌 {tip.get('title', 'Mẹo ghi nhớ')}</div>
         </div>
         """, unsafe_allow_html=True)
         
         c1, c2 = st.columns([1.5, 1])
         with c1:
             for line in tip.get('content', []):
-                # Highlight từ khóa
-                line = line.replace("=>", "👉 <span class='tip-highlight'>")
+                line = line.replace("=>", "👉 <span style='color:#d63384; font-weight:800; background:#fff1f2; padding:2px 6px; border-radius:4px;'>")
                 if "👉" in line: line += "</span>"
-                st.markdown(f"• {line}", unsafe_allow_html=True)
+                st.markdown(f"<div style='font-size:1.1rem; line-height:1.6; margin-bottom:8px;'>• {line}</div>", unsafe_allow_html=True)
         with c2:
             if tip.get('image'):
-                # Mẹo thì tìm cả 2 folder cho chắc
                 folders = ["images", "images_a1"] if "Ô tô" in license_type else ["images_a1", "images"]
                 img = load_image_strict(tip['image'], folders)
                 if img: st.image(img, use_container_width=True)
 
-# --- 6. GIAO DIỆN LUYỆN THI (GIỮ NGUYÊN V9) ---
+# --- 6. GIAO DIỆN LUYỆN THI (FONT TO) ---
 def render_exam_page():
     all_qs = load_json_file('dulieu_600_cau.json')
-    if not all_qs:
-        st.error("Lỗi dữ liệu 600 câu.")
-        return
+    if not all_qs: return
 
-    # Filter
     cats = sorted(list(set([q.get('category', 'Khác') for q in all_qs])))
     
     c1, c2 = st.columns([2, 1])
@@ -172,10 +219,10 @@ def render_exam_page():
 
     # --- CARD CÂU HỎI ---
     st.markdown(f"""
-    <div class="content-card" style="border-left: 5px solid #3182ce;">
-        <div style="display:flex; justify-content:space-between;">
+    <div class="content-card" style="border-left: 6px solid #2563eb;">
+        <div style="display:flex; justify-content:space-between; align-items:center;">
             <span class="badge">Câu {st.session_state.current_q_index + 1}/{total}</span>
-            <span style="color:#718096; font-size:0.8rem;">{q.get('category','Chung')}</span>
+            <span style="color:#64748b; font-weight:600; font-size:0.9rem;">{q.get('category','Chung')}</span>
         </div>
         <div class="q-text">{q['question']}</div>
     </div>
@@ -199,7 +246,7 @@ def render_exam_page():
 
     # --- THANH ĐIỀU HƯỚNG ---
     st.markdown("---")
-    st.markdown('<div style="height:50px"></div>', unsafe_allow_html=True)
+    st.markdown('<div style="height:60px"></div>', unsafe_allow_html=True)
     
     c_prev, c_txt, c_next = st.columns([1, 1, 1])
     with c_prev:
@@ -211,7 +258,7 @@ def render_exam_page():
             st.session_state.current_q_index = min(total - 1, st.session_state.current_q_index + 1)
             st.rerun()
     with c_txt:
-        st.markdown(f"<div style='text-align:center; padding-top:10px; color:#888'>Câu {st.session_state.current_q_index + 1}</div>", unsafe_allow_html=True)
+        st.markdown(f"<div style='text-align:center; padding-top:10px; color:#64748b; font-weight:600;'>Câu {st.session_state.current_q_index + 1}</div>", unsafe_allow_html=True)
 
 # --- MAIN ---
 def main():
@@ -226,7 +273,7 @@ def main():
         
         mode = st.radio("Chế độ:", ["📖 Học Mẹo", "📝 Luyện Thi"])
         st.divider()
-        st.info("Phiên bản V10: Full tính năng & Giao diện App")
+        st.caption("Ver 11.0: Font Inter & Giao diện lớn")
 
     if mode == "📖 Học Mẹo":
         render_tips_page(st.session_state.license_type)

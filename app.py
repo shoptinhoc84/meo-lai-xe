@@ -5,7 +5,7 @@ from PIL import Image, ImageOps
 
 # --- 1. CẤU HÌNH TRANG ---
 st.set_page_config(
-    page_title="GPLX Pro - V26 Big Font",
+    page_title="GPLX Pro - V27 Search Fixed",
     page_icon="🚗",
     layout="wide",
     initial_sidebar_state="collapsed"
@@ -19,19 +19,19 @@ if 'current_q_index' not in st.session_state:
 if 'exam_category' not in st.session_state:
     st.session_state.exam_category = "Tất cả"
 
-# --- 3. HÀM MÀU SẮC (GIỮ NGUYÊN TÍNH NĂNG CHAMELEON) ---
+# --- 3. HÀM MÀU SẮC (GIỮ NGUYÊN) ---
 def get_category_color(category):
     colors = {
-        "Tất cả": "#f1f5f9",
-        "Khái niệm và quy tắc": "#dbeafe", 
-        "Văn hóa, đạo đức nghề nghiệp": "#fce7f3",
-        "Kỹ thuật lái xe": "#dcfce7",
-        "Cấu tạo và sửa chữa": "#ffedd5",
-        "Biển báo đường bộ": "#fee2e2",
-        "Sa hình": "#fff7ed",
-        "Nghiệp vụ vận tải": "#ede9fe"
+        "Tất cả": "#f8fafc",
+        "Khái niệm và quy tắc": "#eff6ff", 
+        "Văn hóa, đạo đức nghề nghiệp": "#fdf2f8",
+        "Kỹ thuật lái xe": "#f0fdf4",
+        "Cấu tạo và sửa chữa": "#fff7ed",
+        "Biển báo đường bộ": "#fef2f2",
+        "Sa hình": "#fffbeb",
+        "Nghiệp vụ vận tải": "#f5f3ff"
     }
-    return colors.get(category, "#f1f5f9")
+    return colors.get(category, "#f8fafc")
 
 def get_category_border(category):
     borders = {
@@ -46,7 +46,7 @@ def get_category_border(category):
     }
     return borders.get(category, "#94a3b8")
 
-# --- 4. CSS TỐI ƯU (FONT TO RÕ) ---
+# --- 4. CSS TỐI ƯU (FONT TO & THANH TÌM KIẾM ĐẸP) ---
 st.markdown("""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
@@ -58,72 +58,63 @@ st.markdown("""
         padding-bottom: 6rem !important;
     }
 
-    /* --- THANH ĐIỀU HƯỚNG TRÊN --- */
+    /* THANH ĐIỀU HƯỚNG TRÊN */
     .top-nav-container {
         background: white; padding: 10px; border-radius: 12px;
         box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); margin-bottom: 15px;
         border: 1px solid #e2e8f0;
     }
 
-    /* --- CÂU HỎI (FONT CỰC TO) --- */
+    /* THANH TÌM KIẾM & FILTER */
+    .filter-area {
+        background: white; padding: 15px; border-radius: 16px;
+        border: 1px solid #e2e8f0; margin-bottom: 20px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+    }
+
+    /* CARD CÂU HỎI (FONT CỰC TO) */
     .content-card {
         background: white; padding: 25px; border-radius: 20px;
         box-shadow: 0 10px 15px -3px rgba(0,0,0,0.05);
         border: 1px solid #f1f5f9; margin-bottom: 20px;
     }
     .q-text { 
-        font-size: 1.5rem !important; /* ~24px: Cực rõ */
+        font-size: 1.5rem !important; 
         font-weight: 700 !important; 
         color: #0f172a !important; 
         line-height: 1.5 !important; 
         margin-top: 10px !important;
     }
 
-    /* --- ĐÁP ÁN (FONT TO & DỄ BẤM) --- */
+    /* ĐÁP ÁN (FONT TO & DỄ BẤM) */
     div[data-testid="stRadio"] > label { display: none; }
     div[role="radiogroup"] { gap: 15px; display: flex; flex-direction: column; }
     
     div[data-testid="stRadio"] div[role="radiogroup"] > label {
         background: white; 
         border: 2px solid #e2e8f0; 
-        padding: 20px !important; /* Tăng vùng bấm */
+        padding: 20px !important; 
         border-radius: 16px; 
         width: 100%; 
         cursor: pointer;
-        display: flex; 
-        align-items: center; 
+        display: flex; align-items: center; 
         color: #334155; 
-        
-        /* CẤU HÌNH FONT CHỮ ĐÁP ÁN */
-        font-size: 1.25rem !important; /* ~20px: To rõ */
+        font-size: 1.25rem !important; 
         font-weight: 500 !important;
         line-height: 1.6 !important;
         transition: all 0.2s ease;
     }
-    
     div[data-testid="stRadio"] div[role="radiogroup"] > label p {
-        font-size: 1.25rem !important; /* Ép cả thẻ p bên trong */
+        font-size: 1.25rem !important;
     }
 
-    /* Hiệu ứng chọn */
     div[data-testid="stRadio"] div[role="radiogroup"] > label:hover {
-        border-color: #6366f1; background: #eef2ff;
-        transform: translateY(-2px);
+        border-color: #6366f1; background: #eef2ff; transform: translateY(-2px);
     }
     div[data-testid="stRadio"] div[role="radiogroup"] > label[data-checked="true"] {
         border-color: #4f46e5 !important; background: #eef2ff !important;
         color: #4338ca !important; font-weight: 700 !important;
         box-shadow: 0 4px 10px rgba(79, 70, 229, 0.2);
-    }
-
-    /* Tùy chỉnh Selectbox */
-    div[data-testid="stSelectbox"] > div > div {
-        border-radius: 12px !important;
-        height: 50px !important; /* Cao hơn dễ bấm */
-        display: flex; align-items: center;
-    }
-    div[data-testid="stSelectbox"] label {
-        font-size: 1.2rem !important;
     }
 
     div[data-testid="stImage"] { display: flex; justify-content: center; margin: 15px 0; }
@@ -173,13 +164,7 @@ def render_tips_page(license_type):
     st.markdown('<div style="font-size:0.9rem; font-weight:700; color:#64748b; margin-bottom:5px;">CHỌN CHỦ ĐỀ MẸO:</div>', unsafe_allow_html=True)
     selected_cat = st.selectbox("Mẹo:", ["Tất cả"] + cats, label_visibility="collapsed")
     
-    # Màu động
-    bg = get_category_color(selected_cat)
     border = get_category_border(selected_cat)
-    
-    # Inject CSS
-    st.markdown(f"""<style>div[data-testid="stSelectbox"] > div > div {{ background-color: {bg} !important; border: 2px solid {border} !important; color: #1e293b !important; font-weight: 700 !important; }}</style>""", unsafe_allow_html=True)
-    
     items = data if selected_cat == "Tất cả" else [d for d in data if d.get('category') == selected_cat]
 
     st.write("---")
@@ -203,21 +188,63 @@ def render_tips_page(license_type):
             if img: st.image(img, use_container_width=True)
         st.write("---")
 
-# --- 7. GIAO DIỆN LUYỆN THI (BIG FONT) ---
+# --- 7. GIAO DIỆN LUYỆN THI (FIX SEARCH) ---
 def render_exam_page():
     all_qs = load_json_file('dulieu_600_cau.json')
     if not all_qs: return
 
     cats = sorted(list(set([q.get('category', 'Khác') for q in all_qs])))
-    current_cat = st.session_state.exam_category
     
-    filtered = all_qs if current_cat == "Tất cả" else [q for q in all_qs if q.get('category') == current_cat]
+    # --- KHU VỰC TÌM KIẾM & LỌC ---
+    # Container màu trắng bao quanh
+    with st.container():
+        st.markdown('<div class="filter-area">', unsafe_allow_html=True)
+        col_search, col_cat = st.columns([1, 1])
+        
+        with col_search:
+            st.markdown('<div style="font-size:0.8rem; font-weight:700; color:#64748b; margin-bottom:2px;">🔍 TÌM KIẾM (Gõ từ khóa):</div>', unsafe_allow_html=True)
+            search_query = st.text_input("Search", placeholder="VD: nồng độ cồn, 18 tuổi...", label_visibility="collapsed")
+            
+        with col_cat:
+            st.markdown('<div style="font-size:0.8rem; font-weight:700; color:#64748b; margin-bottom:2px;">📂 CHỌN CHỦ ĐỀ:</div>', unsafe_allow_html=True)
+            # Quan trọng: Không can thiệp CSS màu nền vào Input Selectbox nữa để giữ tính năng Search
+            idx = 0
+            if st.session_state.exam_category in cats:
+                idx = cats.index(st.session_state.exam_category) + 1
+            
+            sel_cat = st.selectbox("Category", ["Tất cả"] + cats, index=idx, label_visibility="collapsed")
+            
+            if sel_cat != st.session_state.exam_category:
+                st.session_state.exam_category = sel_cat
+                st.session_state.current_q_index = 0
+                st.rerun()
+        st.markdown('</div>', unsafe_allow_html=True)
+
+    # --- LOGIC LỌC ---
+    # 1. Lọc theo chủ đề trước
+    if st.session_state.exam_category == "Tất cả":
+        filtered = all_qs
+    else:
+        filtered = [q for q in all_qs if q.get('category') == st.session_state.exam_category]
+
+    # 2. Lọc theo từ khóa tìm kiếm (Nếu có)
+    if search_query:
+        query_lower = search_query.lower()
+        filtered = [q for q in filtered if query_lower in q['question'].lower()]
+
     total = len(filtered)
     
+    if total == 0:
+        st.warning("⚠️ Không tìm thấy câu hỏi nào phù hợp với từ khóa này.")
+        return
+
     if st.session_state.current_q_index >= total: st.session_state.current_q_index = 0
     q = filtered[st.session_state.current_q_index]
 
-    # 1. THANH ĐIỀU HƯỚNG TRÊN
+    # Lấy màu chủ đề
+    border_color = get_category_border(q.get('category', 'Khác'))
+
+    # --- THANH ĐIỀU HƯỚNG TRÊN ---
     with st.container():
         st.markdown('<div class="top-nav-container">', unsafe_allow_html=True)
         c1, c2, c3 = st.columns([1, 2, 1])
@@ -233,40 +260,10 @@ def render_exam_page():
                 st.rerun()
         st.markdown('</div>', unsafe_allow_html=True)
 
-    # 2. KHUNG CHỌN CHỦ ĐỀ (MÀU ĐỘNG)
-    bg = get_category_color(current_cat)
-    border = get_category_border(current_cat)
-    
+    # --- NỘI DUNG CÂU HỎI ---
     st.markdown(f"""
-    <style>
-        div[data-testid="stSelectbox"] > div > div {{
-            background-color: {bg} !important; border: 2px solid {border} !important;
-            color: #0f172a !important; font-weight: 700 !important;
-            box-shadow: 0 4px 6px -1px {bg} !important;
-        }}
-        div[data-testid="stSelectbox"] svg {{ fill: {border} !important; }}
-    </style>
-    """, unsafe_allow_html=True)
-
-    st.markdown(f'<div style="font-size:0.9rem; font-weight:800; color:{border}; margin-bottom:5px; text-transform:uppercase;">📂 CHỌN CHỦ ĐỀ:</div>', unsafe_allow_html=True)
-    
-    idx = 0
-    if current_cat == "Tất cả": idx = 0
-    elif current_cat in cats: idx = cats.index(current_cat) + 1
-
-    sel_cat = st.selectbox("Filter", ["Tất cả"] + cats, index=idx, label_visibility="collapsed")
-
-    if sel_cat != st.session_state.exam_category:
-        st.session_state.exam_category = sel_cat
-        st.session_state.current_q_index = 0
-        st.rerun()
-
-    st.markdown('<div style="margin-bottom: 20px;"></div>', unsafe_allow_html=True)
-
-    # 3. NỘI DUNG CÂU HỎI
-    st.markdown(f"""
-    <div class="content-card" style="border-left: 8px solid {border};">
-        <div style="font-size:0.9rem; color:{border}; text-transform:uppercase; margin-bottom:5px; font-weight:700;">{q.get('category','Chung')}</div>
+    <div class="content-card" style="border-left: 8px solid {border_color};">
+        <div style="font-size:0.9rem; color:{border_color}; text-transform:uppercase; margin-bottom:5px; font-weight:700;">{q.get('category','Chung')}</div>
         <div class="q-text">{q['question']}</div>
     </div>
     """, unsafe_allow_html=True)
@@ -276,7 +273,7 @@ def render_exam_page():
         img = load_image_strict(q['image'], ['images'])
         if img: st.image(img, use_container_width=True)
 
-    # 4. ĐÁP ÁN (FONT TO)
+    # --- ĐÁP ÁN ---
     user_choice = st.radio("Lựa chọn:", q['options'], index=None, key=f"q_{q['id']}")
 
     if user_choice:
@@ -286,7 +283,7 @@ def render_exam_page():
         else:
             st.error(f"❌ SAI: Đáp án là {correct}")
 
-    # 5. THANH ĐIỀU HƯỚNG DƯỚI
+    # --- THANH ĐIỀU HƯỚNG DƯỚI ---
     st.markdown("---")
     st.markdown('<div style="height:40px"></div>', unsafe_allow_html=True)
     

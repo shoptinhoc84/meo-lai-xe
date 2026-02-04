@@ -1,12 +1,12 @@
 import streamlit as st
 import json
 import os
-import time  # <--- THÊM THƯ VIỆN NÀY ĐỂ TẠO ĐỘ TRỄ
+import time
 from PIL import Image, ImageOps
 
 # --- 1. CẤU HÌNH TRANG ---
 st.set_page_config(
-    page_title="GPLX Pro - V32 Auto Next",
+    page_title="GPLX Pro - V33 Cheat Mode",
     page_icon="🚗",
     layout="wide",
     initial_sidebar_state="collapsed"
@@ -21,9 +21,6 @@ if 'current_q_index' not in st.session_state:
     st.session_state.current_q_index = 0
 if 'exam_category' not in st.session_state:
     st.session_state.exam_category = "Tất cả"
-# State cho Auto Next (Mặc định là Tắt)
-if 'auto_next' not in st.session_state:
-    st.session_state.auto_next = False
 
 # --- 3. CSS GIAO DIỆN ---
 st.markdown("""
@@ -37,7 +34,7 @@ st.markdown("""
         padding-bottom: 6rem !important;
     }
 
-    /* HERO SECTION */
+    /* HERO & CARDS */
     .hero-card {
         background: linear-gradient(135deg, #4f46e5 0%, #3b82f6 100%);
         padding: 30px; border-radius: 24px; color: white;
@@ -47,7 +44,6 @@ st.markdown("""
     .hero-title { font-size: 2rem; font-weight: 800; margin-bottom: 10px; }
     .hero-subtitle { font-size: 1.1rem; opacity: 0.9; font-weight: 500; }
 
-    /* ACTION CARDS */
     .action-card {
         background: white; padding: 25px; border-radius: 20px;
         border: 1px solid #e2e8f0; text-align: center; cursor: pointer;
@@ -59,7 +55,7 @@ st.markdown("""
     .card-title { font-size: 1.2rem; font-weight: 700; color: #1e293b; }
     .card-desc { font-size: 0.9rem; color: #64748b; }
 
-    /* GENERAL UI */
+    /* UI ELEMENTS */
     .top-nav-container {
         background: white; padding: 10px; border-radius: 12px;
         box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); margin-bottom: 15px;
@@ -80,7 +76,7 @@ st.markdown("""
         color: #0f172a !important; line-height: 1.5 !important; margin-top: 5px !important;
     }
     
-    /* ĐÁP ÁN */
+    /* RADIO BUTTONS (ĐÁP ÁN) */
     div[data-testid="stRadio"] > label { display: none; }
     div[role="radiogroup"] { gap: 16px; display: flex; flex-direction: column; }
     div[data-testid="stRadio"] div[role="radiogroup"] > label {
@@ -176,7 +172,7 @@ def render_home_page():
         <div class="action-card">
             <div class="icon">📝</div>
             <div class="card-title">Luyện Thi</div>
-            <div class="card-desc">600 câu trắc nghiệm</div>
+            <div class="card-desc">Chế độ thi thử & Học thuộc</div>
         </div>
         """, unsafe_allow_html=True)
         if st.button("Vào Thi ➡️", key="btn_go_exam", use_container_width=True):
@@ -187,7 +183,7 @@ def render_home_page():
         <div class="action-card">
             <div class="icon">💡</div>
             <div class="card-title">Học Mẹo</div>
-            <div class="card-desc">Mẹo ghi nhớ nhanh</div>
+            <div class="card-desc">Các mẹo ghi nhớ nhanh</div>
         </div>
         """, unsafe_allow_html=True)
         if st.button("Xem Mẹo ➡️", key="btn_go_tips", use_container_width=True):
@@ -226,7 +222,7 @@ def render_tips_page():
             if img: st.image(img, use_container_width=True)
         st.write("---")
 
-# --- 7. GIAO DIỆN LUYỆN THI (AUTO NEXT) ---
+# --- 7. GIAO DIỆN LUYỆN THI (SHOW ANSWER + AUTO NEXT) ---
 def render_exam_page():
     c_home, c_title = st.columns([1, 4])
     with c_home:
@@ -243,12 +239,14 @@ def render_exam_page():
     # FILTER AREA
     with st.container():
         st.markdown('<div class="filter-area">', unsafe_allow_html=True)
-        c1, c2, c3 = st.columns([1, 1, 0.8])
+        # Chia cột: Search | Category | Auto Next | Show Answer
+        c1, c2, c3, c4 = st.columns([1, 1, 0.6, 0.6])
+        
         with c1:
-            st.markdown('<div style="font-size:0.9rem; font-weight:700; color:#64748b;">🔍 TÌM KIẾM:</div>', unsafe_allow_html=True)
+            st.markdown('<div style="font-size:0.8rem; font-weight:700; color:#64748b;">🔍 TÌM KIẾM:</div>', unsafe_allow_html=True)
             search_query = st.text_input("Search", placeholder="Từ khóa...", label_visibility="collapsed")
         with c2:
-            st.markdown('<div style="font-size:0.9rem; font-weight:700; color:#64748b;">📂 CHỦ ĐỀ:</div>', unsafe_allow_html=True)
+            st.markdown('<div style="font-size:0.8rem; font-weight:700; color:#64748b;">📂 CHỦ ĐỀ:</div>', unsafe_allow_html=True)
             idx = 0
             if st.session_state.exam_category in cats: idx = cats.index(st.session_state.exam_category) + 1
             sel_cat = st.selectbox("Category", ["Tất cả"] + cats, index=idx, label_visibility="collapsed")
@@ -257,15 +255,18 @@ def render_exam_page():
                 st.session_state.current_q_index = 0
                 st.rerun()
         
-        # NÚT BẬT/TẮT AUTO NEXT
+        # Nút chức năng nâng cao
         with c3:
-            st.markdown('<div style="font-size:0.9rem; font-weight:700; color:#64748b;">⚡ TỰ ĐỘNG:</div>', unsafe_allow_html=True)
-            # Toggle trả về True/False
-            auto_next_mode = st.toggle("Tự qua câu", key="auto_next_toggle")
+            st.markdown('<div style="font-size:0.8rem; font-weight:700; color:#64748b;">⚡ TỰ ĐỘNG:</div>', unsafe_allow_html=True)
+            auto_next_mode = st.toggle("Auto Next", key="auto_next_toggle")
+        
+        with c4:
+            st.markdown('<div style="font-size:0.8rem; font-weight:700; color:#64748b;">👀 HỌC THUỘC:</div>', unsafe_allow_html=True)
+            show_answer_mode = st.toggle("Hiện đáp án", key="show_answer_toggle")
 
         st.markdown('</div>', unsafe_allow_html=True)
 
-    # LOGIC
+    # LOGIC LỌC
     if st.session_state.exam_category == "Tất cả": filtered = all_qs
     else: filtered = [q for q in all_qs if q.get('category') == st.session_state.exam_category]
     if search_query:
@@ -309,9 +310,29 @@ def render_exam_page():
         img = load_image_strict(q['image'], ['images'])
         if img: st.image(img, use_container_width=True)
 
-    # ANSWERS
-    user_choice = st.radio("Lựa chọn:", q['options'], index=None, key=f"q_{q['id']}")
+    # --- XỬ LÝ VIỆC CHỌN ĐÁP ÁN ---
+    default_index = None
+    
+    # Nếu bật chế độ "Học thuộc" -> Tự tìm index của đáp án đúng
+    if show_answer_mode:
+        try:
+            # Tìm vị trí của đáp án đúng trong danh sách options
+            # Dùng strip() để xóa khoảng trắng thừa cho chắc chắn
+            clean_ops = [opt.strip() for opt in q['options']]
+            clean_correct = q['correct_answer'].strip()
+            default_index = clean_ops.index(clean_correct)
+        except:
+            default_index = None
 
+    # Render Radio Button
+    user_choice = st.radio(
+        "Lựa chọn:", 
+        q['options'], 
+        index=default_index,  # Tự động chọn nếu bật mode
+        key=f"q_{q['id']}"
+    )
+
+    # Xử lý kết quả
     if user_choice:
         correct = q['correct_answer'].strip()
         if user_choice.strip() == correct:
@@ -319,13 +340,13 @@ def render_exam_page():
         else:
             st.error(f"❌ SAI: Đáp án là {correct}")
 
-        # --- LOGIC TỰ ĐỘNG QUA CÂU ---
-        if auto_next_mode: # Nếu nút gạt đang BẬT
-            # Chỉ tự động qua câu nếu chưa phải câu cuối
+        # --- LOGIC AUTO NEXT ---
+        # Nếu bật Auto Next VÀ (đang ở chế độ Học thuộc HOẶC người dùng tự bấm đúng)
+        if auto_next_mode:
             if st.session_state.current_q_index < total - 1:
-                time.sleep(0.7) # Chờ 0.7 giây để người dùng kịp nhìn kết quả
-                st.session_state.current_q_index += 1 # Tăng index
-                st.rerun() # Tải lại trang
+                time.sleep(1.0) # Chờ 1 giây cho dễ nhìn
+                st.session_state.current_q_index += 1
+                st.rerun()
 
     # NAV BOTTOM
     st.markdown("---")

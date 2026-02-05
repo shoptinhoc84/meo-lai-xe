@@ -69,7 +69,7 @@ st.markdown("""
         color: #0f172a !important; line-height: 1.5 !important; margin-top: 5px !important;
     }
 
-    /* --- STYLE CHO TRANG MẸO CẤP TỐC --- */
+    /* --- STYLE CHO TRANG MẸO CẤP TỐC (MỚI) --- */
     .tip-box {
         background: white;
         border-radius: 16px;
@@ -131,6 +131,8 @@ st.markdown("""
     .stTabs [aria-selected="true"] { background-color: #eff6ff !important; border-color: #3b82f6 !important; color: #1d4ed8 !important; font-weight: 700; }
     
     div[data-testid="stButton"] button { width: 100%; border-radius: 12px; font-weight: 700; height: 3.5rem; font-size: 1.2rem !important; }
+    
+    /* Style cho ảnh */
     div[data-testid="stImage"] { display: flex; justify-content: center; margin: 15px 0; }
     div[data-testid="stImage"] img { border-radius: 12px; max-height: 400px; object-fit: contain; }
 
@@ -166,14 +168,15 @@ def load_image_smart(base_name, folders_allowed):
     extensions = ['.png', '.jpg', '.jpeg', '.PNG', '.JPG', '.JPEG']
     
     clean_name = str(base_name).strip()
-    # Nếu tên file đã có đuôi sẵn thì kiểm tra trực tiếp
+    
+    # Nếu người dùng đã nhập sẵn đuôi (VD: tip_tuoi.jpg) trong data
     if any(clean_name.endswith(ext) for ext in extensions):
          for folder in folders_allowed:
             path = os.path.join(folder, clean_name)
             if os.path.exists(path) and os.path.isfile(path):
                 return ImageOps.exif_transpose(Image.open(path))
     
-    # Nếu chưa có đuôi, thử từng đuôi một
+    # Nếu chỉ có tên (VD: tip_tuoi), thử ghép đuôi
     for folder in folders_allowed:
         for ext in extensions:
             path = os.path.join(folder, clean_name + ext)
@@ -252,11 +255,12 @@ def render_captoc_page():
     with c_title:
         st.markdown(f"## ⚡ Bí Kíp Cấp Tốc: {st.session_state.license_type}")
     
-    st.info("💡 Mẹo: Hệ thống tự động tìm file ảnh .jpg, .png trong thư mục images.")
+    # Thông báo nhỏ
+    st.info("💡 Mẹo: Hệ thống tự động hiển thị ảnh .jpg hoặc .png từ thư mục images.")
     folders = ["images", "images_a1"]
 
     # Tab phân loại
-    tab1, tab2, tab3, tab4 = st.tabs(["🔢 Con Số & Tuổi", "🚀 Tốc Độ & K/Cách", "🆔 Hạng Xe (Nhiều ảnh)", "🛑 Biển Báo & Sa Hình"])
+    tab1, tab2, tab3, tab4 = st.tabs(["🔢 Con Số & Tuổi", "🚀 Tốc Độ & K/Cách", "🆔 Hạng Xe (Ảnh)", "🛑 Biển Báo & Sa Hình"])
 
     # --- TAB 1: CON SỐ & TUỔI ---
     with tab1:
@@ -270,6 +274,7 @@ def render_captoc_page():
                     👉 <b>Nhìn 3 đáp án đầu, tìm số LỚN NHẤT.</b><br>
                     Ví dụ: 18, 21, 24 -> Chọn <b>24</b>.<br>
                     <div class="formula-box">Đáp án = Số Tuổi Lớn Nhất</div>
+                    <small><i>(Ngoại lệ: Hạng E là 27 tuổi)</i></small>
                 </div>
             </div>
             
@@ -284,7 +289,7 @@ def render_captoc_page():
             """, unsafe_allow_html=True)
         
         with c2:
-            # Load file tip_tuoi (jpg hoặc png đều được)
+            # Code tự tìm tip_tuoi.jpg hoặc tip_tuoi.png
             img1 = load_image_smart("tip_tuoi", folders)
             if img1: st.image(img1, caption="Mẹo chọn tuổi lớn nhất", use_container_width=True)
             
@@ -346,25 +351,24 @@ def render_captoc_page():
         with c2:
             st.markdown("**📸 Hình ảnh minh họa:**")
             
-            # 1. Ảnh tổng hợp hạng xe (nếu có)
+            # Ảnh 1: Tổng hợp (tìm tip_hang_chung.jpg/png)
             img_chung = load_image_smart("tip_hang_chung", folders)
-            if img_chung: 
-                st.image(img_chung, caption="Tổng hợp hạng xe", use_container_width=True)
+            if img_chung: st.image(img_chung, caption="Tổng hợp hạng xe", use_container_width=True)
             
-            # 2. Ảnh riêng cho hạng FE/FC (nếu có)
+            # Ảnh 2: Mẹo FE/FC (tìm tip_hang_fc.jpg/png)
             img_fc = load_image_smart("tip_hang_fc", folders)
             if img_fc:
                 with st.expander("Xem hình FE - FC"):
                     st.image(img_fc, caption="Mẹo FE - FC", use_container_width=True)
             
-            # 3. Ảnh riêng cho A1 (nếu có)
+            # Ảnh 3: Mẹo A1 (tìm tip_hang_a1.jpg/png)
             img_a1 = load_image_smart("tip_hang_a1", folders)
             if img_a1:
                 with st.expander("Xem hình A1"):
                     st.image(img_a1, caption="Mẹo A1", use_container_width=True)
             
             if not any([img_chung, img_fc, img_a1]):
-                st.warning("Chưa tìm thấy ảnh hạng xe (tip_hang_chung, tip_hang_fc, ...)")
+                st.warning("Chưa tìm thấy ảnh. Hãy đặt tên: tip_hang_chung, tip_hang_fc, tip_hang_a1")
 
     # --- TAB 4: BIỂN BÁO & SA HÌNH ---
     with tab4:
@@ -422,11 +426,12 @@ def render_tips_page():
             st.markdown(f"<div style='font-size:1.25rem; margin-bottom:10px;'>• {line}</div>", unsafe_allow_html=True)
         if tip.get('image'):
             folders = ["images", "images_a1"] if "Ô tô" in st.session_state.license_type else ["images_a1", "images"]
-            img = load_image_smart(tip['image'], folders) # Dùng hàm mới luôn
+            # Dùng hàm load_image_smart cho cả phần cũ để tránh lỗi đuôi file
+            img = load_image_smart(tip['image'], folders)
             if img: st.image(img, use_container_width=True)
         st.write("---")
 
-# --- 8. GIAO DIỆN LUYỆN THI (EXAM) ---
+# --- 8. GIAO DIỆN LUYỆN THI (EXAM - GIỮ NGUYÊN) ---
 def render_exam_page():
     c_home, c_title = st.columns([1, 4])
     with c_home:
@@ -512,7 +517,7 @@ def render_exam_page():
 
     if q['id'] == 1: q['image'] = None
     if q.get('image'):
-        # Dùng hàm smart ở đây luôn
+        # Dùng hàm smart ở đây để đảm bảo ảnh câu hỏi cũng ko bị lỗi
         img = load_image_smart(q['image'], ['images'])
         if img: st.image(img, use_container_width=True)
 

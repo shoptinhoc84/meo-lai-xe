@@ -29,7 +29,6 @@ st.markdown("""
     html, body, [class*="css"] { font-family: 'Inter', sans-serif; }
     .stApp { background-color: #f8fafc; }
     
-    /* Giao diện Thẻ nội dung */
     .hero-card {
         background: linear-gradient(135deg, #4f46e5 0%, #3b82f6 100%);
         padding: 30px; border-radius: 24px; color: white;
@@ -43,15 +42,12 @@ st.markdown("""
     }
     .action-card:hover { transform: translateY(-5px); border-color: #6366f1; }
 
-    /* CSS CHO TRANG MẸO CẤP TỐC */
     .tip-box {
         background: white; border-radius: 16px; padding: 20px; margin-bottom: 15px;
         border-left: 6px solid #3b82f6; box-shadow: 0 2px 5px rgba(0,0,0,0.05);
     }
     .tip-title { color: #1e293b; font-weight: 800; font-size: 1.1rem; margin-bottom: 8px; text-transform: uppercase; }
-    .formula-box { background: #f1f5f9; border: 2px dashed #cbd5e1; border-radius: 12px; padding: 15px; text-align: center; font-weight: 700; font-size: 1.2rem; color: #475569; margin: 10px 0; }
 
-    /* --- RADIO BUTTONS GỐC (STYLE CHƯA CHỌN) --- */
     div[data-testid="stRadio"] > label { display: none; }
     div[role="radiogroup"] { gap: 16px; display: flex; flex-direction: column; }
     div[data-testid="stRadio"] div[role="radiogroup"] > label {
@@ -62,9 +58,7 @@ st.markdown("""
         font-size: 1.5rem !important; font-weight: 500 !important; color: #64748b !important; line-height: 1.5 !important;
     }
 
-    /* Style ảnh câu hỏi */
     div[data-testid="stImage"] img { border-radius: 12px; max-height: 400px; object-fit: contain; }
-
 </style>
 """, unsafe_allow_html=True)
 
@@ -77,10 +71,9 @@ def load_json_file(filename):
 def load_image_smart(base_name, folders):
     if not base_name: return None
     exts = ['.png', '.jpg', '.jpeg', '.PNG', '.JPG']
-    clean_name = str(base_name).strip()
     for folder in folders:
         for ext in exts:
-            path = os.path.join(folder, clean_name if clean_name.endswith(tuple(exts)) else clean_name + ext)
+            path = os.path.join(folder, str(base_name).strip() + ext)
             if os.path.exists(path):
                 return ImageOps.exif_transpose(Image.open(path))
     return None
@@ -105,7 +98,7 @@ def render_home_page():
         st.markdown('<div class="action-card"><h3>📝 Luyện Thi</h3><p>600 câu trắc nghiệm</p></div>', unsafe_allow_html=True)
         if st.button("Bắt đầu thi 📝", use_container_width=True): st.session_state.page = "exam"; st.rerun()
 
-# --- 6. TRANG MẸO CẤP TỐC (Dựa trên captoc_sach_dep.docx) ---
+# --- 6. TRANG MẸO CẤP TỐC ---
 def render_captoc_page():
     if st.button("🏠 Trang chủ"): st.session_state.page = "home"; st.rerun()
     st.header(f"⚡ Bí kíp cấp tốc: {st.session_state.license_type}")
@@ -116,8 +109,8 @@ def render_captoc_page():
     with tab1:
         c1, c2 = st.columns([1.5, 1])
         with c1:
-            [cite_start]st.markdown('<div class="tip-box"><div class="tip-title">🎂 Mẹo Độ Tuổi</div>Nhìn 3 đáp án đầu và tìm số <b>LỚN NHẤT</b>[cite: 21].</div>', unsafe_allow_html=True)
-            [cite_start]st.markdown('<div class="tip-box"><div class="tip-title">⏳ Niên hạn xe</div>Xe tải: <b>25 năm</b> | Xe khách: <b>20 năm</b>[cite: 22].</div>', unsafe_allow_html=True)
+            st.markdown('<div class="tip-box"><div class="tip-title">🎂 Mẹo Độ Tuổi</div>Nhìn 3 đáp án đầu và tìm số <b>LỚN NHẤT</b>.</div>', unsafe_allow_html=True)
+            st.markdown('<div class="tip-box"><div class="tip-title">⏳ Niên hạn xe</div>Xe tải: <b>25 năm</b> | Xe khách: <b>20 năm</b>.</div>', unsafe_allow_html=True)
         with c2:
             img = load_image_smart("tip_tuoi", folders)
             if img: st.image(img, use_container_width=True)
@@ -125,22 +118,21 @@ def render_captoc_page():
     with tab2:
         c1, c2 = st.columns([1.5, 1])
         with c1:
-            [cite_start]st.markdown('<div class="tip-box"><div class="tip-title">📏 Mẹo Khoảng cách</div>Tốc độ lớn nhất - 30 = Đáp án gần nhất[cite: 23].</div>', unsafe_allow_html=True)
+            st.markdown('<div class="tip-box"><div class="tip-title">📏 Mẹo Khoảng cách</div>Tốc độ lớn nhất - 30 = Đáp án gần nhất.</div>', unsafe_allow_html=True)
         with c2:
             img = load_image_smart("tip_tocdo", folders)
             if img: st.image(img, use_container_width=True)
 
     with tab3:
-        [cite_start]st.markdown('<div class="tip-box"><div class="tip-title">👮 Mẹo Sa hình</div>Thấy CSGT giơ tay: chọn đáp án <b>3</b>[cite: 26, 27].</div>', unsafe_allow_html=True)
+        st.markdown('<div class="tip-box"><div class="tip-title">👮 Mẹo Sa hình</div>Thấy CSGT giơ tay: chọn đáp án <b>3</b>.</div>', unsafe_allow_html=True)
 
-# --- 7. TRANG LUYỆN THI (LOGIC ĐỔI MÀU AUTO) ---
+# --- 7. TRANG LUYỆN THI (FIX COLOR & AUTO) ---
 def render_exam_page():
     if st.button("🏠 Home"): st.session_state.page = "home"; st.rerun()
     
     all_qs = load_json_file('dulieu_600_cau.json')
     if not all_qs: st.error("Thiếu file dữ liệu!"); return
 
-    # Filter & Settings
     c1, c2, c3 = st.columns([2, 1, 1])
     with c1: auto_next = st.toggle("Chế độ Tự động chuyển câu (Auto)", key="auto_mode")
     with c2: delay = st.slider("Thời gian chờ (giây)", 1, 5, 2)
@@ -158,52 +150,26 @@ def render_exam_page():
 
     user_choice = st.radio("Chọn đáp án đúng:", q['options'], index=None, key=f"q_{q['id']}")
 
-    # --- XỬ LÝ MÀU SẮC NGAY LẬP TỨC ---
     if user_choice:
         is_correct = user_choice.strip() == q['correct_answer'].strip()
         
         if is_correct:
-            # Inject CSS Xanh Lá Đậm cho câu Đúng
-            st.markdown("""
-                <style>
-                div[data-testid="stRadio"] div[role="radiogroup"] > label[data-checked="true"] {
-                    background-color: #22c55e !important; /* Green 500 */
-                    border: 4px solid #166534 !important;
-                }
-                div[data-testid="stRadio"] div[role="radiogroup"] > label[data-checked="true"] p {
-                    color: white !important; font-weight: 900 !important;
-                }
-                </style>
-            """, unsafe_allow_html=True)
+            st.markdown("""<style>div[data-testid="stRadio"] div[role="radiogroup"] > label[data-checked="true"] { background-color: #22c55e !important; border: 4px solid #166534 !important; } div[data-testid="stRadio"] div[role="radiogroup"] > label[data-checked="true"] p { color: white !important; font-weight: 900 !important; }</style>""", unsafe_allow_html=True)
             st.success("✅ CHÍNH XÁC!")
         else:
-            # Inject CSS Đỏ Đậm cho câu Sai
-            st.markdown("""
-                <style>
-                div[data-testid="stRadio"] div[role="radiogroup"] > label[data-checked="true"] {
-                    background-color: #ef4444 !important; /* Red 500 */
-                    border: 4px solid #991b1b !important;
-                }
-                div[data-testid="stRadio"] div[role="radiogroup"] > label[data-checked="true"] p {
-                    color: white !important; font-weight: 900 !important;
-                }
-                </style>
-            """, unsafe_allow_html=True)
+            st.markdown("""<style>div[data-testid="stRadio"] div[role="radiogroup"] > label[data-checked="true"] { background-color: #ef4444 !important; border: 4px solid #991b1b !important; } div[data-testid="stRadio"] div[role="radiogroup"] > label[data-checked="true"] p { color: white !important; font-weight: 900 !important; }</style>""", unsafe_allow_html=True)
             st.error(f"❌ SAI! Đáp án đúng là: {q['correct_answer']}")
 
         if auto_next:
-            # Hiển thị thanh tiến trình để người dùng kịp nhìn thấy màu sắc
             progress_bar = st.progress(0, text=f"Chuyển câu sau {delay}s...")
             for percent_complete in range(100):
                 time.sleep(delay / 100)
                 progress_bar.progress(percent_complete + 1)
             
-            # Chuyển câu
             if st.session_state.current_q_index < total - 1:
                 st.session_state.current_q_index += 1
                 st.rerun()
 
-    # Điều hướng thủ công
     st.write("---")
     col_p, col_n = st.columns(2)
     with col_p:

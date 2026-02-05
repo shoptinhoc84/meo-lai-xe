@@ -6,7 +6,7 @@ from PIL import Image, ImageOps
 
 # --- 1. CẤU HÌNH TRANG ---
 st.set_page_config(
-    page_title="GPLX Pro - Color Fix",
+    page_title="GPLX Pro - Auto Fix",
     page_icon="🚗",
     layout="wide",
     initial_sidebar_state="collapsed"
@@ -22,7 +22,7 @@ if 'current_q_index' not in st.session_state:
 if 'exam_category' not in st.session_state:
     st.session_state.exam_category = "Tất cả"
 
-# --- 3. CSS GIAO DIỆN (CƠ BẢN) ---
+# --- 3. CSS GIAO DIỆN ---
 st.markdown("""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap');
@@ -45,7 +45,7 @@ st.markdown("""
     }
     .action-card:hover { transform: translateY(-5px); border-color: #6366f1; box-shadow: 0 10px 15px -3px rgba(99, 102, 241, 0.2); }
 
-    /* STYLE MỚI CHO TAB MẸO CẤP TỐC */
+    /* MẸO CẤP TỐC */
     .tip-box {
         background: white; border-radius: 16px; padding: 20px; margin-bottom: 15px;
         border-left: 6px solid #3b82f6; box-shadow: 0 2px 5px rgba(0,0,0,0.05);
@@ -71,25 +71,18 @@ st.markdown("""
     div[data-testid="stRadio"] div[role="radiogroup"] > label p {
         font-size: 1.5rem !important; font-weight: 500 !important; color: #64748b !important; line-height: 1.5 !important;
     }
-    /* Hover mặc định */
     div[data-testid="stRadio"] div[role="radiogroup"] > label:hover { border-color: #3b82f6; background: #eff6ff; }
     
-    /* STYLE MẶC ĐỊNH KHI CHỌN (Sẽ bị ghi đè bởi code Python bên dưới khi biết đúng/sai) */
+    /* MẶC ĐỊNH KHI CHỌN (Sẽ bị ghi đè bởi code logic bên dưới) */
     div[data-testid="stRadio"] div[role="radiogroup"] > label[data-checked="true"] {
         background-color: #eff6ff; border: 3px solid #3b82f6;
     }
 
-    /* Style cho ảnh */
+    /* Style khác */
     div[data-testid="stImage"] { display: flex; justify-content: center; margin: 15px 0; }
     div[data-testid="stImage"] img { border-radius: 12px; max-height: 400px; object-fit: contain; }
-    
-    /* Ẩn tiêu đề radio */
-    .stRadio label p { font-size: 1.5rem; }
-    
-    /* NAV BUTTONS */
     div[data-testid="stButton"] button { width: 100%; border-radius: 12px; font-weight: 700; height: 3.5rem; font-size: 1.2rem !important; }
     
-    /* Content Card */
     .content-card { background: white; padding: 25px; border-radius: 20px; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.05); border: 1px solid #f1f5f9; margin-bottom: 20px; }
     .q-text { font-size: 1.35rem !important; font-weight: 700 !important; color: #0f172a !important; line-height: 1.5 !important; margin-top: 5px !important; }
     .top-nav-container { background: white; padding: 10px; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); margin-bottom: 15px; border: 1px solid #e2e8f0; }
@@ -283,7 +276,7 @@ def render_tips_page():
             if img: st.image(img, use_container_width=True)
         st.write("---")
 
-# --- 8. GIAO DIỆN LUYỆN THI (FIX CSS MẠNH MẼ) ---
+# --- 8. GIAO DIỆN LUYỆN THI (ĐÃ SỬA LỖI AUTO) ---
 def render_exam_page():
     c_home, c_title = st.columns([1, 4])
     with c_home:
@@ -368,47 +361,49 @@ def render_exam_page():
 
     user_choice = st.radio("Lựa chọn:", q['options'], index=default_index, key=f"q_{q['id']}")
 
-    # --- LOGIC QUAN TRỌNG: TIÊM CSS NGAY LẬP TỨC ---
+    # --- LOGIC XỬ LÝ (QUAN TRỌNG: CÓ PROGRESS BAR) ---
     if user_choice:
         clean_user = user_choice.strip()
         clean_correct = q['correct_answer'].strip()
         
-        # Tạo chuỗi CSS mạnh (Dùng !important) để ép màu
+        # 1. ÉP MÀU NGAY LẬP TỨC (Dù đúng hay sai)
         if clean_user == clean_correct:
-            # Màu Xanh (Green) cho câu đúng
+            # Màu Xanh
             st.markdown("""
             <style>
                 div[data-testid="stRadio"] div[role="radiogroup"] > label[data-checked="true"] {
-                    background-color: #d1fae5 !important;
-                    border-color: #059669 !important;
-                    color: #064e3b !important;
+                    background-color: #d1fae5 !important; border-color: #059669 !important; color: #064e3b !important;
                 }
-                div[data-testid="stRadio"] div[role="radiogroup"] > label[data-checked="true"] p {
-                    color: #064e3b !important;
-                }
+                div[data-testid="stRadio"] div[role="radiogroup"] > label[data-checked="true"] p { color: #064e3b !important; }
             </style>
             """, unsafe_allow_html=True)
             if not show_answer_mode: st.success(f"✅ CHÍNH XÁC: {clean_correct}")
         else:
-            # Màu Đỏ (Red) cho câu sai
+            # Màu Đỏ
             st.markdown("""
             <style>
                 div[data-testid="stRadio"] div[role="radiogroup"] > label[data-checked="true"] {
-                    background-color: #fee2e2 !important;
-                    border-color: #ef4444 !important;
-                    color: #991b1b !important;
+                    background-color: #fee2e2 !important; border-color: #ef4444 !important; color: #991b1b !important;
                 }
-                div[data-testid="stRadio"] div[role="radiogroup"] > label[data-checked="true"] p {
-                    color: #991b1b !important;
-                }
+                div[data-testid="stRadio"] div[role="radiogroup"] > label[data-checked="true"] p { color: #991b1b !important; }
             </style>
             """, unsafe_allow_html=True)
             if not show_answer_mode: st.error(f"❌ SAI: Đáp án đúng là {clean_correct}")
 
-        # Sleep SAU KHI đã inject CSS
+        # 2. XỬ LÝ AUTO CHUYỂN CÂU (DÙNG THANH TIẾN TRÌNH ĐỂ GIỮ HÌNH ẢNH)
         if auto_next_mode:
+            # Hiện thanh thời gian để người dùng kịp nhìn thấy kết quả
+            progress_text = f"Đang chuyển câu tiếp theo sau {delay_seconds} giây..."
+            my_bar = st.progress(0, text=progress_text)
+
+            # Chia nhỏ thời gian sleep để update thanh bar (Tạo cảm giác mượt và giữ kết nối)
+            steps = 100
+            for i in range(steps):
+                time.sleep(delay_seconds / steps)
+                my_bar.progress(i + 1, text=progress_text)
+            
+            # Sau khi chạy hết thanh bar thì mới chuyển câu
             if st.session_state.current_q_index < total - 1:
-                time.sleep(delay_seconds)
                 st.session_state.current_q_index += 1
                 st.rerun()
 

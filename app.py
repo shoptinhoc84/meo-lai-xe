@@ -22,7 +22,7 @@ if 'current_q_index' not in st.session_state:
 if 'exam_category' not in st.session_state:
     st.session_state.exam_category = "Tất cả"
 
-# --- 3. CSS TÔ MÀU TRỰC TIẾP ---
+# --- 3. CSS TÔ MÀU & GIAO DIỆN ---
 st.markdown("""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap');
@@ -34,26 +34,7 @@ st.markdown("""
         padding-bottom: 6rem !important;
     }
 
-    /* --- CÁC THÀNH PHẦN UI CŨ --- */
-    .top-nav-container {
-        background: white; padding: 10px; border-radius: 12px;
-        box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); margin-bottom: 15px;
-        border: 1px solid #e2e8f0;
-    }
-    .filter-area {
-        background: white; padding: 15px; border-radius: 16px;
-        border: 1px solid #e2e8f0; margin-bottom: 20px;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.02);
-    }
-    .content-card {
-        background: white; padding: 25px; border-radius: 20px;
-        box-shadow: 0 10px 15px -3px rgba(0,0,0,0.05);
-        border: 1px solid #f1f5f9; margin-bottom: 20px;
-    }
-    .q-text { 
-        font-size: 1.35rem !important; font-weight: 700 !important; 
-        color: #0f172a !important; line-height: 1.5 !important; margin-top: 5px !important;
-    }
+    /* CARD CHUNG */
     .hero-card {
         background: linear-gradient(135deg, #4f46e5 0%, #3b82f6 100%);
         padding: 30px; border-radius: 24px; color: white;
@@ -62,57 +43,71 @@ st.markdown("""
     .action-card {
         background: white; padding: 25px; border-radius: 20px;
         border: 1px solid #e2e8f0; text-align: center; cursor: pointer;
-        transition: all 0.3s ease; height: 100%;
+        transition: all 0.3s ease; height: 100%; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
         display: flex; flex-direction: column; align-items: center; justify-content: center;
     }
-    .action-card:hover { transform: translateY(-5px); border-color: #6366f1; }
+    .action-card:hover { transform: translateY(-5px); border-color: #6366f1; box-shadow: 0 10px 15px -3px rgba(99, 102, 241, 0.2); }
+
+    /* --- STYLE CHO TRANG MẸO CẤP TỐC --- */
+    .tip-box {
+        background: white;
+        border-radius: 16px;
+        padding: 20px;
+        margin-bottom: 15px;
+        border-left: 6px solid #3b82f6;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+    }
+    .tip-title {
+        color: #1e293b;
+        font-weight: 800;
+        font-size: 1.1rem;
+        margin-bottom: 8px;
+        text-transform: uppercase;
+        display: flex; align-items: center; gap: 8px;
+    }
+    .tip-content {
+        color: #334155;
+        font-size: 1.05rem;
+        line-height: 1.6;
+    }
+    .highlight-red { color: #dc2626; font-weight: 700; background: #fee2e2; padding: 2px 6px; border-radius: 6px; }
+    .highlight-green { color: #16a34a; font-weight: 700; background: #dcfce7; padding: 2px 6px; border-radius: 6px; }
+    .highlight-blue { color: #2563eb; font-weight: 700; }
+    
+    .formula-box {
+        background: #f1f5f9;
+        border: 2px dashed #cbd5e1;
+        border-radius: 12px;
+        padding: 15px;
+        text-align: center;
+        font-weight: 700;
+        font-size: 1.2rem;
+        color: #475569;
+        margin: 10px 0;
+    }
 
     /* --- RADIO BUTTONS (TÔ MÀU NỀN) --- */
     div[data-testid="stRadio"] > label { display: none; }
     div[role="radiogroup"] { gap: 16px; display: flex; flex-direction: column; }
-    
-    /* Trạng thái bình thường */
     div[data-testid="stRadio"] div[role="radiogroup"] > label {
-        background: white; 
-        border: 2px solid #e2e8f0; 
-        padding: 20px 20px !important;
-        border-radius: 16px; 
-        width: 100%; 
-        cursor: pointer;
-        display: flex; align-items: center; 
-        transition: all 0.2s ease;
+        background: white; border: 2px solid #e2e8f0; padding: 20px 20px !important;
+        border-radius: 16px; width: 100%; cursor: pointer; display: flex; align-items: center; transition: all 0.2s ease;
     }
-    
-    /* Chữ bình thường */
     div[data-testid="stRadio"] div[role="radiogroup"] > label p {
-        font-size: 1.5rem !important; 
-        font-weight: 500 !important;
-        color: #64748b !important;
-        line-height: 1.5 !important;
+        font-size: 1.5rem !important; font-weight: 500 !important; color: #64748b !important; line-height: 1.5 !important;
     }
-
-    /* Hover */
-    div[data-testid="stRadio"] div[role="radiogroup"] > label:hover {
-        border-color: #10b981; background: #f0fdf4;
-    }
-
-    /* --- TRẠNG THÁI ĐƯỢC CHỌN (ĐÁP ÁN ĐÚNG) --- */
-    /* Đây là phần bạn cần: Tô màu nền bên trong */
+    div[data-testid="stRadio"] div[role="radiogroup"] > label:hover { border-color: #10b981; background: #f0fdf4; }
     div[data-testid="stRadio"] div[role="radiogroup"] > label[data-checked="true"] {
-        background-color: #d1fae5 !important; /* MÀU XANH NGỌC (MINT) */
-        border: 3px solid #059669 !important; /* VIỀN XANH LÁ ĐẬM */
-        box-shadow: 0 4px 15px rgba(16, 185, 129, 0.4); /* Đổ bóng sáng */
+        background-color: #d1fae5 !important; border: 3px solid #059669 !important; box-shadow: 0 4px 15px rgba(16, 185, 129, 0.4);
+    }
+    div[data-testid="stRadio"] div[role="radiogroup"] > label[data-checked="true"] p {
+        color: #064e3b !important; font-weight: 800 !important;
     }
     
-    /* Chữ khi được chọn */
-    div[data-testid="stRadio"] div[role="radiogroup"] > label[data-checked="true"] p {
-        color: #064e3b !important; /* Chữ xanh rêu đậm */
-        font-weight: 800 !important; /* Siêu đậm */
-    }
-
-    div[data-testid="stButton"] button { width: 100%; border-radius: 12px; font-weight: 700; height: 3.5rem; font-size: 1.2rem !important; }
-    div[data-testid="stImage"] { display: flex; justify-content: center; margin: 15px 0; }
-    div[data-testid="stImage"] img { border-radius: 12px; max-height: 400px; object-fit: contain; }
+    /* Tabs */
+    .stTabs [data-baseweb="tab-list"] { gap: 10px; }
+    .stTabs [data-baseweb="tab"] { height: 50px; border-radius: 10px; background-color: white; border: 1px solid #e2e8f0; }
+    .stTabs [aria-selected="true"] { background-color: #eff6ff !important; border-color: #3b82f6 !important; color: #1d4ed8 !important; font-weight: 700; }
 
 </style>
 """, unsafe_allow_html=True)
@@ -176,26 +171,207 @@ def render_home_page():
             st.rerun()
 
     st.markdown("---")
+    st.markdown("### 2. Chế độ học")
+    
+    # Hàng 1
     c1, c2 = st.columns(2)
     with c1:
-        st.markdown("""<div class="action-card"><h3>📝 Luyện Thi</h3><p>600 câu trắc nghiệm</p></div>""", unsafe_allow_html=True)
+        st.markdown("""<div class="action-card" style="border-left: 5px solid #4f46e5;"><h3>🚀 Mẹo Cấp Tốc</h3><p style='color:#64748b'>Tổng hợp bí kíp khoanh nhanh</p></div>""", unsafe_allow_html=True)
+        if st.button("Học Mẹo Nhanh ⚡", key="btn_go_captoc", use_container_width=True):
+            st.session_state.page = "captoc"
+            st.rerun()
+    with c2:
+        st.markdown("""<div class="action-card"><h3>📝 Luyện Thi</h3><p style='color:#64748b'>600 câu trắc nghiệm</p></div>""", unsafe_allow_html=True)
         if st.button("Vào Thi ➡️", key="btn_go_exam", use_container_width=True):
             st.session_state.page = "exam"
             st.rerun()
-    with c2:
-        st.markdown("""<div class="action-card"><h3>💡 Học Mẹo</h3><p>Mẹo ghi nhớ nhanh</p></div>""", unsafe_allow_html=True)
-        if st.button("Xem Mẹo ➡️", key="btn_go_tips", use_container_width=True):
+            
+    # Hàng 2 (Mẹo chi tiết cũ)
+    st.markdown("<div style='height:15px'></div>", unsafe_allow_html=True)
+    c3, c4 = st.columns(2)
+    with c3:
+        st.markdown("""<div class="action-card"><h3>💡 Mẹo Chi Tiết</h3><p style='color:#64748b'>Dữ liệu chi tiết từng phần</p></div>""", unsafe_allow_html=True)
+        if st.button("Xem Mẹo Cũ 📂", key="btn_go_tips", use_container_width=True):
             st.session_state.page = "tips"
             st.rerun()
+    with c4:
+        pass # Để trống hoặc thêm tính năng sau
 
-# --- 6. GIAO DIỆN HỌC MẸO ---
+# --- 6. GIAO DIỆN MẸO CẤP TỐC (NEW) ---
+def render_captoc_page():
+    c_home, c_title = st.columns([1, 4])
+    with c_home:
+        if st.button("🏠 Home", use_container_width=True):
+            st.session_state.page = "home"
+            st.rerun()
+    with c_title:
+        st.markdown(f"## ⚡ Bí Kíp Cấp Tốc: {st.session_state.license_type}")
+    
+    st.info("💡 Đây là những mẹo 'học nhanh' dựa trên quy luật đề thi. Hãy đọc kỹ các từ khóa màu đỏ!")
+
+    # Tab phân loại
+    tab1, tab2, tab3, tab4 = st.tabs(["🔢 Con Số & Tuổi", "🚀 Tốc Độ & K/Cách", "🆔 Hạng Xe", "🛑 Biển Báo & Sa Hình"])
+
+    # --- TAB 1: CON SỐ & TUỔI ---
+    with tab1:
+        col1, col2 = st.columns(2)
+        with col1:
+            st.markdown("""
+            <div class="tip-box">
+                <div class="tip-title">🎂 Mẹo Độ Tuổi</div>
+                <div class="tip-content">
+                    Câu hỏi về độ tuổi lái xe:<br>
+                    👉 <b>Nhìn 3 đáp án đầu, tìm số LỚN NHẤT.</b><br>
+                    Ví dụ: 18, 21, 24 -> Chọn <b>24</b>.<br>
+                    <div class="formula-box">Đáp án = Số Tuổi Lớn Nhất</div>
+                    <small><i>(Ngoại lệ: Hạng E là 27 tuổi)</i></small>
+                </div>
+            </div>
+            
+            <div class="tip-box">
+                <div class="tip-title">⏳ Niên hạn sử dụng xe</div>
+                <div class="tip-content">
+                    Tính từ năm sản xuất:<br>
+                    🚛 Xe tải: <span class="highlight-red">25 năm</span><br>
+                    🚌 Xe chở người > 9 chỗ: <span class="highlight-red">20 năm</span>
+                </div>
+            </div>
+            """, unsafe_allow_html=True)
+            
+        with col2:
+            st.markdown("""
+            <div class="tip-box">
+                <div class="tip-title">🔊 Thời gian dùng còi (Khu đông dân cư)</div>
+                <div class="tip-content">
+                    Được sử dụng còi từ:<br>
+                    <div class="formula-box">05:00 sáng ➡ 22:00 tối</div>
+                    <span class="highlight-red">Cấm còi ban đêm (22h - 5h)</span>
+                </div>
+            </div>
+
+            <div class="tip-box">
+                <div class="tip-title">🅿️ Đỗ xe & Lái xe</div>
+                <div class="tip-content">
+                    • Cách lề đường tối đa: <span class="highlight-red">0.25 mét</span><br>
+                    • Cách xe đối diện tối thiểu: <span class="highlight-red">20 mét</span><br>
+                    • Lái xe liên tục: <b>Không quá 4 giờ</b><br>
+                    • Lái xe trong ngày: <b>Không quá 10 giờ</b>
+                </div>
+            </div>
+            """, unsafe_allow_html=True)
+
+    # --- TAB 2: TỐC ĐỘ & KHOẢNG CÁCH ---
+    with tab2:
+        st.markdown("""
+        <div class="tip-box" style="border-left-color: #f59e0b;">
+            <div class="tip-title">🏎️ Tốc độ trong khu dân cư</div>
+            <div class="tip-content">
+                Xe mô tô, ô tô con chạy bao nhiêu?<br>
+                🛣️ <b>Đường ĐÔI</b> (Có dải phân cách giữa): <span class="highlight-blue">60 km/h</span><br>
+                Road <b>Đường HAI CHIỀU</b> (Không có dải phân cách): <span class="highlight-blue">50 km/h</span><br>
+                <div class="formula-box">Có giải phân cách: 60 | Không có: 50</div>
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
+
+        st.markdown("""
+        <div class="tip-box" style="border-left-color: #10b981;">
+            <div class="tip-title">📏 Khoảng cách an toàn (Mẹo Trừ 30)</div>
+            <div class="tip-content">
+                Khi đề bài hỏi khoảng cách an toàn với tốc độ (60-80, 80-100...):<br>
+                👉 <b>Lấy tốc độ LỚN NHẤT trừ đi 30</b> -> Ra đáp án gần đúng nhất.<br><br>
+                Ví dụ: Tốc độ <b>60-80 km/h</b>.<br>
+                Lấy <span class="highlight-red">80 - 30 = 50</span>.<br>
+                ➡ Chọn đáp án <b>55m</b> (Số gần 50 nhất).<br><br>
+                Ví dụ: Tốc độ <b>80-100 km/h</b>.<br>
+                Lấy <span class="highlight-red">100 - 30 = 70</span>.<br>
+                ➡ Chọn đáp án <b>70m</b>.
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
+
+    # --- TAB 3: HẠNG XE ---
+    with tab3:
+        st.markdown("""
+        <div class="tip-box" style="border-left-color: #8b5cf6;">
+            <div class="tip-title">🆔 Mẹo Hạng Giấy Phép (FE, FC)</div>
+            <div class="tip-content">
+                Nếu câu hỏi về hạng <b>FE, FC</b>:<br>
+                👉 Hỏi <b>FE</b>: Chọn ý <b>1</b> (Em 1)<br>
+                👉 Hỏi <b>FC</b>: Chọn ý <b>2</b> (Chị 2)<br>
+                <div class="formula-box">FE ➡ 1 | FC ➡ 2</div>
+            </div>
+        </div>
+
+        <div class="tip-box">
+            <div class="tip-title">🛵 Mẹo Hạng A1</div>
+            <div class="tip-content">
+                • <b>Được lái:</b> Xe 2 bánh dưới 175cm3.<br>
+                • <b>KHÔNG được lái:</b> Xe ba bánh (trừ xe cho người khuyết tật).<br>
+                • <b>Câu hỏi A1 2025:</b> Vẫn là xe 2 bánh đến 125cm3 hoặc điện 11kW.
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
+
+    # --- TAB 4: BIỂN BÁO & SA HÌNH ---
+    with tab4:
+        c1, c2 = st.columns(2)
+        with c1:
+            st.markdown("""
+            <div class="tip-box" style="border-left-color: #ef4444;">
+                <div class="tip-title">🛑 Logic Cấm (Biển Tròn Đỏ)</div>
+                <div class="tip-content">
+                    • <b>Cấm NHỎ thì Cấm LỚN</b> (Cấm xe con -> Cấm luôn xe tải).<br>
+                    • <b>Cấm LỚN thì KHÔNG Cấm NHỎ</b> (Cấm xe tải -> Xe con đi bình thường).<br>
+                    • <b>Cấm RẼ TRÁI</b> thì <b>ĐƯỢC Quay Đầu</b>.<br>
+                    • <b>Cấm QUAY ĐẦU</b> thì <b>ĐƯỢC Rẽ Trái</b>.
+                </div>
+            </div>
+            
+            <div class="tip-box">
+                <div class="tip-title">🚔 Thứ tự đi Sa Hình</div>
+                <div class="tip-content">
+                    1. <b>Xe đã vào giao lộ</b> (đi trước hết).<br>
+                    2. <b>Xe Ưu Tiên</b>: Hỏa > Sự > Thương > Công (Cứu hỏa, Quân sự, Cứu thương, Công an).<br>
+                    3. <b>Đường Ưu Tiên</b> (Nhìn biển hình thoi).<br>
+                    4. <b>Quyền Tay Phải</b> (Không có xe bên phải).<br>
+                    5. <b>Hướng Rẽ</b>: Phải > Thẳng > Trái.
+                </div>
+            </div>
+            """, unsafe_allow_html=True)
+        
+        with c2:
+            st.markdown("""
+            <div class="tip-box" style="border-left-color: #ec4899;">
+                <div class="tip-title">👮 Mẹo Cảnh Sát Giao Thông</div>
+                <div class="tip-content">
+                    Thấy hình CSGT giơ tay:<br>
+                    👉 Chọn đáp án <b>3</b> (Nếu giơ 2 tay ngang).<br>
+                    👉 Chọn đáp án <b>3</b> (Nếu giơ 1 tay chỉ thẳng).<br>
+                    <i>(Mẹo nhanh: Thấy CSGT chọn ý 3, trừ trường hợp đặc biệt).</i>
+                </div>
+            </div>
+            
+            <div class="tip-box">
+                <div class="tip-title">🚛 Mẹo Xe Tải & Làn Đường</div>
+                <div class="tip-content">
+                    • Câu hỏi "Xe nào vi phạm?" có xe con màu xanh lá: <span class="highlight-green">Bỏ xe con ra</span>.<br>
+                    • Câu hỏi "Xe nào vi phạm?" có biển "Stop": Đa số là <b>xe tải</b> vi phạm.<br>
+                    • Cao tốc: Vào làn phải nhường đường, Ra làn phải có tín hiệu.
+                </div>
+            </div>
+            """, unsafe_allow_html=True)
+
+# --- 7. GIAO DIỆN HỌC MẸO CŨ (JSON) ---
 def render_tips_page():
     if st.button("🏠 Về Trang Chủ"):
         st.session_state.page = "home"
         st.rerun()
-    st.markdown(f"### 📖 Mẹo: {st.session_state.license_type}")
+    st.markdown(f"### 📖 Mẹo Chi Tiết (Dữ liệu cũ): {st.session_state.license_type}")
     data = load_data_by_license(st.session_state.license_type)
-    if not data: return
+    if not data: 
+        st.warning("Chưa có dữ liệu mẹo cũ.")
+        return
     cats = sorted(list(set([i.get('category', 'Khác') for i in data])))
     st.markdown('<div style="font-size:0.9rem; font-weight:700; color:#64748b;">CHỌN CHỦ ĐỀ:</div>', unsafe_allow_html=True)
     selected_cat = st.selectbox("Mẹo:", ["Tất cả"] + cats, label_visibility="collapsed")
@@ -219,7 +395,7 @@ def render_tips_page():
             if img: st.image(img, use_container_width=True)
         st.write("---")
 
-# --- 7. GIAO DIỆN LUYỆN THI (TÔ MÀU TRONG Ô) ---
+# --- 8. GIAO DIỆN LUYỆN THI (TÔ MÀU TRONG Ô) ---
 def render_exam_page():
     c_home, c_title = st.columns([1, 4])
     with c_home:
@@ -233,7 +409,7 @@ def render_exam_page():
     if not all_qs: return
     cats = sorted(list(set([q.get('category', 'Khác') for q in all_qs])))
     
-    # FILTER
+    # FILTER AREA
     with st.container():
         st.markdown('<div class="filter-area">', unsafe_allow_html=True)
         c1, c2, c3, c4 = st.columns([1, 1, 0.8, 0.8])
@@ -264,7 +440,7 @@ def render_exam_page():
 
         st.markdown('</div>', unsafe_allow_html=True)
 
-    # LOGIC
+    # LOGIC FILTER
     if st.session_state.exam_category == "Tất cả": filtered = all_qs
     else: filtered = [q for q in all_qs if q.get('category') == st.session_state.exam_category]
     if search_query:
@@ -295,7 +471,7 @@ def render_exam_page():
                 st.rerun()
         st.markdown('</div>', unsafe_allow_html=True)
 
-    # CONTENT
+    # CONTENT CARD
     st.markdown(f"""
     <div class="content-card" style="border-left: 8px solid {border_color};">
         <div style="font-size:0.9rem; color:{border_color}; text-transform:uppercase; margin-bottom:5px; font-weight:700;">{q.get('category','Chung')}</div>
@@ -308,7 +484,7 @@ def render_exam_page():
         img = load_image_strict(q['image'], ['images'])
         if img: st.image(img, use_container_width=True)
 
-    # --- CHỌN ĐÁP ÁN (LOGIC QUAN TRỌNG) ---
+    # CHỌN ĐÁP ÁN
     default_index = None
     if show_answer_mode:
         try:
@@ -317,16 +493,10 @@ def render_exam_page():
             default_index = clean_ops.index(clean_correct)
         except: default_index = None
 
-    # Biến tấu danh sách đáp án để thêm icon ✅ nếu cần (Tùy chọn)
-    # Nhưng ta dùng CSS tô màu nền là đủ rồi.
-    
     user_choice = st.radio("Lựa chọn:", q['options'], index=default_index, key=f"q_{q['id']}")
 
-    # --- XỬ LÝ KẾT QUẢ ---
-    # Nếu ở chế độ Học Thuộc (Show Answer) -> Không cần hiện thêm bảng thông báo ở dưới
-    # Vì màu xanh trên nút đã là thông báo rồi.
+    # XỬ LÝ KẾT QUẢ
     if user_choice:
-        # Nếu TẮT chế độ học thuộc thì mới hiện thông báo Đúng/Sai ở dưới
         if not show_answer_mode:
             correct = q['correct_answer'].strip()
             if user_choice.strip() == correct:
@@ -362,6 +532,7 @@ def render_exam_page():
 def main():
     if st.session_state.page == "home": render_home_page()
     elif st.session_state.page == "tips": render_tips_page()
+    elif st.session_state.page == "captoc": render_captoc_page()
     elif st.session_state.page == "exam": render_exam_page()
 
 if __name__ == "__main__":

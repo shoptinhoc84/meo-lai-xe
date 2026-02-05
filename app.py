@@ -6,7 +6,7 @@ from PIL import Image, ImageOps
 
 # --- 1. CẤU HÌNH TRANG ---
 st.set_page_config(
-    page_title="GPLX Pro - V36 Direct Fill",
+    page_title="GPLX Pro - V36 Smart Images",
     page_icon="🚗",
     layout="wide",
     initial_sidebar_state="collapsed"
@@ -47,6 +47,27 @@ st.markdown("""
         display: flex; flex-direction: column; align-items: center; justify-content: center;
     }
     .action-card:hover { transform: translateY(-5px); border-color: #6366f1; box-shadow: 0 10px 15px -3px rgba(99, 102, 241, 0.2); }
+
+    /* FILTER & NAV */
+    .top-nav-container {
+        background: white; padding: 10px; border-radius: 12px;
+        box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); margin-bottom: 15px;
+        border: 1px solid #e2e8f0;
+    }
+    .filter-area {
+        background: white; padding: 15px; border-radius: 16px;
+        border: 1px solid #e2e8f0; margin-bottom: 20px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+    }
+    .content-card {
+        background: white; padding: 25px; border-radius: 20px;
+        box-shadow: 0 10px 15px -3px rgba(0,0,0,0.05);
+        border: 1px solid #f1f5f9; margin-bottom: 20px;
+    }
+    .q-text { 
+        font-size: 1.35rem !important; font-weight: 700 !important; 
+        color: #0f172a !important; line-height: 1.5 !important; margin-top: 5px !important;
+    }
 
     /* --- STYLE CHO TRANG MẸO CẤP TỐC --- */
     .tip-box {
@@ -108,6 +129,10 @@ st.markdown("""
     .stTabs [data-baseweb="tab-list"] { gap: 10px; }
     .stTabs [data-baseweb="tab"] { height: 50px; border-radius: 10px; background-color: white; border: 1px solid #e2e8f0; }
     .stTabs [aria-selected="true"] { background-color: #eff6ff !important; border-color: #3b82f6 !important; color: #1d4ed8 !important; font-weight: 700; }
+    
+    div[data-testid="stButton"] button { width: 100%; border-radius: 12px; font-weight: 700; height: 3.5rem; font-size: 1.2rem !important; }
+    div[data-testid="stImage"] { display: flex; justify-content: center; margin: 15px 0; }
+    div[data-testid="stImage"] img { border-radius: 12px; max-height: 400px; object-fit: contain; }
 
 </style>
 """, unsafe_allow_html=True)
@@ -129,14 +154,34 @@ def load_data_by_license(license_type):
         if d: return d
     return []
 
-def load_image_strict(image_name, folders_allowed):
-    if not image_name: return None
-    img_name = str(image_name).strip()
+# --- HÀM LOAD ẢNH THÔNG MINH (CHẤP NHẬN JPG, PNG...) ---
+def load_image_smart(base_name, folders_allowed):
+    """
+    Tự động tìm file ảnh với các đuôi phổ biến (.png, .jpg, .jpeg)
+    base_name: Tên file không cần đuôi (ví dụ: 'tip_tuoi')
+    """
+    if not base_name: return None
+    
+    # Danh sách đuôi file cần kiểm tra
+    extensions = ['.png', '.jpg', '.jpeg', '.PNG', '.JPG', '.JPEG']
+    
+    clean_name = str(base_name).strip()
+    # Nếu tên file đã có đuôi sẵn thì kiểm tra trực tiếp
+    if any(clean_name.endswith(ext) for ext in extensions):
+         for folder in folders_allowed:
+            path = os.path.join(folder, clean_name)
+            if os.path.exists(path) and os.path.isfile(path):
+                return ImageOps.exif_transpose(Image.open(path))
+    
+    # Nếu chưa có đuôi, thử từng đuôi một
     for folder in folders_allowed:
-        path = os.path.join(folder, img_name)
-        if os.path.exists(path) and os.path.isfile(path):
-            try: return ImageOps.exif_transpose(Image.open(path))
-            except: continue
+        for ext in extensions:
+            path = os.path.join(folder, clean_name + ext)
+            if os.path.exists(path) and os.path.isfile(path):
+                try: 
+                    return ImageOps.exif_transpose(Image.open(path))
+                except: 
+                    continue
     return None
 
 def get_category_border(category):
@@ -195,9 +240,9 @@ def render_home_page():
             st.session_state.page = "tips"
             st.rerun()
     with c4:
-        pass # Để trống hoặc thêm tính năng sau
+        pass 
 
-# --- 6. GIAO DIỆN MẸO CẤP TỐC (NEW) ---
+# --- 6. GIAO DIỆN MẸO CẤP TỐC (HIỂN THỊ NHIỀU ẢNH JPG/PNG) ---
 def render_captoc_page():
     c_home, c_title = st.columns([1, 4])
     with c_home:
@@ -207,15 +252,16 @@ def render_captoc_page():
     with c_title:
         st.markdown(f"## ⚡ Bí Kíp Cấp Tốc: {st.session_state.license_type}")
     
-    st.info("💡 Đây là những mẹo 'học nhanh' dựa trên quy luật đề thi. Hãy đọc kỹ các từ khóa màu đỏ!")
+    st.info("💡 Mẹo: Hệ thống tự động tìm file ảnh .jpg, .png trong thư mục images.")
+    folders = ["images", "images_a1"]
 
     # Tab phân loại
-    tab1, tab2, tab3, tab4 = st.tabs(["🔢 Con Số & Tuổi", "🚀 Tốc Độ & K/Cách", "🆔 Hạng Xe", "🛑 Biển Báo & Sa Hình"])
+    tab1, tab2, tab3, tab4 = st.tabs(["🔢 Con Số & Tuổi", "🚀 Tốc Độ & K/Cách", "🆔 Hạng Xe (Nhiều ảnh)", "🛑 Biển Báo & Sa Hình"])
 
     # --- TAB 1: CON SỐ & TUỔI ---
     with tab1:
-        col1, col2 = st.columns(2)
-        with col1:
+        c1, c2 = st.columns([1.5, 1])
+        with c1:
             st.markdown("""
             <div class="tip-box">
                 <div class="tip-title">🎂 Mẹo Độ Tuổi</div>
@@ -224,145 +270,130 @@ def render_captoc_page():
                     👉 <b>Nhìn 3 đáp án đầu, tìm số LỚN NHẤT.</b><br>
                     Ví dụ: 18, 21, 24 -> Chọn <b>24</b>.<br>
                     <div class="formula-box">Đáp án = Số Tuổi Lớn Nhất</div>
-                    <small><i>(Ngoại lệ: Hạng E là 27 tuổi)</i></small>
                 </div>
             </div>
             
             <div class="tip-box">
-                <div class="tip-title">⏳ Niên hạn sử dụng xe</div>
+                <div class="tip-title">⏳ Niên hạn & Quy Định Khác</div>
                 <div class="tip-content">
-                    Tính từ năm sản xuất:<br>
-                    🚛 Xe tải: <span class="highlight-red">25 năm</span><br>
-                    🚌 Xe chở người > 9 chỗ: <span class="highlight-red">20 năm</span>
-                </div>
-            </div>
-            """, unsafe_allow_html=True)
-            
-        with col2:
-            st.markdown("""
-            <div class="tip-box">
-                <div class="tip-title">🔊 Thời gian dùng còi (Khu đông dân cư)</div>
-                <div class="tip-content">
-                    Được sử dụng còi từ:<br>
-                    <div class="formula-box">05:00 sáng ➡ 22:00 tối</div>
-                    <span class="highlight-red">Cấm còi ban đêm (22h - 5h)</span>
-                </div>
-            </div>
-
-            <div class="tip-box">
-                <div class="tip-title">🅿️ Đỗ xe & Lái xe</div>
-                <div class="tip-content">
-                    • Cách lề đường tối đa: <span class="highlight-red">0.25 mét</span><br>
-                    • Cách xe đối diện tối thiểu: <span class="highlight-red">20 mét</span><br>
-                    • Lái xe liên tục: <b>Không quá 4 giờ</b><br>
-                    • Lái xe trong ngày: <b>Không quá 10 giờ</b>
-                </div>
-            </div>
-            """, unsafe_allow_html=True)
-
-    # --- TAB 2: TỐC ĐỘ & KHOẢNG CÁCH ---
-    with tab2:
-        st.markdown("""
-        <div class="tip-box" style="border-left-color: #f59e0b;">
-            <div class="tip-title">🏎️ Tốc độ trong khu dân cư</div>
-            <div class="tip-content">
-                Xe mô tô, ô tô con chạy bao nhiêu?<br>
-                🛣️ <b>Đường ĐÔI</b> (Có dải phân cách giữa): <span class="highlight-blue">60 km/h</span><br>
-                Road <b>Đường HAI CHIỀU</b> (Không có dải phân cách): <span class="highlight-blue">50 km/h</span><br>
-                <div class="formula-box">Có giải phân cách: 60 | Không có: 50</div>
-            </div>
-        </div>
-        """, unsafe_allow_html=True)
-
-        st.markdown("""
-        <div class="tip-box" style="border-left-color: #10b981;">
-            <div class="tip-title">📏 Khoảng cách an toàn (Mẹo Trừ 30)</div>
-            <div class="tip-content">
-                Khi đề bài hỏi khoảng cách an toàn với tốc độ (60-80, 80-100...):<br>
-                👉 <b>Lấy tốc độ LỚN NHẤT trừ đi 30</b> -> Ra đáp án gần đúng nhất.<br><br>
-                Ví dụ: Tốc độ <b>60-80 km/h</b>.<br>
-                Lấy <span class="highlight-red">80 - 30 = 50</span>.<br>
-                ➡ Chọn đáp án <b>55m</b> (Số gần 50 nhất).<br><br>
-                Ví dụ: Tốc độ <b>80-100 km/h</b>.<br>
-                Lấy <span class="highlight-red">100 - 30 = 70</span>.<br>
-                ➡ Chọn đáp án <b>70m</b>.
-            </div>
-        </div>
-        """, unsafe_allow_html=True)
-
-    # --- TAB 3: HẠNG XE ---
-    with tab3:
-        st.markdown("""
-        <div class="tip-box" style="border-left-color: #8b5cf6;">
-            <div class="tip-title">🆔 Mẹo Hạng Giấy Phép (FE, FC)</div>
-            <div class="tip-content">
-                Nếu câu hỏi về hạng <b>FE, FC</b>:<br>
-                👉 Hỏi <b>FE</b>: Chọn ý <b>1</b> (Em 1)<br>
-                👉 Hỏi <b>FC</b>: Chọn ý <b>2</b> (Chị 2)<br>
-                <div class="formula-box">FE ➡ 1 | FC ➡ 2</div>
-            </div>
-        </div>
-
-        <div class="tip-box">
-            <div class="tip-title">🛵 Mẹo Hạng A1</div>
-            <div class="tip-content">
-                • <b>Được lái:</b> Xe 2 bánh dưới 175cm3.<br>
-                • <b>KHÔNG được lái:</b> Xe ba bánh (trừ xe cho người khuyết tật).<br>
-                • <b>Câu hỏi A1 2025:</b> Vẫn là xe 2 bánh đến 125cm3 hoặc điện 11kW.
-            </div>
-        </div>
-        """, unsafe_allow_html=True)
-
-    # --- TAB 4: BIỂN BÁO & SA HÌNH ---
-    with tab4:
-        c1, c2 = st.columns(2)
-        with c1:
-            st.markdown("""
-            <div class="tip-box" style="border-left-color: #ef4444;">
-                <div class="tip-title">🛑 Logic Cấm (Biển Tròn Đỏ)</div>
-                <div class="tip-content">
-                    • <b>Cấm NHỎ thì Cấm LỚN</b> (Cấm xe con -> Cấm luôn xe tải).<br>
-                    • <b>Cấm LỚN thì KHÔNG Cấm NHỎ</b> (Cấm xe tải -> Xe con đi bình thường).<br>
-                    • <b>Cấm RẼ TRÁI</b> thì <b>ĐƯỢC Quay Đầu</b>.<br>
-                    • <b>Cấm QUAY ĐẦU</b> thì <b>ĐƯỢC Rẽ Trái</b>.
-                </div>
-            </div>
-            
-            <div class="tip-box">
-                <div class="tip-title">🚔 Thứ tự đi Sa Hình</div>
-                <div class="tip-content">
-                    1. <b>Xe đã vào giao lộ</b> (đi trước hết).<br>
-                    2. <b>Xe Ưu Tiên</b>: Hỏa > Sự > Thương > Công (Cứu hỏa, Quân sự, Cứu thương, Công an).<br>
-                    3. <b>Đường Ưu Tiên</b> (Nhìn biển hình thoi).<br>
-                    4. <b>Quyền Tay Phải</b> (Không có xe bên phải).<br>
-                    5. <b>Hướng Rẽ</b>: Phải > Thẳng > Trái.
+                    • <b>Niên hạn xe tải:</b> <span class="highlight-red">25 năm</span><br>
+                    • <b>Niên hạn xe khách (>9 chỗ):</b> <span class="highlight-red">20 năm</span><br>
+                    • <b>Cấm bóp còi:</b> Từ <span class="highlight-red">22h đêm - 5h sáng</span>.<br>
                 </div>
             </div>
             """, unsafe_allow_html=True)
         
         with c2:
+            # Load file tip_tuoi (jpg hoặc png đều được)
+            img1 = load_image_smart("tip_tuoi", folders)
+            if img1: st.image(img1, caption="Mẹo chọn tuổi lớn nhất", use_container_width=True)
+            
+            img2 = load_image_smart("tip_khoangcach", folders)
+            if img2: st.image(img2, caption="Quy định đỗ xe & Niên hạn", use_container_width=True)
+
+    # --- TAB 2: TỐC ĐỘ & KHOẢNG CÁCH ---
+    with tab2:
+        c1, c2 = st.columns([1.5, 1])
+        with c1:
             st.markdown("""
-            <div class="tip-box" style="border-left-color: #ec4899;">
-                <div class="tip-title">👮 Mẹo Cảnh Sát Giao Thông</div>
+            <div class="tip-box" style="border-left-color: #f59e0b;">
+                <div class="tip-title">🏎️ Tốc độ trong khu dân cư</div>
                 <div class="tip-content">
-                    Thấy hình CSGT giơ tay:<br>
-                    👉 Chọn đáp án <b>3</b> (Nếu giơ 2 tay ngang).<br>
-                    👉 Chọn đáp án <b>3</b> (Nếu giơ 1 tay chỉ thẳng).<br>
-                    <i>(Mẹo nhanh: Thấy CSGT chọn ý 3, trừ trường hợp đặc biệt).</i>
+                    Xe mô tô, ô tô con chạy bao nhiêu?<br>
+                    🛣️ <b>Đường ĐÔI</b> (Có dải phân cách giữa): <span class="highlight-blue">60 km/h</span><br>
+                    Road <b>Đường HAI CHIỀU/MỘT CHIỀU</b> (Không có dải phân cách): <span class="highlight-blue">50 km/h</span><br>
                 </div>
             </div>
-            
-            <div class="tip-box">
-                <div class="tip-title">🚛 Mẹo Xe Tải & Làn Đường</div>
+
+            <div class="tip-box" style="border-left-color: #10b981;">
+                <div class="tip-title">📏 Khoảng cách an toàn (Mẹo Trừ 30)</div>
                 <div class="tip-content">
-                    • Câu hỏi "Xe nào vi phạm?" có xe con màu xanh lá: <span class="highlight-green">Bỏ xe con ra</span>.<br>
-                    • Câu hỏi "Xe nào vi phạm?" có biển "Stop": Đa số là <b>xe tải</b> vi phạm.<br>
-                    • Cao tốc: Vào làn phải nhường đường, Ra làn phải có tín hiệu.
+                    Khi đề bài hỏi khoảng cách an toàn với tốc độ (60-80, 80-100...):<br>
+                    👉 <b>Lấy tốc độ LỚN NHẤT trừ đi 30</b> -> Ra đáp án gần đúng nhất.<br><br>
+                    Ví dụ: Tốc độ <b>60-80 km/h</b>.<br>
+                    Lấy <span class="highlight-red">80 - 30 = 50</span> ➡ Chọn đáp án <b>55m</b>.<br>
                 </div>
             </div>
             """, unsafe_allow_html=True)
+        with c2:
+            img = load_image_smart("tip_tocdo", folders)
+            if img: st.image(img, caption="Bảng tốc độ & Khoảng cách", use_container_width=True)
 
-# --- 7. GIAO DIỆN HỌC MẸO CŨ (JSON) ---
+    # --- TAB 3: HẠNG XE (HIỂN THỊ NHIỀU ẢNH) ---
+    with tab3:
+        c1, c2 = st.columns([1.5, 1])
+        with c1:
+            st.markdown("""
+            <div class="tip-box" style="border-left-color: #8b5cf6;">
+                <div class="tip-title">🆔 Mẹo Hạng Giấy Phép (FE, FC)</div>
+                <div class="tip-content">
+                    Nếu câu hỏi về hạng <b>FE, FC</b>:<br>
+                    👉 Hỏi <b>FE</b>: Chọn ý <b>1</b> (Em 1)<br>
+                    👉 Hỏi <b>FC</b>: Chọn ý <b>2</b> (Chị 2)<br>
+                    <div class="formula-box">FE ➡ 1 | FC ➡ 2</div>
+                </div>
+            </div>
+
+            <div class="tip-box">
+                <div class="tip-title">🛵 Mẹo Hạng A1</div>
+                <div class="tip-content">
+                    • <b>Được lái:</b> Xe 2 bánh đến 125cm3 (Luật mới).<br>
+                    • <b>KHÔNG lái:</b> Xe ba bánh (trừ xe cho người khuyết tật).<br>
+                </div>
+            </div>
+            """, unsafe_allow_html=True)
+        
+        with c2:
+            st.markdown("**📸 Hình ảnh minh họa:**")
+            
+            # 1. Ảnh tổng hợp hạng xe (nếu có)
+            img_chung = load_image_smart("tip_hang_chung", folders)
+            if img_chung: 
+                st.image(img_chung, caption="Tổng hợp hạng xe", use_container_width=True)
+            
+            # 2. Ảnh riêng cho hạng FE/FC (nếu có)
+            img_fc = load_image_smart("tip_hang_fc", folders)
+            if img_fc:
+                with st.expander("Xem hình FE - FC"):
+                    st.image(img_fc, caption="Mẹo FE - FC", use_container_width=True)
+            
+            # 3. Ảnh riêng cho A1 (nếu có)
+            img_a1 = load_image_smart("tip_hang_a1", folders)
+            if img_a1:
+                with st.expander("Xem hình A1"):
+                    st.image(img_a1, caption="Mẹo A1", use_container_width=True)
+            
+            if not any([img_chung, img_fc, img_a1]):
+                st.warning("Chưa tìm thấy ảnh hạng xe (tip_hang_chung, tip_hang_fc, ...)")
+
+    # --- TAB 4: BIỂN BÁO & SA HÌNH ---
+    with tab4:
+        c1, c2 = st.columns([1.5, 1])
+        with c1:
+            st.markdown("""
+            <div class="tip-box" style="border-left-color: #ef4444;">
+                <div class="tip-title">🛑 Logic Cấm & Sa Hình</div>
+                <div class="tip-content">
+                    <b>1. Biển Cấm:</b><br>
+                    • Cấm NHỎ -> Cấm LỚN (Cấm xe con thì cấm luôn xe tải).<br>
+                    • Cấm LỚN -> KHÔNG cấm NHỎ.<br>
+                </div>
+            </div>
+            
+            <div class="tip-box" style="border-left-color: #ec4899;">
+                <div class="tip-title">👮 Mẹo Cảnh Sát Giao Thông</div>
+                <div class="tip-content">
+                    Thấy hình CSGT giơ tay (1 tay hoặc 2 tay):<br>
+                    👉 <b>Chọn ngay đáp án 3.</b><br>
+                    <i>(Mẹo: Cứ thấy chú Công an đứng giữa đường là chọn ý 3).</i>
+                </div>
+            </div>
+            """, unsafe_allow_html=True)
+        with c2:
+            img = load_image_smart("tip_sahinh", folders)
+            if img: st.image(img, caption="Sa hình & CSGT", use_container_width=True)
+
+# --- 7. GIAO DIỆN HỌC MẸO CHI TIẾT (JSON CŨ) ---
 def render_tips_page():
     if st.button("🏠 Về Trang Chủ"):
         st.session_state.page = "home"
@@ -391,11 +422,11 @@ def render_tips_page():
             st.markdown(f"<div style='font-size:1.25rem; margin-bottom:10px;'>• {line}</div>", unsafe_allow_html=True)
         if tip.get('image'):
             folders = ["images", "images_a1"] if "Ô tô" in st.session_state.license_type else ["images_a1", "images"]
-            img = load_image_strict(tip['image'], folders)
+            img = load_image_smart(tip['image'], folders) # Dùng hàm mới luôn
             if img: st.image(img, use_container_width=True)
         st.write("---")
 
-# --- 8. GIAO DIỆN LUYỆN THI (TÔ MÀU TRONG Ô) ---
+# --- 8. GIAO DIỆN LUYỆN THI (EXAM) ---
 def render_exam_page():
     c_home, c_title = st.columns([1, 4])
     with c_home:
@@ -481,7 +512,8 @@ def render_exam_page():
 
     if q['id'] == 1: q['image'] = None
     if q.get('image'):
-        img = load_image_strict(q['image'], ['images'])
+        # Dùng hàm smart ở đây luôn
+        img = load_image_smart(q['image'], ['images'])
         if img: st.image(img, use_container_width=True)
 
     # CHỌN ĐÁP ÁN

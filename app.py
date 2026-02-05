@@ -6,7 +6,7 @@ from PIL import Image, ImageOps
 
 # --- 1. CẤU HÌNH TRANG ---
 st.set_page_config(
-    page_title="GPLX Pro - V36 Smart Images",
+    page_title="GPLX Pro - Smart Color",
     page_icon="🚗",
     layout="wide",
     initial_sidebar_state="collapsed"
@@ -69,7 +69,7 @@ st.markdown("""
         color: #0f172a !important; line-height: 1.5 !important; margin-top: 5px !important;
     }
 
-    /* --- STYLE CHO TRANG MẸO CẤP TỐC (MỚI) --- */
+    /* --- STYLE CHO TRANG MẸO CẤP TỐC --- */
     .tip-box {
         background: white;
         border-radius: 16px;
@@ -107,7 +107,7 @@ st.markdown("""
         margin: 10px 0;
     }
 
-    /* --- RADIO BUTTONS (TÔ MÀU NỀN) --- */
+    /* --- RADIO BUTTONS (CƠ BẢN - MẶC ĐỊNH MÀU XANH DƯƠNG) --- */
     div[data-testid="stRadio"] > label { display: none; }
     div[role="radiogroup"] { gap: 16px; display: flex; flex-direction: column; }
     div[data-testid="stRadio"] div[role="radiogroup"] > label {
@@ -117,12 +117,16 @@ st.markdown("""
     div[data-testid="stRadio"] div[role="radiogroup"] > label p {
         font-size: 1.5rem !important; font-weight: 500 !important; color: #64748b !important; line-height: 1.5 !important;
     }
-    div[data-testid="stRadio"] div[role="radiogroup"] > label:hover { border-color: #10b981; background: #f0fdf4; }
+    div[data-testid="stRadio"] div[role="radiogroup"] > label:hover { border-color: #3b82f6; background: #eff6ff; }
+    
+    /* Mặc định khi chọn (Chưa biết đúng sai) -> Màu xanh dương (Blue) */
     div[data-testid="stRadio"] div[role="radiogroup"] > label[data-checked="true"] {
-        background-color: #d1fae5 !important; border: 3px solid #059669 !important; box-shadow: 0 4px 15px rgba(16, 185, 129, 0.4);
+        background-color: #eff6ff !important; 
+        border: 3px solid #3b82f6 !important; /* Blue border */
+        box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3);
     }
     div[data-testid="stRadio"] div[role="radiogroup"] > label[data-checked="true"] p {
-        color: #064e3b !important; font-weight: 800 !important;
+        color: #1e40af !important; font-weight: 800 !important;
     }
     
     /* Tabs */
@@ -156,35 +160,22 @@ def load_data_by_license(license_type):
         if d: return d
     return []
 
-# --- HÀM LOAD ẢNH THÔNG MINH (CHẤP NHẬN JPG, PNG...) ---
+# --- HÀM LOAD ẢNH THÔNG MINH ---
 def load_image_smart(base_name, folders_allowed):
-    """
-    Tự động tìm file ảnh với các đuôi phổ biến (.png, .jpg, .jpeg)
-    base_name: Tên file không cần đuôi (ví dụ: 'tip_tuoi')
-    """
     if not base_name: return None
-    
-    # Danh sách đuôi file cần kiểm tra
     extensions = ['.png', '.jpg', '.jpeg', '.PNG', '.JPG', '.JPEG']
-    
     clean_name = str(base_name).strip()
-    
-    # Nếu người dùng đã nhập sẵn đuôi (VD: tip_tuoi.jpg) trong data
     if any(clean_name.endswith(ext) for ext in extensions):
          for folder in folders_allowed:
             path = os.path.join(folder, clean_name)
             if os.path.exists(path) and os.path.isfile(path):
                 return ImageOps.exif_transpose(Image.open(path))
-    
-    # Nếu chỉ có tên (VD: tip_tuoi), thử ghép đuôi
     for folder in folders_allowed:
         for ext in extensions:
             path = os.path.join(folder, clean_name + ext)
             if os.path.exists(path) and os.path.isfile(path):
-                try: 
-                    return ImageOps.exif_transpose(Image.open(path))
-                except: 
-                    continue
+                try: return ImageOps.exif_transpose(Image.open(path))
+                except: continue
     return None
 
 def get_category_border(category):
@@ -234,7 +225,7 @@ def render_home_page():
             st.session_state.page = "exam"
             st.rerun()
             
-    # Hàng 2 (Mẹo chi tiết cũ)
+    # Hàng 2
     st.markdown("<div style='height:15px'></div>", unsafe_allow_html=True)
     c3, c4 = st.columns(2)
     with c3:
@@ -245,7 +236,7 @@ def render_home_page():
     with c4:
         pass 
 
-# --- 6. GIAO DIỆN MẸO CẤP TỐC (HIỂN THỊ NHIỀU ẢNH JPG/PNG) ---
+# --- 6. GIAO DIỆN MẸO CẤP TỐC ---
 def render_captoc_page():
     c_home, c_title = st.columns([1, 4])
     with c_home:
@@ -255,7 +246,6 @@ def render_captoc_page():
     with c_title:
         st.markdown(f"## ⚡ Bí Kíp Cấp Tốc: {st.session_state.license_type}")
     
-    # Thông báo nhỏ
     st.info("💡 Mẹo: Hệ thống tự động hiển thị ảnh .jpg hoặc .png từ thư mục images.")
     folders = ["images", "images_a1"]
 
@@ -277,7 +267,6 @@ def render_captoc_page():
                     <small><i>(Ngoại lệ: Hạng E là 27 tuổi)</i></small>
                 </div>
             </div>
-            
             <div class="tip-box">
                 <div class="tip-title">⏳ Niên hạn & Quy Định Khác</div>
                 <div class="tip-content">
@@ -287,12 +276,9 @@ def render_captoc_page():
                 </div>
             </div>
             """, unsafe_allow_html=True)
-        
         with c2:
-            # Code tự tìm tip_tuoi.jpg hoặc tip_tuoi.png
             img1 = load_image_smart("tip_tuoi", folders)
             if img1: st.image(img1, caption="Mẹo chọn tuổi lớn nhất", use_container_width=True)
-            
             img2 = load_image_smart("tip_khoangcach", folders)
             if img2: st.image(img2, caption="Quy định đỗ xe & Niên hạn", use_container_width=True)
 
@@ -309,7 +295,6 @@ def render_captoc_page():
                     Road <b>Đường HAI CHIỀU/MỘT CHIỀU</b> (Không có dải phân cách): <span class="highlight-blue">50 km/h</span><br>
                 </div>
             </div>
-
             <div class="tip-box" style="border-left-color: #10b981;">
                 <div class="tip-title">📏 Khoảng cách an toàn (Mẹo Trừ 30)</div>
                 <div class="tip-content">
@@ -324,7 +309,7 @@ def render_captoc_page():
             img = load_image_smart("tip_tocdo", folders)
             if img: st.image(img, caption="Bảng tốc độ & Khoảng cách", use_container_width=True)
 
-    # --- TAB 3: HẠNG XE (HIỂN THỊ NHIỀU ẢNH) ---
+    # --- TAB 3: HẠNG XE ---
     with tab3:
         c1, c2 = st.columns([1.5, 1])
         with c1:
@@ -338,7 +323,6 @@ def render_captoc_page():
                     <div class="formula-box">FE ➡ 1 | FC ➡ 2</div>
                 </div>
             </div>
-
             <div class="tip-box">
                 <div class="tip-title">🛵 Mẹo Hạng A1</div>
                 <div class="tip-content">
@@ -347,26 +331,18 @@ def render_captoc_page():
                 </div>
             </div>
             """, unsafe_allow_html=True)
-        
         with c2:
             st.markdown("**📸 Hình ảnh minh họa:**")
-            
-            # Ảnh 1: Tổng hợp (tìm tip_hang_chung.jpg/png)
             img_chung = load_image_smart("tip_hang_chung", folders)
             if img_chung: st.image(img_chung, caption="Tổng hợp hạng xe", use_container_width=True)
-            
-            # Ảnh 2: Mẹo FE/FC (tìm tip_hang_fc.jpg/png)
             img_fc = load_image_smart("tip_hang_fc", folders)
             if img_fc:
                 with st.expander("Xem hình FE - FC"):
                     st.image(img_fc, caption="Mẹo FE - FC", use_container_width=True)
-            
-            # Ảnh 3: Mẹo A1 (tìm tip_hang_a1.jpg/png)
             img_a1 = load_image_smart("tip_hang_a1", folders)
             if img_a1:
                 with st.expander("Xem hình A1"):
                     st.image(img_a1, caption="Mẹo A1", use_container_width=True)
-            
             if not any([img_chung, img_fc, img_a1]):
                 st.warning("Chưa tìm thấy ảnh. Hãy đặt tên: tip_hang_chung, tip_hang_fc, tip_hang_a1")
 
@@ -383,7 +359,6 @@ def render_captoc_page():
                     • Cấm LỚN -> KHÔNG cấm NHỎ.<br>
                 </div>
             </div>
-            
             <div class="tip-box" style="border-left-color: #ec4899;">
                 <div class="tip-title">👮 Mẹo Cảnh Sát Giao Thông</div>
                 <div class="tip-content">
@@ -397,7 +372,7 @@ def render_captoc_page():
             img = load_image_smart("tip_sahinh", folders)
             if img: st.image(img, caption="Sa hình & CSGT", use_container_width=True)
 
-# --- 7. GIAO DIỆN HỌC MẸO CHI TIẾT (JSON CŨ) ---
+# --- 7. GIAO DIỆN HỌC MẸO CHI TIẾT ---
 def render_tips_page():
     if st.button("🏠 Về Trang Chủ"):
         st.session_state.page = "home"
@@ -426,12 +401,11 @@ def render_tips_page():
             st.markdown(f"<div style='font-size:1.25rem; margin-bottom:10px;'>• {line}</div>", unsafe_allow_html=True)
         if tip.get('image'):
             folders = ["images", "images_a1"] if "Ô tô" in st.session_state.license_type else ["images_a1", "images"]
-            # Dùng hàm load_image_smart cho cả phần cũ để tránh lỗi đuôi file
             img = load_image_smart(tip['image'], folders)
             if img: st.image(img, use_container_width=True)
         st.write("---")
 
-# --- 8. GIAO DIỆN LUYỆN THI (EXAM - GIỮ NGUYÊN) ---
+# --- 8. GIAO DIỆN LUYỆN THI (EXAM - SỬA LỖI MÀU) ---
 def render_exam_page():
     c_home, c_title = st.columns([1, 4])
     with c_home:
@@ -517,7 +491,6 @@ def render_exam_page():
 
     if q['id'] == 1: q['image'] = None
     if q.get('image'):
-        # Dùng hàm smart ở đây để đảm bảo ảnh câu hỏi cũng ko bị lỗi
         img = load_image_smart(q['image'], ['images'])
         if img: st.image(img, use_container_width=True)
 
@@ -532,14 +505,42 @@ def render_exam_page():
 
     user_choice = st.radio("Lựa chọn:", q['options'], index=default_index, key=f"q_{q['id']}")
 
-    # XỬ LÝ KẾT QUẢ
+    # --- XỬ LÝ KẾT QUẢ & ĐỔI MÀU (LOGIC MỚI) ---
     if user_choice:
-        if not show_answer_mode:
-            correct = q['correct_answer'].strip()
-            if user_choice.strip() == correct:
-                st.success(f"✅ CHÍNH XÁC: {correct}")
-            else:
-                st.error(f"❌ SAI: Đáp án đúng là {correct}")
+        clean_user = user_choice.strip()
+        clean_correct = q['correct_answer'].strip()
+        
+        # Nếu ĐÚNG: Ghi đè CSS thành Xanh (Green)
+        if clean_user == clean_correct:
+            if not show_answer_mode: st.success(f"✅ CHÍNH XÁC: {clean_correct}")
+            st.markdown("""
+            <style>
+                div[data-testid="stRadio"] div[role="radiogroup"] > label[data-checked="true"] {
+                    background-color: #d1fae5 !important;
+                    border: 3px solid #059669 !important;
+                    box-shadow: 0 4px 15px rgba(16, 185, 129, 0.4) !important;
+                }
+                div[data-testid="stRadio"] div[role="radiogroup"] > label[data-checked="true"] p {
+                    color: #064e3b !important;
+                }
+            </style>
+            """, unsafe_allow_html=True)
+            
+        # Nếu SAI: Ghi đè CSS thành Đỏ (Red)
+        else:
+            if not show_answer_mode: st.error(f"❌ SAI: Đáp án đúng là {clean_correct}")
+            st.markdown("""
+            <style>
+                div[data-testid="stRadio"] div[role="radiogroup"] > label[data-checked="true"] {
+                    background-color: #fee2e2 !important;
+                    border: 3px solid #ef4444 !important;
+                    box-shadow: 0 4px 15px rgba(239, 68, 68, 0.4) !important;
+                }
+                div[data-testid="stRadio"] div[role="radiogroup"] > label[data-checked="true"] p {
+                    color: #991b1b !important;
+                }
+            </style>
+            """, unsafe_allow_html=True)
 
         if auto_next_mode:
             if st.session_state.current_q_index < total - 1:

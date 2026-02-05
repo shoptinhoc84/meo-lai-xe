@@ -6,7 +6,7 @@ from PIL import Image, ImageOps
 
 # --- 1. CẤU HÌNH TRANG ---
 st.set_page_config(
-    page_title="GPLX Pro - Auto Fix",
+    page_title="GPLX Pro - Auto Bold Color",
     page_icon="🚗",
     layout="wide",
     initial_sidebar_state="collapsed"
@@ -22,7 +22,7 @@ if 'current_q_index' not in st.session_state:
 if 'exam_category' not in st.session_state:
     st.session_state.exam_category = "Tất cả"
 
-# --- 3. CSS GIAO DIỆN ---
+# --- 3. CSS GIAO DIỆN CƠ BẢN ---
 st.markdown("""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap');
@@ -45,7 +45,7 @@ st.markdown("""
     }
     .action-card:hover { transform: translateY(-5px); border-color: #6366f1; box-shadow: 0 10px 15px -3px rgba(99, 102, 241, 0.2); }
 
-    /* MẸO CẤP TỐC */
+    /* STYLE MỚI CHO TAB MẸO CẤP TỐC */
     .tip-box {
         background: white; border-radius: 16px; padding: 20px; margin-bottom: 15px;
         border-left: 6px solid #3b82f6; box-shadow: 0 2px 5px rgba(0,0,0,0.05);
@@ -55,13 +55,12 @@ st.markdown("""
         text-transform: uppercase; display: flex; align-items: center; gap: 8px;
     }
     .tip-content { color: #334155; font-size: 1.05rem; line-height: 1.6; }
-    .highlight-red { color: #dc2626; font-weight: 700; background: #fee2e2; padding: 2px 6px; border-radius: 6px; }
     .formula-box {
         background: #f1f5f9; border: 2px dashed #cbd5e1; border-radius: 12px;
         padding: 15px; text-align: center; font-weight: 700; font-size: 1.2rem; color: #475569; margin: 10px 0;
     }
 
-    /* --- RADIO BUTTONS (STYLE GỐC) --- */
+    /* --- RADIO BUTTONS (STYLE GỐC - KHI CHƯA CHỌN) --- */
     div[data-testid="stRadio"] > label { display: none; }
     div[role="radiogroup"] { gap: 16px; display: flex; flex-direction: column; }
     div[data-testid="stRadio"] div[role="radiogroup"] > label {
@@ -73,16 +72,15 @@ st.markdown("""
     }
     div[data-testid="stRadio"] div[role="radiogroup"] > label:hover { border-color: #3b82f6; background: #eff6ff; }
     
-    /* MẶC ĐỊNH KHI CHỌN (Sẽ bị ghi đè bởi code logic bên dưới) */
+    /* Style khi chọn tạm thời (mặc định xanh dương nhạt) - Sẽ bị code Python ghi đè */
     div[data-testid="stRadio"] div[role="radiogroup"] > label[data-checked="true"] {
         background-color: #eff6ff; border: 3px solid #3b82f6;
     }
 
-    /* Style khác */
+    /* CÁC THÀNH PHẦN KHÁC */
     div[data-testid="stImage"] { display: flex; justify-content: center; margin: 15px 0; }
     div[data-testid="stImage"] img { border-radius: 12px; max-height: 400px; object-fit: contain; }
     div[data-testid="stButton"] button { width: 100%; border-radius: 12px; font-weight: 700; height: 3.5rem; font-size: 1.2rem !important; }
-    
     .content-card { background: white; padding: 25px; border-radius: 20px; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.05); border: 1px solid #f1f5f9; margin-bottom: 20px; }
     .q-text { font-size: 1.35rem !important; font-weight: 700 !important; color: #0f172a !important; line-height: 1.5 !important; margin-top: 5px !important; }
     .top-nav-container { background: white; padding: 10px; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); margin-bottom: 15px; border: 1px solid #e2e8f0; }
@@ -276,7 +274,7 @@ def render_tips_page():
             if img: st.image(img, use_container_width=True)
         st.write("---")
 
-# --- 8. GIAO DIỆN LUYỆN THI (ĐÃ SỬA LỖI AUTO) ---
+# --- 8. GIAO DIỆN LUYỆN THI (FIX CSS MẠNH MẼ CHO AUTO) ---
 def render_exam_page():
     c_home, c_title = st.columns([1, 4])
     with c_home:
@@ -361,48 +359,58 @@ def render_exam_page():
 
     user_choice = st.radio("Lựa chọn:", q['options'], index=default_index, key=f"q_{q['id']}")
 
-    # --- LOGIC XỬ LÝ (QUAN TRỌNG: CÓ PROGRESS BAR) ---
+    # --- LOGIC QUAN TRỌNG: TIÊM CSS ĐỘNG DỰA TRÊN KẾT QUẢ ---
+    # Kỹ thuật: Inject CSS !important ngay khi người dùng chọn
     if user_choice:
         clean_user = user_choice.strip()
         clean_correct = q['correct_answer'].strip()
         
-        # 1. ÉP MÀU NGAY LẬP TỨC (Dù đúng hay sai)
         if clean_user == clean_correct:
-            # Màu Xanh
+            # === NẾU ĐÚNG: MÀU XANH ĐẬM (GREEN) ===
+            # Nền xanh nhạt, Viền xanh đậm, Chữ xanh đậm, Font đậm
             st.markdown("""
             <style>
                 div[data-testid="stRadio"] div[role="radiogroup"] > label[data-checked="true"] {
-                    background-color: #d1fae5 !important; border-color: #059669 !important; color: #064e3b !important;
+                    background-color: #d1fae5 !important;
+                    border: 4px solid #059669 !important;
+                    color: #064e3b !important;
                 }
-                div[data-testid="stRadio"] div[role="radiogroup"] > label[data-checked="true"] p { color: #064e3b !important; }
+                div[data-testid="stRadio"] div[role="radiogroup"] > label[data-checked="true"] p {
+                    color: #064e3b !important;
+                    font-weight: 900 !important;
+                }
             </style>
             """, unsafe_allow_html=True)
             if not show_answer_mode: st.success(f"✅ CHÍNH XÁC: {clean_correct}")
+        
         else:
-            # Màu Đỏ
+            # === NẾU SAI: MÀU ĐỎ ĐẬM (RED) ===
+            # Nền đỏ nhạt, Viền đỏ đậm, Chữ đỏ đậm, Font đậm
             st.markdown("""
             <style>
                 div[data-testid="stRadio"] div[role="radiogroup"] > label[data-checked="true"] {
-                    background-color: #fee2e2 !important; border-color: #ef4444 !important; color: #991b1b !important;
+                    background-color: #fee2e2 !important;
+                    border: 4px solid #ef4444 !important;
+                    color: #991b1b !important;
                 }
-                div[data-testid="stRadio"] div[role="radiogroup"] > label[data-checked="true"] p { color: #991b1b !important; }
+                div[data-testid="stRadio"] div[role="radiogroup"] > label[data-checked="true"] p {
+                    color: #991b1b !important;
+                    font-weight: 900 !important;
+                }
             </style>
             """, unsafe_allow_html=True)
             if not show_answer_mode: st.error(f"❌ SAI: Đáp án đúng là {clean_correct}")
 
-        # 2. XỬ LÝ AUTO CHUYỂN CÂU (DÙNG THANH TIẾN TRÌNH ĐỂ GIỮ HÌNH ẢNH)
+        # LOGIC AUTO: Chờ rồi mới chuyển
         if auto_next_mode:
-            # Hiện thanh thời gian để người dùng kịp nhìn thấy kết quả
+            # Trick: Dùng progress bar để người dùng thấy màu trước khi chuyển
             progress_text = f"Đang chuyển câu tiếp theo sau {delay_seconds} giây..."
             my_bar = st.progress(0, text=progress_text)
-
-            # Chia nhỏ thời gian sleep để update thanh bar (Tạo cảm giác mượt và giữ kết nối)
             steps = 100
             for i in range(steps):
                 time.sleep(delay_seconds / steps)
                 my_bar.progress(i + 1, text=progress_text)
             
-            # Sau khi chạy hết thanh bar thì mới chuyển câu
             if st.session_state.current_q_index < total - 1:
                 st.session_state.current_q_index += 1
                 st.rerun()

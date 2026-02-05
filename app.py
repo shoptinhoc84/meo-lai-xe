@@ -6,7 +6,7 @@ from PIL import Image, ImageOps
 
 # --- 1. CẤU HÌNH TRANG ---
 st.set_page_config(
-    page_title="GPLX Pro - Sửa Lỗi Auto",
+    page_title="GPLX Pro - Fix Auto & Image",
     page_icon="🚗",
     layout="wide",
     initial_sidebar_state="collapsed"
@@ -20,43 +20,41 @@ if 'license_type' not in st.session_state:
 if 'current_q_index' not in st.session_state:
     st.session_state.current_q_index = 0
 
-# --- 3. CSS GIAO DIỆN (FONT TO & FIX LAYOUT) ---
+# --- 3. CSS GIAO DIỆN (FONT TO & FIX LỖI CHE TIÊU ĐỀ) ---
 st.markdown("""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap');
     html, body, [class*="css"] { font-family: 'Inter', sans-serif; }
     .stApp { background-color: #f8fafc; }
     
+    /* Khoảng cách lề trên lớn để không bị che mất trang chủ */
     .block-container { 
-        padding-top: 4rem !important; 
+        padding-top: 5rem !important; 
         padding-bottom: 6rem !important; 
         max-width: 1100px;
     }
 
-    /* CARD TRANG CHỦ */
     .hero-card {
         background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%);
-        padding: 30px; border-radius: 25px; color: white; text-align: center; margin-bottom: 30px;
+        padding: 40px; border-radius: 25px; color: white; text-align: center; margin-bottom: 30px;
     }
     
     .section-title {
-        font-size: 1.8rem; font-weight: 800; color: #1e293b;
-        margin: 20px 0 10px 0; padding-bottom: 5px; border-bottom: 4px solid #3b82f6;
-        display: inline-block;
+        font-size: 2rem; font-weight: 800; color: #1e293b;
+        margin-bottom: 15px; border-bottom: 5px solid #3b82f6; display: inline-block;
     }
 
-    /* ĐÁP ÁN - FONT CHỮ TO */
+    /* ĐÁP ÁN - FONT CHỮ TO RÕ */
     div[data-testid="stRadio"] div[role="radiogroup"] > label {
         background: white; border: 2px solid #cbd5e1; padding: 20px !important;
         border-radius: 15px; width: 100%; cursor: pointer; margin-bottom: 10px;
     }
     div[data-testid="stRadio"] div[role="radiogroup"] > label p {
-        font-size: 1.5rem !important; font-weight: 600 !important;
+        font-size: 1.6rem !important; font-weight: 600 !important;
     }
 
-    /* NÚT ĐIỀU HƯỚNG */
     div[data-testid="stButton"] button {
-        border-radius: 12px; font-weight: 800; height: 3.5rem; font-size: 1.2rem !important;
+        border-radius: 12px; font-weight: 800; height: 4rem; font-size: 1.4rem !important;
     }
 </style>
 """, unsafe_allow_html=True)
@@ -76,10 +74,10 @@ def load_data_by_license(license_type):
     return []
 
 def load_image_smart(base_name, folders):
-    if not base_name: return None
+    if not base_name or str(base_name).strip() == "": return None
     exts = ['', '.png', '.jpg', '.jpeg', '.PNG', '.JPG']
-    # Loại bỏ phần mở rộng cũ nếu có để tránh trùng lặp
-    clean_name = str(base_name).split('.')[0]
+    # Lấy tên file nguyên bản
+    clean_name = str(base_name).strip()
     for folder in folders:
         for ext in exts:
             path = os.path.join(folder, clean_name + ext)
@@ -90,25 +88,25 @@ def load_image_smart(base_name, folders):
 
 # --- 5. TRANG CHỦ ---
 def render_home_page():
-    st.markdown('<div class="hero-card"><h1>🚗 GPLX MASTER PRO</h1><p>Học nhanh một chạm - Tự động chuyển câu</p></div>', unsafe_allow_html=True)
+    st.markdown('<div class="hero-card"><h1>🚗 GPLX MASTER PRO</h1><p>Học nhanh một chạm - Tự động qua câu</p></div>', unsafe_allow_html=True)
     col_xm, col_ot = st.columns(2)
 
     with col_xm:
-        st.markdown('<div class="section-title">🛵 XE MÁY (A1, A2)</div>', unsafe_allow_html=True)
-        if st.button("🚀 Mẹo Cấp Tốc Xe Máy", use_container_width=True, key="xm_captoc"):
+        st.markdown('<div class="section-title">🛵 XE MÁY</div>', unsafe_allow_html=True)
+        if st.button("🚀 Mẹo Cấp Tốc Xe Máy", use_container_width=True):
             st.session_state.license_type = "Xe máy (A1, A2)"; st.session_state.page = "captoc"; st.rerun()
-        if st.button("📖 Mẹo Chi Tiết Xe Máy", use_container_width=True, key="xm_tips"):
+        if st.button("📖 Mẹo Chi Tiết Xe Máy", use_container_width=True):
             st.session_state.license_type = "Xe máy (A1, A2)"; st.session_state.page = "tips"; st.rerun()
-        if st.button("📝 Luyện Thi Xe Máy", use_container_width=True, key="xm_exam"):
+        if st.button("📝 Luyện Thi Xe Máy", use_container_width=True):
             st.session_state.license_type = "Xe máy (A1, A2)"; st.session_state.page = "exam"; st.rerun()
 
     with col_ot:
-        st.markdown('<div class="section-title">🚗 Ô TÔ (B1, B2, C)</div>', unsafe_allow_html=True)
-        if st.button("🚀 Mẹo Cấp Tốc Ô Tô", use_container_width=True, key="ot_captoc"):
+        st.markdown('<div class="section-title">🚗 Ô TÔ</div>', unsafe_allow_html=True)
+        if st.button("🚀 Mẹo Cấp Tốc Ô Tô", use_container_width=True):
             st.session_state.license_type = "Ô tô (B1, B2, C...)"; st.session_state.page = "captoc"; st.rerun()
-        if st.button("📖 Mẹo Chi Tiết Ô Tô", use_container_width=True, key="ot_tips"):
+        if st.button("📖 Mẹo Chi Tiết Ô Tô", use_container_width=True):
             st.session_state.license_type = "Ô tô (B1, B2, C...)"; st.session_state.page = "tips"; st.rerun()
-        if st.button("📝 Luyện Thi Ô Tô", use_container_width=True, key="ot_exam"):
+        if st.button("📝 Luyện Thi Ô Tô", use_container_width=True):
             st.session_state.license_type = "Ô tô (B1, B2, C...)"; st.session_state.page = "exam"; st.rerun()
 
 # --- 6. TRANG MẸO CẤP TỐC ---
@@ -127,12 +125,12 @@ def render_tips_page():
     data = load_data_by_license(st.session_state.license_type)
     if not data: st.warning("Không có dữ liệu."); return
     for tip in data:
-        st.markdown(f'<div class="detail-card"><div class="detail-title">📌 {tip.get("title", "Mẹo")}</div>', unsafe_allow_html=True)
+        st.markdown(f'<div style="background:white; padding:20px; border-radius:15px; margin-bottom:15px; border-top:8px solid #3b82f6;"><h3>📌 {tip.get("title", "Mẹo")}</h3>', unsafe_allow_html=True)
         for line in tip.get('content', []):
-            st.markdown(f'<div class="detail-line">• {line}</div>', unsafe_allow_html=True)
+            st.markdown(f'<p style="font-size:1.4rem;">• {line}</p>', unsafe_allow_html=True)
         st.markdown('</div>', unsafe_allow_html=True)
 
-# --- 8. TRANG LUYỆN THI (FIX LỖI AUTO & ẢNH) ---
+# --- 8. TRANG LUYỆN THI (FIX DÍNH ẢNH CÂU 1 & AUTO ĐỨNG YÊN) ---
 def render_exam_page():
     if st.button("🏠 Về Trang Chủ"): st.session_state.page = "home"; st.rerun()
     
@@ -140,7 +138,7 @@ def render_exam_page():
     if not all_qs: st.error("Lỗi dữ liệu!"); return
     total = len(all_qs)
 
-    # ĐIỀU HƯỚNG
+    # ĐIỀU HƯỚNG TRÊN
     c1, c2, c3 = st.columns([1, 1, 1])
     with c1:
         if st.button("⬅️ Trước", key="p_top"):
@@ -154,20 +152,31 @@ def render_exam_page():
             st.session_state.current_q_index = min(total - 1, st.session_state.current_q_index + 1); st.rerun()
 
     # CÀI ĐẶT
-    auto_mode = st.toggle("🚀 CHẾ ĐỘ AUTO", key="auto_mode")
-    delay = st.slider("Giây chờ:", 1, 5, 2)
+    st.write("---")
+    c_auto, c_delay = st.columns(2)
+    with c_auto: auto_mode = st.toggle("🚀 CHẾ ĐỘ AUTO (Chạy liên tục)", key="auto_mode")
+    with c_delay: delay = st.slider("Giây chờ qua câu:", 1, 5, 2)
 
-    # CÂU HỎI
+    # LẤY DỮ LIỆU CÂU HỎI
     q = all_qs[st.session_state.current_q_index]
     st.markdown(f"### Câu {st.session_state.current_q_index + 1}:")
     st.info(f"**{q['question']}**")
     
-    # ẢNH (Dùng hàm smart để không bị dính ảnh cũ)
-    img_data = load_image_smart(q.get('image'), ["images", "images_a1"])
-    if img_data:
-        st.image(img_data)
+    # --- FIX DÍNH ẢNH CÂU 1 ---
+    # Nếu là câu số 1 (index 0), kiểm tra xem ảnh có phải là ảnh rác không
+    current_img = q.get('image')
+    # Ở đây chúng ta chỉ load ảnh nếu nó thực sự thuộc về câu hỏi (tránh tên file trùng với mẹo)
+    if current_img:
+        # Nếu câu 1 bị dính ảnh mẹo, ta có thể lọc theo ID câu hỏi
+        if st.session_state.current_q_index == 0 and (current_img == "1" or current_img == "tip_tuoi"):
+            img_data = None
+        else:
+            img_data = load_image_smart(current_img, ["images", "images_a1"])
+        
+        if img_data:
+            st.image(img_data)
 
-    # ĐÁP ÁN
+    # XỬ LÝ ĐÁP ÁN
     correct_ans = q['correct_answer'].strip()
     options = q['options']
     correct_idx = -1
@@ -176,9 +185,9 @@ def render_exam_page():
             correct_idx = i
             break
 
-    # Nếu bật Auto, hệ thống tự chọn câu đúng
+    # HIỂN THỊ RADIO (Nếu Auto thì ép chọn đúng luôn)
     user_choice = st.radio(
-        "Lựa chọn:", 
+        "Lựa chọn đáp án:", 
         options, 
         index=correct_idx if auto_mode else None, 
         key=f"radio_{st.session_state.current_q_index}"
@@ -187,24 +196,27 @@ def render_exam_page():
     if user_choice:
         if user_choice.strip() == correct_ans:
             st.markdown("""<style>div[data-testid="stRadio"] div[role="radiogroup"] > label[data-checked="true"] { background-color: #16a34a !important; border: 4px solid #14532d !important; } div[data-testid="stRadio"] div[role="radiogroup"] > label[data-checked="true"] p { color: white !important; font-weight: 900 !important; }</style>""", unsafe_allow_html=True)
-            st.success("ĐÚNG!")
+            st.success("✅ CHÍNH XÁC!")
         else:
             st.markdown("""<style>div[data-testid="stRadio"] div[role="radiogroup"] > label[data-checked="true"] { background-color: #dc2626 !important; border: 4px solid #7f1d1d !important; } div[data-testid="stRadio"] div[role="radiogroup"] > label[data-checked="true"] p { color: white !important; font-weight: 900 !important; }</style>""", unsafe_allow_html=True)
-            st.error(f"SAI! Đáp án là: {correct_ans}")
+            st.error(f"❌ SAI! Đáp án đúng là: {correct_ans}")
 
-        # LOGIC CHUYỂN CÂU TỰ ĐỘNG
+        # --- FIX LỖI AUTO KHÔNG QUA CÂU ---
         if auto_mode:
             placeholder = st.empty()
-            for i in range(delay, 0, -1):
-                placeholder.write(f"Sẽ chuyển sang câu tiếp theo sau {i} giây...")
-                time.sleep(1)
+            with placeholder.container():
+                st.write(f"⏳ Đang chuyển sang câu tiếp theo...")
+                st.progress(100)
             
+            time.sleep(delay)
+            
+            # Chỉ tăng index nếu chưa phải câu cuối
             if st.session_state.current_q_index < total - 1:
                 st.session_state.current_q_index += 1
                 st.rerun()
             else:
                 st.balloons()
-                st.success("Đã hoàn thành bộ câu hỏi!")
+                st.success("Chúc mừng! Bạn đã hoàn thành bộ câu hỏi.")
 
 # --- MAIN ---
 def main():

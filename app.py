@@ -6,7 +6,7 @@ from PIL import Image, ImageOps
 
 # --- 1. CẤU HÌNH TRANG ---
 st.set_page_config(
-    page_title="GPLX Pro - Smart Color",
+    page_title="GPLX Pro - Auto Color",
     page_icon="🚗",
     layout="wide",
     initial_sidebar_state="collapsed"
@@ -107,7 +107,7 @@ st.markdown("""
         margin: 10px 0;
     }
 
-    /* --- RADIO BUTTONS (CƠ BẢN - MẶC ĐỊNH MÀU XANH DƯƠNG) --- */
+    /* --- RADIO BUTTONS (CƠ BẢN - MẶC ĐỊNH MÀU XANH DƯƠNG KHI MỚI BẤM) --- */
     div[data-testid="stRadio"] > label { display: none; }
     div[role="radiogroup"] { gap: 16px; display: flex; flex-direction: column; }
     div[data-testid="stRadio"] div[role="radiogroup"] > label {
@@ -119,7 +119,7 @@ st.markdown("""
     }
     div[data-testid="stRadio"] div[role="radiogroup"] > label:hover { border-color: #3b82f6; background: #eff6ff; }
     
-    /* Mặc định khi chọn (Chưa biết đúng sai) -> Màu xanh dương (Blue) */
+    /* Mặc định khi chọn (Chưa biết đúng sai - trạng thái chờ) -> Màu xanh dương */
     div[data-testid="stRadio"] div[role="radiogroup"] > label[data-checked="true"] {
         background-color: #eff6ff !important; 
         border: 3px solid #3b82f6 !important; /* Blue border */
@@ -135,8 +135,6 @@ st.markdown("""
     .stTabs [aria-selected="true"] { background-color: #eff6ff !important; border-color: #3b82f6 !important; color: #1d4ed8 !important; font-weight: 700; }
     
     div[data-testid="stButton"] button { width: 100%; border-radius: 12px; font-weight: 700; height: 3.5rem; font-size: 1.2rem !important; }
-    
-    /* Style cho ảnh */
     div[data-testid="stImage"] { display: flex; justify-content: center; margin: 15px 0; }
     div[data-testid="stImage"] img { border-radius: 12px; max-height: 400px; object-fit: contain; }
 
@@ -405,7 +403,7 @@ def render_tips_page():
             if img: st.image(img, use_container_width=True)
         st.write("---")
 
-# --- 8. GIAO DIỆN LUYỆN THI (EXAM - SỬA LỖI MÀU) ---
+# --- 8. GIAO DIỆN LUYỆN THI (ĐÃ SỬA CSS ĐỔI MÀU MẠNH HƠN) ---
 def render_exam_page():
     c_home, c_title = st.columns([1, 4])
     with c_home:
@@ -505,7 +503,7 @@ def render_exam_page():
 
     user_choice = st.radio("Lựa chọn:", q['options'], index=default_index, key=f"q_{q['id']}")
 
-    # --- XỬ LÝ KẾT QUẢ & ĐỔI MÀU (LOGIC MỚI) ---
+    # --- XỬ LÝ KẾT QUẢ & ĐỔI MÀU (LOGIC MỚI - MẠNH HƠN) ---
     if user_choice:
         clean_user = user_choice.strip()
         clean_correct = q['correct_answer'].strip()

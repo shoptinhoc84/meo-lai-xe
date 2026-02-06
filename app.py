@@ -6,7 +6,7 @@ from PIL import Image, ImageOps
 
 # --- 1. CẤU HÌNH TRANG ---
 st.set_page_config(
-    page_title="GPLX Pro - Giao Diện Mới 2026",
+    page_title="GPLX Pro - Full Mẹo 2026",
     page_icon="🚗",
     layout="wide",
     initial_sidebar_state="collapsed"
@@ -134,7 +134,7 @@ def render_home_page():
         if st.button("📝 Luyện Thi (B, C, D)", use_container_width=True, key="ot3"):
             st.session_state.license_type = "Ô tô (B1, B2, C...)"; st.session_state.page = "exam"; st.rerun()
 
-# --- 6. TRANG MẸO CẤP TỐC (CẢI TIẾN UI) ---
+# --- 6. TRANG MẸO CẤP TỐC (ĐÃ FIX LỖI CÚ PHÁP) ---
 def render_captoc_page():
     # Sidebar Navigation
     with st.sidebar:
@@ -145,19 +145,19 @@ def render_captoc_page():
 
     st.markdown(f'<div class="section-title">⚡ MẸO CẤP TỐC: {st.session_state.license_type}</div>', unsafe_allow_html=True)
     
-    # Cấu trúc dữ liệu Mẹo (Dễ dàng quản lý và hiển thị)
+    # Cấu trúc dữ liệu Mẹo (SỬ DỤNG TRIPLE QUOTES """ ĐỂ TRÁNH LỖI)
     tips_data = {
         "🔢 SỐ & TUỔI & ĐUA": [
             {
                 "title": "🏍️ Mẹo Đua Xe (Mới)",
                 "color": "#8b5cf6",
-                "content": "• Lấy bánh xe cuối cùng <b>TRỪ 1</b> ➡ Ra đáp án.<br>• <i>Ví dụ:</i> Xe ô tô (4 bánh): 4 - 1 = <b>3</b> (Chọn ý 3).",
+                "content": """• Lấy bánh xe cuối cùng <b>TRỪ 1</b> ➡ Ra đáp án.<br>• <i>Ví dụ:</i> Xe ô tô (4 bánh): 4 - 1 = <b>3</b> (Chọn ý 3).""",
                 "images": ["tip_duaxe"]
             },
             {
                 "title": "🎂 Mẹo Độ Tuổi",
                 "color": "#3b82f6",
-                "content": "👉 Nhìn 3 đáp án đầu, chọn số <span class="hl-red">LỚN NHẤT</span>.<br>Ví dụ: 18, 21, 24 ➡ Chọn <b>24</b>.",
+                "content": """👉 Nhìn 3 đáp án đầu, chọn số <span class="hl-red">LỚN NHẤT</span>.<br>Ví dụ: 18, 21, 24 ➡ Chọn <b>24</b>.""",
                 "images": ["tip_tuoi"]
             },
             {
@@ -175,7 +175,7 @@ def render_captoc_page():
                 "title": "🏎️ Tốc độ & Khoảng cách",
                 "color": "#f59e0b",
                 "content": """• Đường <b>ĐÔI</b> (Có giải phân cách): <span class="hl-blue">60 km/h</span>.<br>
-                              • Đường <b>2 CHIỀU</b> (Không giải phân cách): <span class="hl-blue">50 km/h</span>.<br>
+                              • Đường <b>2 CHIỀU</b> (Không giải phân cách): <span class="highlight-blue">50 km/h</span>.<br>
                               • <b>Khoảng cách:</b> Lấy V(max) <span class="hl-red">TRỪ 30</span> ➡ Ra đáp án.""",
                 "images": ["tip_tocdo"]
             }
@@ -217,7 +217,7 @@ def render_captoc_page():
             {
                 "title": "👮 Mẹo Quan Lớn - Quan Bé",
                 "color": "#10b981",
-                "content": "• Gặp câu hỏi có <b>2, 3 xe Quan</b> (Công an, Quân sự...):<br>• Ưu tiên chọn đáp án có từ <b>\"Cả\"</b>.",
+                "content": """• Gặp câu hỏi có <b>2, 3 xe Quan</b> (Công an, Quân sự...):<br>• Ưu tiên chọn đáp án có từ <b>"Cả"</b>.""",
                 "images": []
             },
             {

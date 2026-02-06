@@ -253,6 +253,20 @@ def render_captoc_page():
         ],
         "🚔 SA HÌNH & QUAN": [
             {
+                "title": "🚛 Mẹo Xe Tải & Mũi Tên Đỏ (Mới)",
+                "color": "#10b981", # Xanh lá
+                "content": """• <b>Mũi tên đỏ trên Xe tải:</b> Chỉ hướng số nào ➡ Chọn đáp án số đó.<br>&nbsp;&nbsp;<i>(Ví dụ: Hướng 1 ➡ Chọn ý 1).</i><br>
+                              • <b>Ngoại lệ:</b> Trừ 1 câu có biển tròn xanh "Hướng đi phải theo" ➡ <span class='hl-box hl-red'>Không áp dụng</span>.""",
+                "images": ["tip_xetai"]
+            },
+            {
+                "title": "🚫 Vi Phạm & Chấp Hành (Mẹo Xe Con)",
+                "color": "#ef4444",
+                "content": """• Câu hỏi có từ <b>"Vi phạm"</b> ➡ Chọn đáp án <b>BỎ</b> "Xe con" (Không có xe con).<br>
+                              • Câu hỏi có từ <b>"Chấp hành"</b> ➡ Chọn đáp án <b>CÓ</b> "Xe con".""",
+                "images": ["tip_sahinh"]
+            },
+            {
                 "title": "👮 Mẹo Quan Lớn - Quan Bé",
                 "color": "#10b981",
                 "content": """• Gặp câu hỏi có <b>2, 3 xe Quan</b> (Công an, Quân sự...):<br>• Ưu tiên chọn đáp án có từ <span class='hl-box hl-green'>"Cả"</span>.""",
@@ -273,7 +287,7 @@ def render_captoc_page():
     }
 
     # --- CHỨC NĂNG TÌM KIẾM ---
-    search_term = st.text_input("🔍 Tìm kiếm mẹo (Ví dụ: tuổi, tốc độ, cấm...)", "").lower()
+    search_term = st.text_input("🔍 Tìm kiếm mẹo (Ví dụ: tuổi, tốc độ, cấm, vi phạm...)", "").lower()
     
     if search_term:
         st.write(f"Kết quả tìm kiếm cho: **{search_term}**")

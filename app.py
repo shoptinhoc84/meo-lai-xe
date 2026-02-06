@@ -193,8 +193,8 @@ def render_captoc_page():
         <div class="tip-box" style="border-left-color: #f97316;">
             <div class="tip-title">⚙️ Mẹo Kỹ Thuật & Từ Khóa</div>
             <div class="tip-content">
-            • Cuối câu có từ <b>"Kéo"</b> ➡ Chọn ý <b>2</b> hoặc <b>3</b>.<br>
-            • Cuối câu có từ <b>"Móc"</b> ➡ Chọn ý <b>1</b> hoặc <b>2</b>.<br>
+            • Cuối câu có từ <b>"Kéo"</b> ➡ Chọn ý <b>2</b> và <b>3</b>.<br>
+            • Cuối câu có từ <b>"Móc"</b> ➡ Chọn ý <b>1</b> và <b>2</b>.<br>
             • <b>Lên cầu - Xuống hầm:</b> Về số thấp (số 1).
             </div>
         </div>

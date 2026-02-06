@@ -6,7 +6,7 @@ from PIL import Image, ImageOps
 
 # --- 1. CẤU HÌNH TRANG ---
 st.set_page_config(
-    page_title="GPLX Pro - Full Mẹo 2026",
+    page_title="GPLX Pro - Full Mẹo Đua Xe 2026",
     page_icon="🚗",
     layout="wide",
     initial_sidebar_state="collapsed"
@@ -135,12 +135,19 @@ def render_captoc_page():
     st.header(f"⚡ Mẹo Cấp Tốc: {st.session_state.license_type}")
     
     # Chia tab
-    tab1, tab2, tab3, tab4 = st.tabs(["🔢 SỐ & TUỔI", "🏎️ TỐC ĐỘ", "🛑 BIỂN BÁO, KT & LÀN", "🚔 SA HÌNH"])
+    tab1, tab2, tab3, tab4 = st.tabs(["🔢 SỐ, TUỔI & ĐUA", "🏎️ TỐC ĐỘ", "🛑 BIỂN BÁO, KT & LÀN", "🚔 SA HÌNH"])
     folders = ["images", "images_a1"]
 
-    # TAB 1: TUỔI - HẠNG
+    # TAB 1: TUỔI - HẠNG - ĐUA XE
     with tab1:
         st.markdown("""
+        <div class="tip-box" style="border-left-color: #8b5cf6;">
+            <div class="tip-title">🏍️ Mẹo Đua Xe (Mới)</div>
+            <div class="tip-content">
+            • Lấy bánh xe cuối cùng <b>TRỪ 1</b> ➡ Ra đáp án.<br>
+            • <i>Ví dụ:</i> Xe ô tô (4 bánh): 4 - 1 = <b>3</b> (Chọn ý 3).
+            </div>
+        </div>
         <div class="tip-box">
             <div class="tip-title">🎂 Mẹo Độ Tuổi</div>
             <div class="tip-content">👉 Nhìn 3 đáp án đầu, chọn số <span class="highlight-red">LỚN NHẤT</span>.<br>Ví dụ: 18, 21, 24 ➡ Chọn <b>24</b>.</div>
@@ -149,14 +156,13 @@ def render_captoc_page():
             <div class="tip-title">🆔 Mẹo Hạng Xe</div>
             <div class="tip-content">
             • Hỏi <b>"B1, C1, D1, D2"</b> ➡ Lấy số + 1 = Đáp án.<br>
-            &nbsp;&nbsp;<i>(Ví dụ: B1 ➡ 1+1=2)</i><br>
             • Hỏi <b>"A, B, C, D"</b> (không số) ➡ Chọn đáp án <b>cuối</b>.<br>
             • Hỏi <b>"BE, CE, DE"</b> ➡ Bỏ E, tìm đáp án có chữ cái <b>B, C, D</b>.<br>
             • <b>Niên hạn:</b> Xe tải 25 năm | Xe khách 20 năm.
             </div>
         </div>
         """, unsafe_allow_html=True)
-        imgs = load_multiple_images("tip_tuoi", folders) + load_multiple_images("tip_hang", folders)
+        imgs = load_multiple_images("tip_tuoi", folders) + load_multiple_images("tip_hang", folders) + load_multiple_images("tip_duaxe", folders)
         for img in imgs: st.image(img, use_container_width=True)
 
     # TAB 2: TỐC ĐỘ
@@ -174,9 +180,16 @@ def render_captoc_page():
         imgs = load_multiple_images("tip_tocdo", folders)
         for img in imgs: st.image(img, use_container_width=True)
 
-    # TAB 3: BIỂN BÁO - KỸ THUẬT - MẸO KÉO/MÓC
+    # TAB 3: BIỂN BÁO - KỸ THUẬT - LÀN - KÉO/MÓC
     with tab3:
         st.markdown("""
+        <div class="tip-box" style="border-left-color: #10b981;">
+            <div class="tip-title">🛣️ Mẹo Đi Đúng Làn (Cộng 1)</div>
+            <div class="tip-content">
+            • Câu hỏi có chữ <b>"làn đường 1"</b> (làn dòng 1) ➡ Ta <b>+1</b> ➡ Chọn ý <b>2</b>.<br>
+            • Câu hỏi có chữ <b>"làn đường 2"</b> (làn dòng 2) ➡ Ta <b>+1</b> ➡ Chọn ý <b>3</b>.
+            </div>
+        </div>
         <div class="tip-box" style="border-left-color: #ef4444;">
             <div class="tip-title">🛑 Mẹo Biển Báo Cấm & Được</div>
             <div class="tip-content">
@@ -193,8 +206,8 @@ def render_captoc_page():
         <div class="tip-box" style="border-left-color: #f97316;">
             <div class="tip-title">⚙️ Mẹo Kỹ Thuật & Từ Khóa</div>
             <div class="tip-content">
-            • Cuối câu có từ <b>"Kéo"</b> ➡ Chọn ý <b>2</b> và <b>3</b>.<br>
-            • Cuối câu có từ <b>"Móc"</b> ➡ Chọn ý <b>1</b> và <b>2</b>.<br>
+            • Cuối câu có từ <b>"Kéo"</b> ➡ Chọn ý <b>2</b> hoặc <b>3</b>.<br>
+            • Cuối câu có từ <b>"Móc"</b> ➡ Chọn ý <b>1</b> hoặc <b>2</b>.<br>
             • <b>Lên cầu - Xuống hầm:</b> Về số thấp (số 1).
             </div>
         </div>
@@ -204,13 +217,6 @@ def render_captoc_page():
             • 1 gạch (/) ➡ Cấm Đỗ ➡ Chọn <b>3</b>.<br>
             • 2 gạch (X) ➡ Cấm Dừng & Đỗ ➡ Chọn <b>4</b>.<br>
             • Cấm Máy kéo (không cấm Moóc). Cấm Moóc (cấm luôn Máy kéo).
-            </div>
-        </div>
-        <div class="tip-box" style="border-left-color: #10b981;">
-            <div class="tip-title">🛣️ Mẹo Đi Đúng Làn (Cộng 1)</div>
-            <div class="tip-content">
-            • Câu hỏi có chữ <b>"làn đường 1"</b> (làn dòng 1) ➡ Ta <b>+1</b> ➡ Chọn ý <b>2</b>.<br>
-            • Câu hỏi có chữ <b>"làn đường 2"</b> (làn dòng 2) ➡ Ta <b>+1</b> ➡ Chọn ý <b>3</b>.
             </div>
         </div>
         """, unsafe_allow_html=True)

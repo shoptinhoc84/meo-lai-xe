@@ -6,7 +6,7 @@ from PIL import Image, ImageOps
 
 # --- 1. CẤU HÌNH TRANG ---
 st.set_page_config(
-    page_title="GPLX Pro - Full Option 2026",
+    page_title="GPLX Pro - Chuẩn Mẹo 2026",
     page_icon="🚗",
     layout="wide",
     initial_sidebar_state="collapsed"
@@ -134,8 +134,8 @@ def render_captoc_page():
     if st.button("🏠 VỀ TRANG CHỦ"): st.session_state.page = "home"; st.rerun()
     st.header(f"⚡ Mẹo Cấp Tốc: {st.session_state.license_type}")
     
-    # Chia tab
-    tab1, tab2, tab3, tab4 = st.tabs(["🔢 SỐ & TUỔI", "🏎️ TỐC ĐỘ", "🛑 BIỂN BÁO & KT", "🚔 SA HÌNH & LÀN"])
+    # CHIA TAB - Đưa Làn vào Tab 3
+    tab1, tab2, tab3, tab4 = st.tabs(["🔢 SỐ & TUỔI", "🏎️ TỐC ĐỘ", "🛑 BIỂN BÁO, KT & LÀN", "🚔 SA HÌNH"])
     folders = ["images", "images_a1"]
 
     # TAB 1: TUỔI - HẠNG
@@ -171,7 +171,7 @@ def render_captoc_page():
         imgs = load_multiple_images("tip_tocdo", folders)
         for img in imgs: st.image(img, use_container_width=True)
 
-    # TAB 3: BIỂN BÁO - KỸ THUẬT - MẸO KÉO/MÓC
+    # TAB 3: BIỂN BÁO - KỸ THUẬT - LÀN
     with tab3:
         st.markdown("""
         <div class="tip-box" style="border-left-color: #ef4444;">
@@ -203,13 +203,6 @@ def render_captoc_page():
             • Cấm Máy kéo (không cấm Moóc). Cấm Moóc (cấm luôn Máy kéo).
             </div>
         </div>
-        """, unsafe_allow_html=True)
-        imgs = load_multiple_images("tip_bienbao", folders) + load_multiple_images("tip_cau_ham", folders) + load_multiple_images("tip_mooc", folders)
-        for img in imgs: st.image(img, use_container_width=True)
-
-    # TAB 4: SA HÌNH - ĐI ĐÚNG LÀN
-    with tab4:
-        st.markdown("""
         <div class="tip-box" style="border-left-color: #10b981;">
             <div class="tip-title">🛣️ Mẹo Đi Đúng Làn (Cộng 1)</div>
             <div class="tip-content">
@@ -217,6 +210,13 @@ def render_captoc_page():
             • Câu hỏi có chữ <b>"làn đường 2"</b> (làn dòng 2) ➡ Ta <b>+1</b> ➡ Chọn ý <b>3</b>.
             </div>
         </div>
+        """, unsafe_allow_html=True)
+        imgs = load_multiple_images("tip_bienbao", folders) + load_multiple_images("tip_cau_ham", folders) + load_multiple_images("tip_mooc", folders)
+        for img in imgs: st.image(img, use_container_width=True)
+
+    # TAB 4: SA HÌNH
+    with tab4:
+        st.markdown("""
         <div class="tip-box" style="border-left-color: #10b981;">
             <div class="tip-title">👮 Mẹo Sa Hình & CSGT</div>
             <div class="tip-content">
@@ -280,7 +280,6 @@ def render_exam_page():
     
     current_img = q.get('image')
     if current_img:
-        # Lọc bỏ ảnh mẹo nếu dính vào câu 1
         if not (st.session_state.current_q_index == 0 and ("tip" in str(current_img) or current_img == "1")):
             img = load_image_smart(current_img, ["images", "images_a1"])
             if img: st.image(img)

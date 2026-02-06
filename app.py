@@ -6,8 +6,8 @@ from PIL import Image, ImageOps
 
 # --- 1. CẤU HÌNH TRANG ---
 st.set_page_config(
-    page_title="GPLX Pro - Bản Full Option 2026",
-    page_icon="🛵",
+    page_title="GPLX Pro - Master 2026",
+    page_icon="🚗",
     layout="wide",
     initial_sidebar_state="collapsed"
 )
@@ -20,14 +20,14 @@ if 'license_type' not in st.session_state:
 if 'current_q_index' not in st.session_state:
     st.session_state.current_q_index = 0
 
-# --- 3. CSS TỔNG LỰC (FONT TO, MÀU ĐẬM, FIX LAYOUT) ---
+# --- 3. CSS GIAO DIỆN (FONT TO, CARD ĐẸP, MÀU SẮC CHUẨN) ---
 st.markdown("""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap');
     html, body, [class*="css"] { font-family: 'Inter', sans-serif; }
     .stApp { background-color: #f8fafc; }
     
-    /* FIX LỖI CHE TRANG CHỦ */
+    /* FIX LỖI CHE TIÊU ĐỀ */
     .block-container { 
         padding-top: 5rem !important; 
         padding-bottom: 6rem !important; 
@@ -44,41 +44,42 @@ st.markdown("""
         margin: 20px 0 15px 0; padding-bottom: 5px; border-bottom: 5px solid #3b82f6; display: inline-block;
     }
 
-    /* --- STYLE MẸO (CẤP TỐC & CHI TIẾT) --- */
+    /* --- STYLE MẸO CẤP TỐC (MỚI) --- */
     .tip-box {
         background: white; border-radius: 18px; padding: 25px; margin-bottom: 20px;
-        border-left: 12px solid #3b82f6; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.08);
+        border-left: 10px solid #2563eb; box-shadow: 0 5px 15px rgba(0,0,0,0.05);
     }
-    .tip-title { color: #1e293b; font-weight: 800; font-size: 1.8rem; margin-bottom: 15px; text-transform: uppercase; }
-    .tip-content { color: #334155; font-size: 1.5rem; line-height: 1.7; font-weight: 500; }
+    .tip-title { color: #1e293b; font-weight: 800; font-size: 1.6rem; margin-bottom: 15px; text-transform: uppercase; display: flex; align-items: center; gap: 10px; }
+    .tip-content { color: #334155; font-size: 1.4rem; line-height: 1.6; font-weight: 500; }
     
-    .highlight-red { color: #e11d48; font-weight: 800; background: #fff1f2; padding: 2px 8px; border-radius: 8px; }
-    .highlight-blue { color: #2563eb; font-weight: 800; background: #eff6ff; padding: 2px 8px; border-radius: 8px; }
+    /* Highlight màu sắc */
+    .hl-red { color: #dc2626; font-weight: 800; background: #fee2e2; padding: 2px 8px; border-radius: 6px; }
+    .hl-blue { color: #2563eb; font-weight: 800; background: #eff6ff; padding: 2px 8px; border-radius: 6px; }
+    .hl-green { color: #16a34a; font-weight: 800; background: #dcfce7; padding: 2px 8px; border-radius: 6px; }
 
-    /* RADIO BUTTONS (ĐÁP ÁN) */
+    /* RADIO BUTTONS */
     div[data-testid="stRadio"] div[role="radiogroup"] > label {
-        background: white; border: 2px solid #cbd5e1; padding: 25px !important;
-        border-radius: 18px; width: 100%; cursor: pointer; margin-bottom: 12px;
+        background: white; border: 2px solid #cbd5e1; padding: 20px !important;
+        border-radius: 15px; width: 100%; cursor: pointer; margin-bottom: 10px;
     }
     div[data-testid="stRadio"] div[role="radiogroup"] > label p {
-        font-size: 1.6rem !important; font-weight: 700 !important; color: #1e293b;
+        font-size: 1.5rem !important; font-weight: 600 !important; color: #1e293b;
     }
 
-    /* NÚT BẤM TO */
     div[data-testid="stButton"] button {
-        border-radius: 15px; font-weight: 800; height: 4.5rem; font-size: 1.4rem !important; transition: all 0.3s ease;
+        border-radius: 12px; font-weight: 800; height: 4.5rem; font-size: 1.3rem !important; transition: all 0.2s;
     }
 </style>
 """, unsafe_allow_html=True)
 
-# --- 4. HÀM HỖ TRỢ (DỮ LIỆU & ẢNH) ---
+# --- 4. HÀM HỖ TRỢ ---
 def load_json_file(filename):
     try:
         with open(filename, 'r', encoding='utf-8') as f: return json.load(f)
     except: return None
 
 def load_data_by_license(license_type):
-    """Tải dữ liệu MẸO CHI TIẾT (Mẹo cũ)"""
+    """Load mẹo chi tiết (cũ)"""
     is_oto = "Ô tô" in license_type
     target = ['data.json', 'data (6).json'] if is_oto else ['tips_a1.json', 'tips_a1 (1).json']
     for f in target:
@@ -87,12 +88,13 @@ def load_data_by_license(license_type):
     return []
 
 def load_multiple_images(prefix, folders):
-    """Tìm và hiển thị tất cả ảnh có chung tiền tố (VD: tip_sahinh_1, tip_sahinh_2...)"""
+    """Load nhiều ảnh cùng lúc (ví dụ: tip_sahinh_1, tip_sahinh_2...)"""
     images = []
+    # Quét tất cả file trong thư mục
     for folder in folders:
         if not os.path.exists(folder): continue
-        files = sorted(os.listdir(folder))
-        for f in files:
+        all_files = sorted(os.listdir(folder)) # Sắp xếp để hiện theo thứ tự 1, 2, 3...
+        for f in all_files:
             if f.startswith(prefix):
                 try:
                     img = ImageOps.exif_transpose(Image.open(os.path.join(folder, f)))
@@ -101,6 +103,7 @@ def load_multiple_images(prefix, folders):
     return images
 
 def load_image_smart(base_name, folders):
+    """Load 1 ảnh thông minh cho phần thi"""
     if not base_name or str(base_name).strip() == "": return None
     exts = ['', '.png', '.jpg', '.jpeg', '.PNG', '.JPG']
     clean_name = str(base_name).strip()
@@ -112,57 +115,131 @@ def load_image_smart(base_name, folders):
                 except: continue
     return None
 
-# --- 5. TRANG CHỦ (MỘT CHẠM) ---
+# --- 5. TRANG CHỦ ---
 def render_home_page():
-    st.markdown('<div class="hero-card"><h1>🚗 GPLX MASTER PRO 2026</h1><p style="font-size:1.4rem">Lựa chọn hạng bằng để vào học ngay lập tức</p></div>', unsafe_allow_html=True)
+    st.markdown('<div class="hero-card"><h1>🚗 GPLX MASTER PRO</h1><p style="font-size:1.4rem">Hệ thống ôn thi thông minh & Mẹo cấp tốc</p></div>', unsafe_allow_html=True)
     col_xm, col_ot = st.columns(2)
 
     with col_xm:
         st.markdown('<div class="section-title">🛵 XE MÁY (A1, A2)</div>', unsafe_allow_html=True)
-        if st.button("🚀 Mẹo Cấp Tốc Xe Máy", use_container_width=True, key="xm_cap"):
+        if st.button("🚀 Mẹo Cấp Tốc Xe Máy", use_container_width=True, key="xm_1"):
             st.session_state.license_type = "Xe máy (A1, A2)"; st.session_state.page = "captoc"; st.rerun()
-        if st.button("📖 Mẹo Chi Tiết Xe Máy", use_container_width=True, key="xm_chi"):
+        if st.button("📖 Mẹo Chi Tiết Xe Máy", use_container_width=True, key="xm_2"):
             st.session_state.license_type = "Xe máy (A1, A2)"; st.session_state.page = "tips"; st.rerun()
-        if st.button("📝 Luyện Thi Xe Máy", use_container_width=True, key="xm_thi"):
+        if st.button("📝 Luyện Thi Xe Máy", use_container_width=True, key="xm_3"):
             st.session_state.license_type = "Xe máy (A1, A2)"; st.session_state.page = "exam"; st.rerun()
 
     with col_ot:
         st.markdown('<div class="section-title">🚗 Ô TÔ (B1, B2, C)</div>', unsafe_allow_html=True)
-        if st.button("🚀 Mẹo Cấp Tốc Ô Tô", use_container_width=True, key="ot_cap"):
+        if st.button("🚀 Mẹo Cấp Tốc Ô Tô", use_container_width=True, key="ot_1"):
             st.session_state.license_type = "Ô tô (B1, B2, C...)"; st.session_state.page = "captoc"; st.rerun()
-        if st.button("📖 Mẹo Chi Tiết Ô Tô", use_container_width=True, key="ot_chi"):
+        if st.button("📖 Mẹo Chi Tiết Ô Tô", use_container_width=True, key="ot_2"):
             st.session_state.license_type = "Ô tô (B1, B2, C...)"; st.session_state.page = "tips"; st.rerun()
-        if st.button("📝 Luyện Thi Ô Tô", use_container_width=True, key="ot_thi"):
+        if st.button("📝 Luyện Thi Ô Tô", use_container_width=True, key="ot_3"):
             st.session_state.license_type = "Ô tô (B1, B2, C...)"; st.session_state.page = "exam"; st.rerun()
 
-# --- 6. TRANG MẸO CẤP TỐC (THEO FILE WORD) ---
+# --- 6. TRANG MẸO CẤP TỐC (NỘI DUNG TỪ FILE WORD) ---
 def render_captoc_page():
-    if st.button("🏠 VỀ TRANG CHỦ"): st.session_state.page = "home"; st.rerun()
+    if st.button("🏠 Về Trang Chủ"): st.session_state.page = "home"; st.rerun()
     st.header(f"⚡ Mẹo Cấp Tốc: {st.session_state.license_type}")
     
-    tab1, tab2, tab3 = st.tabs(["🔢 CON SỐ", "🏎️ TỐC ĐỘ", "🚔 SA HÌNH"])
+    # Chia thành 4 Tab logic theo sách
+    tab1, tab2, tab3, tab4 = st.tabs(["🔢 TUỔI & HẠNG", "🏎️ TỐC ĐỘ", "🛑 BIỂN BÁO", "🚔 SA HÌNH"])
     folders = ["images", "images_a1"]
 
+    # TAB 1: TUỔI & HẠNG XE
     with tab1:
-        st.markdown("""<div class="tip-box"><div class="tip-title">🎂 Mẹo Độ Tuổi</div><div class="tip-content">👉 Nhìn 3 đáp án đầu, chọn số <span class="highlight-red">LỚN NHẤT</span>.</div></div>""", unsafe_allow_html=True)
-        imgs = load_multiple_images("tip_tuoi", folders)
-        for i in imgs: st.image(i, use_container_width=True)
+        c1, c2 = st.columns([1.5, 1])
+        with c1:
+            st.markdown("""
+            <div class="tip-box">
+                <div class="tip-title">🎂 Mẹo Độ Tuổi</div>
+                <div class="tip-content">
+                    👉 Nhìn 3 đáp án đầu, tìm số <span class="hl-red">LỚN NHẤT</span>.<br>
+                    Ví dụ: 18, 21, 24 -> Chọn <b>24</b>.
+                </div>
+            </div>
+            <div class="tip-box" style="border-left-color: #8b5cf6;">
+                <div class="tip-title">🆔 Mẹo Hạng Xe</div>
+                <div class="tip-content">
+                    • Hỏi <b>FE</b>: Chọn ý <b>1</b> (Em 1)<br>
+                    • Hỏi <b>FC</b>: Chọn ý <b>2</b> (Chị 2)<br>
+                    • <b>Niên hạn:</b> Xe tải <span class="hl-blue">25 năm</span>, Xe khách <span class="hl-blue">20 năm</span>.
+                </div>
+            </div>
+            """, unsafe_allow_html=True)
+        with c2:
+            # Load tất cả ảnh có tên bắt đầu bằng tip_tuoi... và tip_hang...
+            imgs = load_multiple_images("tip_tuoi", folders) + load_multiple_images("tip_hang", folders)
+            for img in imgs: st.image(img, use_container_width=True)
 
+    # TAB 2: TỐC ĐỘ & KHOẢNG CÁCH
     with tab2:
-        st.markdown("""<div class="tip-box" style="border-left-color: #f59e0b;"><div class="tip-title">🏎️ Tốc độ & Khoảng cách</div><div class="tip-content">• Đường ĐÔI: <span class="highlight-blue">60 km/h</span> | Đường 2 CHIỀU: <span class="highlight-blue">50 km/h</span><br>• Mẹo Trừ 30: V(max) - 30 = Khoảng cách an toàn.</div></div>""", unsafe_allow_html=True)
-        imgs = load_multiple_images("tip_tocdo", folders)
-        for i in imgs: st.image(i, use_container_width=True)
+        c1, c2 = st.columns([1.5, 1])
+        with c1:
+            st.markdown("""
+            <div class="tip-box" style="border-left-color: #f59e0b;">
+                <div class="tip-title">🏎️ Tốc Độ Khu Dân Cư</div>
+                <div class="tip-content">
+                    • Có giải phân cách (Đường đôi): <span class="hl-blue">60 km/h</span><br>
+                    • Không có giải phân cách (2 chiều): <span class="hl-blue">50 km/h</span>
+                </div>
+            </div>
+            <div class="tip-box" style="border-left-color: #f59e0b;">
+                <div class="tip-title">📏 Khoảng Cách (Trừ 30)</div>
+                <div class="tip-content">
+                    Lấy tốc độ lớn nhất <span class="hl-red">TRỪ ĐI 30</span> -> Ra đáp án gần đúng nhất.<br>
+                    <i>Ví dụ: 80-100km/h -> 100 - 30 = 70m.</i>
+                </div>
+            </div>
+            """, unsafe_allow_html=True)
+        with c2:
+            imgs = load_multiple_images("tip_tocdo", folders)
+            for img in imgs: st.image(img, use_container_width=True)
 
+    # TAB 3: BIỂN BÁO
     with tab3:
-        st.markdown("""<div class="tip-box" style="border-left-color: #ef4444;"><div class="tip-title">👮 Mẹo Sa Hình</div><div class="tip-content">Thấy CSGT giơ tay chọn ý <span class="highlight-red">3</span>.<br>Thứ tự: Hỏa > Sự > Thương > Công.</div></div>""", unsafe_allow_html=True)
-        imgs = load_multiple_images("tip_sahinh", folders)
-        for i in imgs: st.image(i, use_container_width=True)
+        st.markdown("""
+        <div class="tip-box" style="border-left-color: #ef4444;">
+            <div class="tip-title">🛑 Mẹo Biển Báo Cấm & Dừng Đỗ</div>
+            <div class="tip-content">
+                • <b>Cấm:</b> Cấm nhỏ thì cấm lớn (Cấm xe con -> Cấm xe tải).<br>
+                • <b>Dừng / Đỗ:</b><br>
+                &nbsp;&nbsp;+ 1 vạch chéo (/): Cấm đỗ -> Chọn ý <span class="hl-red">3</span><br>
+                &nbsp;&nbsp;+ 2 vạch chéo (X): Cấm dừng đỗ -> Chọn ý <span class="hl-red">4</span>
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
+        imgs = load_multiple_images("tip_bienbao", folders)
+        for img in imgs: st.image(img, use_container_width=True)
 
-# --- 7. TRANG MẸO CHI TIẾT (MẸO CŨ TỪ JSON) ---
+    # TAB 4: SA HÌNH
+    with tab4:
+        st.markdown("""
+        <div class="tip-box" style="border-left-color: #10b981;">
+            <div class="tip-title">👮 Mẹo Sa Hình & CSGT</div>
+            <div class="tip-content">
+                • Thấy hình <b>CSGT</b> giơ tay: Luôn chọn đáp án <span class="hl-red">3</span>.<br>
+                • <b>Xe tải:</b> Xe tải đi thẳng hướng nào chọn đáp án đó (Trừ biển xanh).<br>
+                • <b>Thứ tự ưu tiên:</b> Hỏa > Sự > Thương > Công.
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
+        # Load tất cả ảnh sa hình (tip_sahinh_1, tip_sahinh_2...)
+        imgs = load_multiple_images("tip_sahinh", folders)
+        if imgs:
+            # Hiển thị lưới ảnh (2 ảnh mỗi hàng)
+            cols = st.columns(2)
+            for i, img in enumerate(imgs):
+                with cols[i % 2]:
+                    st.image(img, caption=f"Hình minh họa {i+1}", use_container_width=True)
+        else:
+            st.info("Chưa có ảnh. Hãy đặt tên: tip_sahinh_1.jpg, tip_sahinh_2.jpg...")
+
+# --- 7. TRANG MẸO CHI TIẾT (JSON CŨ) ---
 def render_tips_page():
-    if st.button("🏠 VỀ TRANG CHỦ"): st.session_state.page = "home"; st.rerun()
-    st.markdown(f"## 📖 Mẹo Chi Tiết (Bản cũ): {st.session_state.license_type}")
-    
+    if st.button("🏠 Về Trang Chủ"): st.session_state.page = "home"; st.rerun()
+    st.markdown(f"## 📖 Mẹo Chi Tiết: {st.session_state.license_type}")
     data = load_data_by_license(st.session_state.license_type)
     if not data: st.warning("Chưa có dữ liệu mẹo cũ."); return
     
@@ -171,10 +248,7 @@ def render_tips_page():
     items = data if selected_cat == "Tất cả" else [d for d in data if d.get('category') == selected_cat]
     
     for tip in items:
-        st.markdown(f"""
-        <div class="tip-box" style="border-left-color: #8b5cf6;">
-            <div class="tip-title">📌 {tip.get('title', 'Mẹo')}</div>
-        """, unsafe_allow_html=True)
+        st.markdown(f'<div class="tip-box" style="border-left-color: #db2777;"><div class="tip-title">📌 {tip.get("title", "Mẹo")}</div>', unsafe_allow_html=True)
         for line in tip.get('content', []):
             st.markdown(f'<div class="tip-content">• {line}</div>', unsafe_allow_html=True)
         st.markdown('</div>', unsafe_allow_html=True)
@@ -182,14 +256,14 @@ def render_tips_page():
             img = load_image_smart(tip['image'], ["images", "images_a1"])
             if img: st.image(img, use_container_width=True)
 
-# --- 8. TRANG LUYỆN THI (FIX AUTO & ẢNH) ---
+# --- 8. TRANG LUYỆN THI (AUTO CHẠY LUÔN & FIX ẢNH) ---
 def render_exam_page():
-    if st.button("🏠 VỀ TRANG CHỦ"): st.session_state.page = "home"; st.rerun()
+    if st.button("🏠 Về Trang Chủ"): st.session_state.page = "home"; st.rerun()
     all_qs = load_json_file('dulieu_600_cau.json')
-    if not all_qs: st.error("Lỗi dữ liệu!"); return
+    if not all_qs: st.error("Thiếu dữ liệu!"); return
     total = len(all_qs)
 
-    # ĐIỀU HƯỚNG
+    # ĐIỀU HƯỚNG TRÊN
     st.write("---")
     c1, c2, c3 = st.columns([1, 1, 1])
     with c1:
@@ -200,18 +274,25 @@ def render_exam_page():
     with c3:
         if st.button("Tiếp theo ➡️"): st.session_state.current_q_index = min(total - 1, st.session_state.current_q_index + 1); st.rerun()
 
-    auto_mode = st.toggle("🚀 CHẾ ĐỘ AUTO (Tự chọn đúng)", key="auto")
-    delay = st.slider("Giây chờ:", 1, 5, 2)
+    auto_mode = st.toggle("🚀 CHẾ ĐỘ AUTO (Chạy liên tục - Tự chọn đúng)", key="auto")
+    delay = st.slider("Giây chờ qua câu:", 1, 5, 2)
 
     q = all_qs[st.session_state.current_q_index]
     st.subheader(f"Câu {st.session_state.current_q_index + 1} / {total}")
     st.info(f"**{q['question']}**")
     
-    # Fix ảnh câu 1
+    # Fix dính ảnh câu 1 (Chỉ hiện ảnh nếu không phải là ảnh mẹo)
     current_img = q.get('image')
-    if current_img and not (st.session_state.current_q_index == 0 and "tip" in str(current_img)):
-        img = load_image_smart(current_img, ["images", "images_a1"])
-        if img: st.image(img)
+    if current_img:
+        # Nếu là câu 1, kiểm tra kỹ hơn
+        if st.session_state.current_q_index == 0:
+             # Nếu tên ảnh là "1" hoặc chứa chữ "tip" thì bỏ qua
+             if current_img != "1" and "tip" not in str(current_img):
+                 img = load_image_smart(current_img, ["images", "images_a1"])
+                 if img: st.image(img)
+        else:
+             img = load_image_smart(current_img, ["images", "images_a1"])
+             if img: st.image(img)
 
     correct_ans = q['correct_answer'].strip()
     options = q['options']

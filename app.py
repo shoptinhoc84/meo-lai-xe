@@ -6,7 +6,7 @@ from PIL import Image, ImageOps
 
 # --- 1. CẤU HÌNH TRANG ---
 st.set_page_config(
-    page_title="GPLX Pro - Full Mẹo Đua Xe 2026",
+    page_title="GPLX Pro - Full Mẹo 2026",
     page_icon="🚗",
     layout="wide",
     initial_sidebar_state="collapsed"
@@ -108,7 +108,7 @@ def load_image_smart(base_name, folders):
 
 # --- 5. TRANG CHỦ ---
 def render_home_page():
-    st.markdown('<div class="hero-card"><h1>🚗 GPLX SHOPTINHOC</h1><p style="font-size:1.4rem">Ôn thi cấp tốc - Đậu ngay lần đầu</p></div>', unsafe_allow_html=True)
+    st.markdown('<div class="hero-card"><h1>🚗 GPLX MASTER PRO</h1><p style="font-size:1.4rem">Ôn thi cấp tốc - Đậu ngay lần đầu</p></div>', unsafe_allow_html=True)
     col_xm, col_ot = st.columns(2)
 
     with col_xm:
@@ -135,7 +135,7 @@ def render_captoc_page():
     st.header(f"⚡ Mẹo Cấp Tốc: {st.session_state.license_type}")
     
     # Chia tab
-    tab1, tab2, tab3, tab4 = st.tabs(["🔢 SỐ, TUỔI & ĐUA", "🏎️ TỐC ĐỘ", "🛑 BIỂN BÁO, KT & LÀN", "🚔 SA HÌNH"])
+    tab1, tab2, tab3, tab4 = st.tabs(["🔢 SỐ, TUỔI & ĐUA", "🏎️ TỐC ĐỘ", "🛑 BIỂN BÁO, KT & LÀN", "🚔 SA HÌNH & NHƯỜNG"])
     folders = ["images", "images_a1"]
 
     # TAB 1: TUỔI - HẠNG - ĐUA XE
@@ -183,6 +183,15 @@ def render_captoc_page():
     # TAB 3: BIỂN BÁO - KỸ THUẬT - LÀN - KÉO/MÓC
     with tab3:
         st.markdown("""
+        <div class="tip-box" style="border-left-color: #f97316;">
+            <div class="tip-title">⚙️ Mẹo Kỹ Thuật & Từ Khóa</div>
+            <div class="tip-content">
+            • Câu hỏi có từ <b>"số tự động"</b> ➡ Luôn chọn ý <span class="highlight-red">1</span>.<br>
+            • Cuối câu có từ <b>"Kéo"</b> ➡ Chọn ý <b>2</b> hoặc <b>3</b>.<br>
+            • Cuối câu có từ <b>"Móc"</b> ➡ Chọn ý <b>1</b> hoặc <b>2</b>.<br>
+            • <b>Lên cầu - Xuống hầm:</b> Về số thấp (số 1).
+            </div>
+        </div>
         <div class="tip-box" style="border-left-color: #10b981;">
             <div class="tip-title">🛣️ Mẹo Đi Đúng Làn (Cộng 1)</div>
             <div class="tip-content">
@@ -203,14 +212,6 @@ def render_captoc_page():
             • Có từ <b>"Cấm"</b> ➡ Chọn ý <b>1</b>. | Còn lại ➡ Chọn ý <b>2</b>.
             </div>
         </div>
-        <div class="tip-box" style="border-left-color: #f97316;">
-            <div class="tip-title">⚙️ Mẹo Kỹ Thuật & Từ Khóa</div>
-            <div class="tip-content">
-            • Cuối câu có từ <b>"Kéo"</b> ➡ Chọn ý <b>2</b> hoặc <b>3</b>.<br>
-            • Cuối câu có từ <b>"Móc"</b> ➡ Chọn ý <b>1</b> hoặc <b>2</b>.<br>
-            • <b>Lên cầu - Xuống hầm:</b> Về số thấp (số 1).
-            </div>
-        </div>
         <div class="tip-box" style="border-left-color: #ef4444;">
             <div class="tip-title">🛑 Dừng Đỗ & Cấm Moóc</div>
             <div class="tip-content">
@@ -227,8 +228,10 @@ def render_captoc_page():
     with tab4:
         st.markdown("""
         <div class="tip-box" style="border-left-color: #10b981;">
-            <div class="tip-title">👮 Mẹo Sa Hình & CSGT</div>
+            <div class="tip-title">👮 Mẹo Sa Hình & Nhường Đường</div>
             <div class="tip-content">
+            • <b>Mẹo Nhường:</b> Thứ tự ưu tiên chọn đáp án: <b>1 Khách ➡ 2 Bạn ➡ 3 Con</b>.<br>
+            &nbsp;&nbsp;<i>(Thần chú: Khách - Bạn - Con)</i><br>
             • <b>CSGT dang 2 tay</b> (đứng trên bục): Chọn ý <span class="highlight-red">4</span>.<br>
             • <b>CSGT giơ tay</b> (hoặc còn lại): Chọn ý <span class="highlight-red">3</span>.<br>
             • <b>Xe Mô tô:</b> Đường thẳng chọn <b>2</b>, đường nằm ngang chọn <b>3</b>.<br>

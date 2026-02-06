@@ -16,11 +16,11 @@ st.set_page_config(
 if 'page' not in st.session_state:
     st.session_state.page = "home"
 if 'license_type' not in st.session_state:
-    st.session_state.license_type = "Xe máy (A1, A2)" # Mặc định
+    st.session_state.license_type = "Xe máy (A1, A2)"
 if 'current_q_index' not in st.session_state:
     st.session_state.current_q_index = 0
 
-# --- 3. CSS GIAO DIỆN (ĐẸP - MƯỢT - HIỆN ĐẠI) ---
+# --- 3. CSS GIAO DIỆN ---
 st.markdown("""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap');
@@ -83,7 +83,6 @@ def load_json_file(filename):
     except: return None
 
 def load_data_by_license(license_type):
-    # Hàm này dùng cho phần MẸO
     is_oto = "Ô tô" in license_type
     target = ['data.json', 'data (6).json'] if is_oto else ['tips_a1.json', 'tips_a1 (1).json']
     for f in target:
@@ -319,23 +318,26 @@ def render_tips_page():
                 img = load_image_smart(tip['image'], ["images", "images_a1"])
                 if img: st.image(img)
 
-# --- 8. TRANG LUYỆN THI (AUTO - TÌM KIẾM - ĐÚNG DATA) ---
+# --- 8. TRANG LUYỆN THI (ĐÃ FIX LỖI STREAMLITVALUEABOVEMAXERROR) ---
 def render_exam_page():
-    # --- LOGIC CHỌN FILE DỮ LIỆU ---
-    # Nếu là Xe máy thì tải dulieu_xe_may.json, ngược lại tải 600 câu
+    # --- CHỌN FILE DỮ LIỆU ---
     if "Xe máy" in st.session_state.license_type:
         data_file = 'dulieu_xe_may.json'
-        # Kiểm tra file có tồn tại không
+        # Nếu chưa có file xe máy thì báo lỗi nhẹ để user biết
         if not os.path.exists(data_file):
-            st.error(f"⚠️ Chưa tìm thấy file '{data_file}'. Hãy tạo file này theo mẫu đã cung cấp.")
-            if st.button("🏠 Về Trang Chủ"): st.session_state.page = "home"; st.rerun()
-            return
+            st.warning(f"⚠️ Đang sử dụng dữ liệu Ô tô (do chưa có file '{data_file}'). Hãy tạo file này để thi chuẩn hơn.")
+            data_file = 'dulieu_600_cau.json'
     else:
         data_file = 'dulieu_600_cau.json'
 
     all_qs = load_json_file(data_file)
     if not all_qs: st.error("Lỗi đọc dữ liệu!"); return
     total = len(all_qs)
+
+    # --- QUAN TRỌNG: FIX LỖI KHI CHUYỂN TỪ BỘ 600 -> 250 CÂU ---
+    # Nếu câu hiện tại lớn hơn tổng số câu của bộ đề mới -> Reset về 0
+    if st.session_state.current_q_index >= total:
+        st.session_state.current_q_index = 0
 
     # --- SIDEBAR (TÌM KIẾM & AUTO) ---
     with st.sidebar:
@@ -389,18 +391,18 @@ def render_exam_page():
     
     current_img = q.get('image')
     if current_img:
-        # Lọc bỏ ảnh mẹo nếu dính vào câu 1
         if not (st.session_state.current_q_index == 0 and ("tip" in str(current_img) or current_img == "1")):
             img = load_image_smart(current_img, ["images", "images_a1"])
             if img: st.image(img)
 
     correct_ans = q['correct_answer'].strip()
     options = q['options']
-    # Tìm index đáp án đúng
+    
+    # Tìm index đáp án đúng (xử lý an toàn nếu dữ liệu lỗi)
     try:
         correct_idx = [i for i, opt in enumerate(options) if opt.strip() == correct_ans][0]
     except:
-        correct_idx = None # Phòng trường hợp dữ liệu lỗi
+        correct_idx = None
 
     user_choice = st.radio("Chọn đáp án:", options, index=correct_idx if auto_mode else None, key=f"r_{st.session_state.current_q_index}")
 

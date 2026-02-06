@@ -248,12 +248,12 @@ def render_captoc_page():
         <div class="tip-box" style="border-left-color: #10b981;">
             <div class="tip-title">👮 Mẹo Sa Hình & Nhường Đường</div>
             <div class="tip-content">
-            • <b>Mẹo Nhường:</b> Thứ tự ưu tiên chọn đáp án: <b>1 Khách ➡ 2 Bạn ➡ 3 Con</b>.<br>
+            • <b>Câu hỏi có từ Nhường đường:</b> Thứ tự ưu tiên chọn đáp án: <b>1 Khách ➡ 2 Bạn ➡ 3 Con</b>.<br>
             &nbsp;&nbsp;<i>(Thần chú: Khách - Bạn - Con)</i><br>
             • <b>CSGT dang 2 tay</b> (đứng trên bục): Chọn ý <span class="highlight-red">4</span>.<br>
             • <b>CSGT giơ tay</b> (hoặc còn lại): Chọn ý <span class="highlight-red">3</span>.<br>
             • <b>Xe Mô tô:</b> Đường thẳng chọn <b>2</b>, đường nằm ngang chọn <b>3</b>.<br>
-            • <b>Áo xanh/đỏ:</b> Xe gắn máy áo xanh chọn <b>1</b>, Ô tô áo đỏ chọn <b>3</b>.<br>
+            • <b>Áo xanh/đỏ:</b> Xe gắn máy áo xanh chọn <b>1</b>,xe Mô tô áo đỏ chọn <b>3</b>.<br>
             • <b>Quy tắc 1-1-2-4:</b> Nhất chớm - Nhì ưu - Tam đường - Tứ hướng.
             </div>
         </div>

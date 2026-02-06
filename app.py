@@ -20,7 +20,7 @@ if 'license_type' not in st.session_state:
 if 'current_q_index' not in st.session_state:
     st.session_state.current_q_index = 0
 
-# --- 3. CSS GIAO DIỆN ---
+# --- 3. CSS GIAO DIỆN (ĐẸP - MƯỢT - HIỆN ĐẠI) ---
 st.markdown("""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap');
@@ -34,6 +34,7 @@ st.markdown("""
         padding-top: 2rem !important; padding-bottom: 5rem !important; max-width: 1100px;
     }
 
+    /* CARD TRANG CHỦ */
     .hero-card {
         background: linear-gradient(135deg, #2563eb 0%, #4f46e5 100%);
         padding: 40px; border-radius: 24px; 
@@ -43,17 +44,24 @@ st.markdown("""
     .hero-title { font-size: 2.5rem; font-weight: 800; letter-spacing: -1px; margin-bottom: 10px; }
     .hero-sub { font-size: 1.2rem; font-weight: 500; opacity: 0.9; }
 
-    /* CARD MẸO */
+    /* CARD MẸO (TIP BOX) */
     .tip-card {
-        background: white; padding: 20px; border-radius: 16px;
-        border-left-width: 6px; border-left-style: solid;
-        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05); margin-bottom: 15px;
+        background: white; 
+        padding: 20px; 
+        border-radius: 16px;
+        border-left-width: 6px; 
+        border-left-style: solid;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+        margin-bottom: 15px;
         transition: transform 0.2s ease, box-shadow 0.2s ease;
     }
-    .tip-card:hover { transform: translateY(-3px); box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); }
+    .tip-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+    }
     .tip-body { font-size: 1.15rem; line-height: 1.7; color: #475569; }
 
-    /* Highlight */
+    /* Highlight Text */
     .hl-box { padding: 2px 8px; border-radius: 6px; font-weight: 700; font-size: 0.9em; }
     .hl-red { color: #dc2626; background: #fef2f2; border: 1px solid #fecaca; }
     .hl-blue { color: #2563eb; background: #eff6ff; border: 1px solid #bfdbfe; }
@@ -61,34 +69,80 @@ st.markdown("""
     
     div[data-testid="stButton"] button {
         border-radius: 12px; font-weight: 700; height: 3.5rem; 
-        border: none; box-shadow: 0 2px 5px rgba(0,0,0,0.05); transition: all 0.2s;
+        border: none; box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        transition: all 0.2s;
     }
-    div[data-testid="stButton"] button:hover { transform: scale(1.02); box-shadow: 0 5px 10px rgba(0,0,0,0.1); }
+    div[data-testid="stButton"] button:hover {
+        transform: scale(1.02); box-shadow: 0 5px 10px rgba(0,0,0,0.1);
+    }
 
-    div[data-testid="stNumberInput"] input { font-weight: 800; font-size: 1.2rem; text-align: center; }
+    div[data-testid="stNumberInput"] input {
+        font-weight: 800; font-size: 1.2rem; text-align: center;
+    }
 
     div[data-testid="stRadio"] div[role="radiogroup"] > label {
         background: white; border: 1px solid #cbd5e1; padding: 15px !important;
         border-radius: 12px; margin-bottom: 8px; transition: all 0.2s;
     }
-    div[data-testid="stRadio"] div[role="radiogroup"] > label:hover { border-color: #2563eb; background: #f8fafc; }
-    div[data-testid="stRadio"] div[role="radiogroup"] > label p { font-size: 1.3rem !important; font-weight: 600 !important; color: #1e293b; }
+    div[data-testid="stRadio"] div[role="radiogroup"] > label:hover {
+        border-color: #2563eb; background: #f8fafc;
+    }
+    div[data-testid="stRadio"] div[role="radiogroup"] > label p {
+        font-size: 1.3rem !important; font-weight: 600 !important; color: #1e293b;
+    }
 </style>
 """, unsafe_allow_html=True)
 
-# --- 4. HÀM HỖ TRỢ ---
+# --- 4. HÀM HỖ TRỢ XỬ LÝ DỮ LIỆU THÔNG MINH ---
 def load_json_file(filename):
     try:
         with open(filename, 'r', encoding='utf-8') as f: return json.load(f)
     except: return None
 
 def load_data_by_license(license_type):
+    # Hàm này dùng cho phần MẸO
     is_oto = "Ô tô" in license_type
     target = ['data.json', 'data (6).json'] if is_oto else ['tips_a1.json', 'tips_a1 (1).json']
     for f in target:
         d = load_json_file(f)
         if d: return d
     return []
+
+def load_and_process_data(filename):
+    """
+    Hàm này tự động phát hiện cấu trúc file JSON (List phẳng hay Dict phân cấp)
+    và chuyển đổi về dạng List chuẩn cho ứng dụng chạy.
+    """
+    raw_data = load_json_file(filename)
+    if not raw_data: return []
+
+    questions = []
+    
+    # TRƯỜNG HỢP 1: Dữ liệu Xe máy mới (Dạng Dictionary có 'sections')
+    if isinstance(raw_data, dict) and "sections" in raw_data:
+        for section in raw_data["sections"]:
+            for q in section.get("questions", []):
+                # Chuẩn hóa dữ liệu về dạng app cần
+                opts = q.get("choices", [])
+                correct_idx = q.get("correct", 0) # Index (thường là 1, 2, 3...)
+                
+                # Tìm chuỗi đáp án đúng từ index
+                correct_ans_str = ""
+                if isinstance(correct_idx, int) and 1 <= correct_idx <= len(opts):
+                    correct_ans_str = opts[correct_idx - 1]
+                
+                questions.append({
+                    "question": q.get("question", ""),
+                    "options": opts,
+                    "correct_answer": correct_ans_str,
+                    "image": "" # Tạm thời để trống nếu file json chưa có link ảnh
+                })
+    
+    # TRƯỜNG HỢP 2: Dữ liệu Ô tô cũ (Dạng List phẳng)
+    elif isinstance(raw_data, list):
+        questions = raw_data
+        
+    return questions
 
 def load_multiple_images(prefix, folders):
     images = []
@@ -131,7 +185,7 @@ def render_home_page():
             st.session_state.license_type = "Xe máy (A1, A2)"; st.session_state.page = "captoc"; st.rerun()
         if st.button("📖 Mẹo Chi Tiết", use_container_width=True, key="xm2"):
             st.session_state.license_type = "Xe máy (A1, A2)"; st.session_state.page = "tips"; st.rerun()
-        if st.button("📝 Thi Thử (250 câu)", use_container_width=True, key="xm3"):
+        if st.button("📝 Thi Thử Xe Máy", use_container_width=True, key="xm3"):
             st.session_state.license_type = "Xe máy (A1, A2)"; st.session_state.page = "exam"; st.rerun()
 
     with col_ot:
@@ -140,7 +194,7 @@ def render_home_page():
             st.session_state.license_type = "Ô tô (B1, B2, C...)"; st.session_state.page = "captoc"; st.rerun()
         if st.button("📖 Mẹo Chi Tiết", use_container_width=True, key="ot2"):
             st.session_state.license_type = "Ô tô (B1, B2, C...)"; st.session_state.page = "tips"; st.rerun()
-        if st.button("📝 Thi Thử (600 câu)", use_container_width=True, key="ot3"):
+        if st.button("📝 Thi Thử Ô Tô", use_container_width=True, key="ot3"):
             st.session_state.license_type = "Ô tô (B1, B2, C...)"; st.session_state.page = "exam"; st.rerun()
 
 # --- 6. TRANG MẸO CẤP TỐC ---
@@ -318,28 +372,31 @@ def render_tips_page():
                 img = load_image_smart(tip['image'], ["images", "images_a1"])
                 if img: st.image(img)
 
-# --- 8. TRANG LUYỆN THI (ĐÃ FIX LỖI STREAMLITVALUEABOVEMAXERROR) ---
+# --- 8. TRANG LUYỆN THI (ĐÃ FIX LỖI JSON) ---
 def render_exam_page():
     # --- CHỌN FILE DỮ LIỆU ---
     if "Xe máy" in st.session_state.license_type:
         data_file = 'dulieu_xe_may.json'
-        # Nếu chưa có file xe máy thì báo lỗi nhẹ để user biết
         if not os.path.exists(data_file):
-            st.warning(f"⚠️ Đang sử dụng dữ liệu Ô tô (do chưa có file '{data_file}'). Hãy tạo file này để thi chuẩn hơn.")
+            st.warning(f"⚠️ Chưa có file xe máy chuẩn. Đang dùng dữ liệu Ô tô tạm.")
             data_file = 'dulieu_600_cau.json'
     else:
         data_file = 'dulieu_600_cau.json'
 
-    all_qs = load_json_file(data_file)
-    if not all_qs: st.error("Lỗi đọc dữ liệu!"); return
+    # --- SỬ DỤNG HÀM XỬ LÝ MỚI ---
+    all_qs = load_and_process_data(data_file)
+    
+    if not all_qs: 
+        st.error(f"Lỗi: Không đọc được dữ liệu từ file {data_file} hoặc file rỗng.")
+        return
+        
     total = len(all_qs)
 
-    # --- QUAN TRỌNG: FIX LỖI KHI CHUYỂN TỪ BỘ 600 -> 250 CÂU ---
-    # Nếu câu hiện tại lớn hơn tổng số câu của bộ đề mới -> Reset về 0
+    # --- FIX LỖI INDEX KHI CHUYỂN BỘ ĐỀ ---
     if st.session_state.current_q_index >= total:
         st.session_state.current_q_index = 0
 
-    # --- SIDEBAR (TÌM KIẾM & AUTO) ---
+    # --- SIDEBAR ---
     with st.sidebar:
         if st.button("🏠 Về Trang Chủ", use_container_width=True):
             st.session_state.page = "home"; st.rerun()
@@ -361,13 +418,12 @@ def render_exam_page():
             else:
                 st.warning("Không tìm thấy.")
 
-    # --- THANH ĐIỀU HƯỚNG CHÍNH ---
+    # --- THANH ĐIỀU HƯỚNG ---
     c1, c2, c3 = st.columns([1, 2, 1])
     with c1:
         if st.button("⬅️ Trước", use_container_width=True): 
             st.session_state.current_q_index = max(0, st.session_state.current_q_index - 1); st.rerun()
     with c2:
-        # Ô nhập số câu
         new_index = st.number_input(
             "Câu số:", 
             min_value=1, max_value=total, 
@@ -398,7 +454,6 @@ def render_exam_page():
     correct_ans = q['correct_answer'].strip()
     options = q['options']
     
-    # Tìm index đáp án đúng (xử lý an toàn nếu dữ liệu lỗi)
     try:
         correct_idx = [i for i, opt in enumerate(options) if opt.strip() == correct_ans][0]
     except:

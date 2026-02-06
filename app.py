@@ -129,7 +129,7 @@ def render_home_page():
         if st.button("📝 Luyện Thi Ô Tô", use_container_width=True, key="ot_exam"):
             st.session_state.license_type = "Ô tô (B1, B2, C...)"; st.session_state.page = "exam"; st.rerun()
 
-# --- 6. TRANG MẸO CẤP TỐC (CẬP NHẬT FULL) ---
+# --- 6. TRANG MẸO CẤP TỐC (ĐÃ CHỈNH SỬA) ---
 def render_captoc_page():
     if st.button("🏠 VỀ TRANG CHỦ"): st.session_state.page = "home"; st.rerun()
     st.header(f"⚡ Mẹo Cấp Tốc: {st.session_state.license_type}")
@@ -138,7 +138,7 @@ def render_captoc_page():
     tab1, tab2, tab3, tab4 = st.tabs(["🔢 SỐ & TUỔI", "🏎️ TỐC ĐỘ", "🛑 BIỂN BÁO & KT", "🚔 SA HÌNH"])
     folders = ["images", "images_a1"]
 
-    # TAB 1: TUỔI - HẠNG - TỪ KHÓA
+    # TAB 1: TUỔI - HẠNG (Đã xóa Kéo/Móc)
     with tab1:
         st.markdown("""
         <div class="tip-box">
@@ -146,17 +146,14 @@ def render_captoc_page():
             <div class="tip-content">👉 Nhìn 3 đáp án đầu, chọn số <span class="highlight-red">LỚN NHẤT</span>.<br>Ví dụ: 18, 21, 24 ➡ Chọn <b>24</b>.</div>
         </div>
         <div class="tip-box" style="border-left-color: #8b5cf6;">
-            <div class="tip-title">🆔 Hạng Xe & Từ Khóa</div>
+            <div class="tip-title">🆔 Hạng Xe</div>
             <div class="tip-content">
-            • Hỏi <b>FE</b>: Chọn ý <b>1</b> | Hỏi <b>FC</b>: Chọn ý <b>2</b>.<br>
-            • <b>Niên hạn:</b> Xe tải 25 năm | Xe khách 20 năm.<br>
-            • <b>Mẹo cuối câu:</b><br>
-            &nbsp;&nbsp;+ Có từ <b>"Kéo"</b> ➡ Chọn ý <span class="highlight-red">2</span>.<br>
-            &nbsp;&nbsp;+ Có từ <b>"Móc"</b> ➡ Chọn ý <span class="highlight-red">1</span>.
+            • Hỏi <b>FE</b>: Chọn ý <b>1</b> (Em 1)<br>
+            • Hỏi <b>FC</b>: Chọn ý <b>2</b> (Chị 2)<br>
+            • <b>Niên hạn:</b> Xe tải 25 năm | Xe khách 20 năm.
             </div>
         </div>
         """, unsafe_allow_html=True)
-        # Load ảnh
         imgs = load_multiple_images("tip_tuoi", folders) + load_multiple_images("tip_hang", folders)
         for img in imgs: st.image(img, use_container_width=True)
 
@@ -175,36 +172,45 @@ def render_captoc_page():
         imgs = load_multiple_images("tip_tocdo", folders)
         for img in imgs: st.image(img, use_container_width=True)
 
-    # TAB 3: BIỂN BÁO - KỸ THUẬT - LÊN CẦU
+    # TAB 3: BIỂN BÁO (THÊM MẸO MỚI)
     with tab3:
         st.markdown("""
         <div class="tip-box" style="border-left-color: #ef4444;">
-            <div class="tip-title">🛑 Biển Báo & Lên Cầu</div>
+            <div class="tip-title">🛑 Mẹo Biển Báo Cấm & Được</div>
             <div class="tip-content">
-            • <b>Biển cấm & STOP:</b> Có từ "Cấm" chọn <b>1</b>, còn lại chọn <b>2</b>.<br>
-            • <b>Mô tô & Ô tô đi cùng:</b> Cấm chọn <b>1</b>, Được chọn <b>3</b>.<br>
-            • <b>Dừng Đỗ:</b> 1 gạch (/) chọn <b>3</b>, 2 gạch (X) chọn <b>4</b>.<br>
-            • <b>Lên cầu - Xuống hầm:</b> Về số thấp (số 1).<br>
-            • <b>Cấm Moóc:</b> Cấm Máy kéo (không cấm Moóc). Cấm Moóc (cấm luôn Máy kéo).
+            <b>1. Mô tô & Ô tô đi cùng nhau:</b><br>
+            • Có từ <b>"Cấm"</b> ➡ Chọn ý <span class="highlight-red">1</span>.<br>
+            • Có từ <b>"Được"</b> (hoặc còn lại) ➡ Chọn ý <span class="highlight-red">3</span>.<br><br>
+            <b>2. Biển cấm Mô tô & Cấm tất cả xe cơ giới:</b><br>
+            • Hỏi <b>"Cấm"</b> ➡ Chọn ý <span class="highlight-red">1</span>.<br>
+            • Hỏi <b>"Được"</b> (hoặc còn lại) ➡ Chọn ý <span class="highlight-red">3</span>.<br><br>
+            <b>3. Biển cấm Luật định và STOP:</b><br>
+            • Có từ <b>"Cấm"</b> ➡ Chọn ý <b>1</b>.<br>
+            • Còn lại ➡ Chọn ý <b>2</b>.
+            </div>
+        </div>
+        <div class="tip-box" style="border-left-color: #ef4444;">
+            <div class="tip-title">🛑 Mẹo Dừng Đỗ</div>
+            <div class="tip-content">
+            • 1 gạch chéo (/) ➡ Cấm Đỗ ➡ Chọn ý <span class="highlight-red">3</span>.<br>
+            • 2 gạch chéo (X) ➡ Cấm Dừng & Đỗ ➡ Chọn ý <span class="highlight-red">4</span>.
             </div>
         </div>
         """, unsafe_allow_html=True)
-        # Load ảnh: bienbao + cauham + mooc
         imgs = load_multiple_images("tip_bienbao", folders) + load_multiple_images("tip_cau_ham", folders) + load_multiple_images("tip_mooc", folders)
         for img in imgs: st.image(img, use_container_width=True)
 
-    # TAB 4: SA HÌNH
+    # TAB 4: SA HÌNH (CẬP NHẬT CSGT)
     with tab4:
         st.markdown("""
         <div class="tip-box" style="border-left-color: #10b981;">
-            <div class="tip-title">👮 Mẹo Sa Hình</div>
+            <div class="tip-title">👮 Mẹo Sa Hình & CSGT</div>
             <div class="tip-content">
-            • <b>Quy tắc:</b> 1-1-2-4 (Nhất chớm - Nhì ưu - Tam đường - Tứ hướng).<br>
-            • <b>Xe Cảnh sát:</b> Ở ô nào chọn đáp án đó (thường là ý 2).<br>
+            • <b>CSGT dang 2 tay</b> (đứng trên bục): Chọn ý <span class="highlight-red">4</span>.<br>
+            • <b>CSGT giơ tay</b> (hoặc các câu khác): Chọn ý <span class="highlight-red">3</span>.<br>
+            • <b>Quy tắc 1-1-2-4:</b> Nhất chớm - Nhì ưu - Tam đường - Tứ hướng.<br>
             • <b>Xe Tải:</b> Đi thẳng hướng nào chọn đáp án đó (Trừ biển xanh).<br>
-            • <b>Xe Mô tô:</b> Đường thẳng chọn <b>2</b>, đường nằm ngang chọn <b>3</b>.<br>
-            • <b>Áo xanh/đỏ:</b> Xe gắn máy áo xanh chọn <b>1</b>, Ô tô áo đỏ chọn <b>3</b>.<br>
-            • Gặp biển "Giao nhau với đường ưu tiên" ➡ Đi sau cùng.
+            • <b>Xe Mô tô:</b> Đường thẳng chọn <b>2</b>, đường nằm ngang chọn <b>3</b>.
             </div>
         </div>
         """, unsafe_allow_html=True)
@@ -260,7 +266,6 @@ def render_exam_page():
     
     current_img = q.get('image')
     if current_img:
-        # Không hiện ảnh nếu là câu 1 và tên ảnh chứa "tip" hoặc là "1"
         if not (st.session_state.current_q_index == 0 and ("tip" in str(current_img) or current_img == "1")):
             img = load_image_smart(current_img, ["images", "images_a1"])
             if img: st.image(img)

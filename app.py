@@ -108,7 +108,7 @@ def load_image_smart(base_name, folders):
 
 # --- 5. TRANG CHỦ ---
 def render_home_page():
-    st.markdown('<div class="hero-card"><h1>🚗 GPLX MASTER PRO</h1><p style="font-size:1.4rem">Ôn thi cấp tốc - Đậu ngay lần đầu</p></div>', unsafe_allow_html=True)
+    st.markdown('<div class="hero-card"><h1>🚗 GPLX SHOPTINHOC</h1><p style="font-size:1.4rem">Ôn thi cấp tốc - Đậu ngay lần đầu</p></div>', unsafe_allow_html=True)
     col_xm, col_ot = st.columns(2)
 
     with col_xm:

@@ -135,7 +135,7 @@ def render_captoc_page():
     st.header(f"⚡ Mẹo Cấp Tốc: {st.session_state.license_type}")
     
     # Chia tab
-    tab1, tab2, tab3, tab4 = st.tabs(["🔢 SỐ, TUỔI & ĐUA", "🏎️ TỐC ĐỘ", "🛑 BIỂN BÁO, KT & LÀN", "🚔 SA HÌNH & NHƯỜNG"])
+    tab1, tab2, tab3, tab4 = st.tabs(["🔢 SỐ, TUỔI & ĐUA", "🏎️ TỐC ĐỘ", "🛑 BIỂN BÁO, KT & LÀN", "🚔 SA HÌNH & QUAN"])
     folders = ["images", "images_a1"]
 
     # TAB 1: TUỔI - HẠNG - ĐUA XE
@@ -180,11 +180,22 @@ def render_captoc_page():
         imgs = load_multiple_images("tip_tocdo", folders)
         for img in imgs: st.image(img, use_container_width=True)
 
-    # TAB 3: BIỂN BÁO - KỸ THUẬT - LÀN - KÉO/MÓC
+    # TAB 3: BIỂN BÁO - KỸ THUẬT - LÀN - 3 BIỂN TRÒN
     with tab3:
         st.markdown("""
+        <div class="tip-box" style="border-left-color: #ef4444;">
+            <div class="tip-title">🛑 Mẹo 3 Biển Tròn (Đỏ & Xanh)</div>
+            <div class="tip-content">
+            <b>1. Gặp 3 biển tròn ĐỎ:</b><br>
+            • Có từ <b>"hai bánh"</b> ➡ Chọn ý <span class="highlight-red">2</span>.<br>
+            • Không có ➡ Chọn ý <span class="highlight-red">1</span>.<br><br>
+            <b>2. Gặp 3 biển tròn XANH:</b><br>
+            • Có từ <b>"ngã ba, ngã tư"</b> ➡ Chọn ý <span class="highlight-red">3</span>.<br>
+            • Không có ➡ Chọn ý <span class="highlight-red">1</span>.
+            </div>
+        </div>
         <div class="tip-box" style="border-left-color: #f97316;">
-            <div class="tip-title">⚙️ Mẹo Kỹ Thuật & Từ Khóa</div>
+            <div class="tip-title">⚙️ Mẹo Kỹ Thuật</div>
             <div class="tip-content">
             • Câu hỏi có từ <b>"số tự động"</b> ➡ Luôn chọn ý <span class="highlight-red">1</span>.<br>
             • Cuối câu có từ <b>"Kéo"</b> ➡ Chọn ý <b>2</b> hoặc <b>3</b>.<br>
@@ -224,9 +235,16 @@ def render_captoc_page():
         imgs = load_multiple_images("tip_bienbao", folders) + load_multiple_images("tip_cau_ham", folders) + load_multiple_images("tip_mooc", folders)
         for img in imgs: st.image(img, use_container_width=True)
 
-    # TAB 4: SA HÌNH
+    # TAB 4: SA HÌNH & QUAN
     with tab4:
         st.markdown("""
+        <div class="tip-box" style="border-left-color: #10b981;">
+            <div class="tip-title">👮 Mẹo Quan Lớn - Quan Bé (Mới)</div>
+            <div class="tip-content">
+            • Gặp câu hỏi có <b>2, 3 xe Quan</b> (Công an, Quân sự...):<br>
+            • Ưu tiên chọn đáp án có từ <b>"Cả"</b>.
+            </div>
+        </div>
         <div class="tip-box" style="border-left-color: #10b981;">
             <div class="tip-title">👮 Mẹo Sa Hình & Nhường Đường</div>
             <div class="tip-content">

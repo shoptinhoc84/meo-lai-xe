@@ -42,7 +42,7 @@ st.markdown("""
         max-width: 1100px;
     }
 
-    /* CARD TRANG CHỦ GRADIENT */
+    /* CARD TRANG CHỦ */
     .hero-card {
         background: linear-gradient(135deg, #2563eb 0%, #4f46e5 100%);
         padding: 40px; border-radius: 24px; 
@@ -67,7 +67,6 @@ st.markdown("""
         transform: translateY(-3px);
         box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
     }
-    .tip-header { font-size: 1.3rem; font-weight: 800; color: #334155; margin-bottom: 8px; display: flex; align-items: center; gap: 8px;}
     .tip-body { font-size: 1.15rem; line-height: 1.7; color: #475569; }
 
     /* Highlight Text */
@@ -84,6 +83,11 @@ st.markdown("""
     }
     div[data-testid="stButton"] button:hover {
         transform: scale(1.02); box-shadow: 0 5px 10px rgba(0,0,0,0.1);
+    }
+
+    /* Input số câu hỏi */
+    div[data-testid="stNumberInput"] input {
+        font-weight: 800; font-size: 1.2rem; text-align: center;
     }
 
     /* Radio Button (Đáp án) */
@@ -167,14 +171,14 @@ def render_home_page():
         if st.button("📝 Thi Thử Ngay", use_container_width=True, key="ot3"):
             st.session_state.license_type = "Ô tô (B1, B2, C...)"; st.session_state.page = "exam"; st.rerun()
 
-# --- 6. TRANG MẸO CẤP TỐC (CÓ TÌM KIẾM & GIAO DIỆN ĐẸP) ---
+# --- 6. TRANG MẸO CẤP TỐC ---
 def render_captoc_page():
     # Sidebar
     with st.sidebar:
         if st.button("🏠 Về Trang Chủ", use_container_width=True):
             st.session_state.page = "home"; st.rerun()
         st.markdown("### 💡 Hướng dẫn")
-        st.info("Nhập từ khóa vào ô tìm kiếm để lọc nhanh mẹo bạn cần. Ví dụ: 'tuổi', 'tốc độ', 'biển báo'...")
+        st.info("Nhập từ khóa vào ô tìm kiếm để lọc nhanh mẹo bạn cần.")
 
     st.markdown(f'<h2 style="color:#1e40af; border-bottom: 3px solid #3b82f6; padding-bottom:10px;">⚡ MẸO CẤP TỐC: {st.session_state.license_type}</h2>', unsafe_allow_html=True)
     
@@ -287,7 +291,7 @@ def render_captoc_page():
     }
 
     # --- CHỨC NĂNG TÌM KIẾM ---
-    search_term = st.text_input("🔍 Tìm kiếm mẹo (Ví dụ: tuổi, tốc độ, cấm, vi phạm...)", "").lower()
+    search_term = st.text_input("🔍 Tìm kiếm mẹo nhanh (Ví dụ: tuổi, tốc độ, cấm, vi phạm...)", "").lower()
     
     if search_term:
         st.write(f"Kết quả tìm kiếm cho: **{search_term}**")
@@ -367,26 +371,53 @@ def render_tips_page():
                 img = load_image_smart(tip['image'], ["images", "images_a1"])
                 if img: st.image(img)
 
-# --- 8. TRANG LUYỆN THI (AUTO) ---
+# --- 8. TRANG LUYỆN THI (AUTO & KHÔI PHỤC TÌM KIẾM) ---
 def render_exam_page():
+    all_qs = load_json_file('dulieu_600_cau.json')
+    if not all_qs: st.error("Lỗi dữ liệu!"); return
+    total = len(all_qs)
+
     with st.sidebar:
         if st.button("🏠 Về Trang Chủ", use_container_width=True):
             st.session_state.page = "home"; st.rerun()
         st.write("---")
         auto_mode = st.toggle("🚀 AUTO CHẠY LUÔN", key="auto")
         delay = st.slider("Tốc độ (s):", 1, 5, 2)
+        
+        st.write("---")
+        st.markdown("### 🔍 Tìm câu hỏi")
+        search_q = st.text_input("Gõ từ khóa:", placeholder="VD: nồng độ cồn")
+        if search_q:
+            results = [i for i, q in enumerate(all_qs) if search_q.lower() in q['question'].lower()]
+            if results:
+                st.success(f"Tìm thấy {len(results)} câu.")
+                selected_q = st.selectbox("Chọn câu để nhảy tới:", results, format_func=lambda x: f"Câu {x+1}")
+                if st.button("Đi tới câu này"):
+                    st.session_state.current_q_index = selected_q
+                    st.rerun()
+            else:
+                st.warning("Không tìm thấy.")
 
-    all_qs = load_json_file('dulieu_600_cau.json')
-    if not all_qs: st.error("Lỗi dữ liệu!"); return
-    total = len(all_qs)
-
-    # Thanh điều hướng
+    # Thanh điều hướng chính (Khôi phục nhập số câu)
     c1, c2, c3 = st.columns([1, 2, 1])
     with c1:
         if st.button("⬅️ Trước", use_container_width=True): 
             st.session_state.current_q_index = max(0, st.session_state.current_q_index - 1); st.rerun()
     with c2:
-        st.markdown(f"<h3 style='text-align: center; margin:0'>Câu {st.session_state.current_q_index + 1} / {total}</h3>", unsafe_allow_html=True)
+        # KHÔI PHỤC Ô NHẬP SỐ CÂU
+        new_index = st.number_input(
+            "Chuyển đến câu số:", 
+            min_value=1, max_value=total, 
+            value=st.session_state.current_q_index + 1,
+            label_visibility="collapsed"
+        )
+        if new_index - 1 != st.session_state.current_q_index:
+            st.session_state.current_q_index = new_index - 1
+            st.rerun()
+        
+        # Hiển thị số câu hiện tại nhỏ ở dưới
+        st.markdown(f"<div style='text-align: center; color: #64748b; font-size: 0.9rem;'>Câu {st.session_state.current_q_index + 1} / {total}</div>", unsafe_allow_html=True)
+
     with c3:
         if st.button("Tiếp ➡️", use_container_width=True): 
             st.session_state.current_q_index = min(total - 1, st.session_state.current_q_index + 1); st.rerun()

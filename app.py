@@ -135,7 +135,7 @@ def render_captoc_page():
     st.header(f"⚡ Mẹo Cấp Tốc: {st.session_state.license_type}")
     
     # Chia tab
-    tab1, tab2, tab3, tab4 = st.tabs(["🔢 SỐ & TUỔI", "🏎️ TỐC ĐỘ", "🛑 BIỂN BÁO & KT", "🚔 SA HÌNH"])
+    tab1, tab2, tab3, tab4 = st.tabs(["🔢 SỐ & TUỔI", "🏎️ TỐC ĐỘ", "🛑 BIỂN BÁO & KT", "🚔 SA HÌNH & LÀN"])
     folders = ["images", "images_a1"]
 
     # TAB 1: TUỔI - HẠNG

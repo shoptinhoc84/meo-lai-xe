@@ -6,7 +6,7 @@ from PIL import Image, ImageOps
 
 # --- 1. CẤU HÌNH TRANG ---
 st.set_page_config(
-    page_title="GPLX Pro - Chuẩn Mẹo 2026",
+    page_title="GPLX Pro - Full Mẹo 2026",
     page_icon="🚗",
     layout="wide",
     initial_sidebar_state="collapsed"
@@ -134,7 +134,7 @@ def render_captoc_page():
     if st.button("🏠 VỀ TRANG CHỦ"): st.session_state.page = "home"; st.rerun()
     st.header(f"⚡ Mẹo Cấp Tốc: {st.session_state.license_type}")
     
-    # CHIA TAB - Đưa Làn vào Tab 3
+    # Chia tab
     tab1, tab2, tab3, tab4 = st.tabs(["🔢 SỐ & TUỔI", "🏎️ TỐC ĐỘ", "🛑 BIỂN BÁO, KT & LÀN", "🚔 SA HÌNH"])
     folders = ["images", "images_a1"]
 
@@ -146,9 +146,12 @@ def render_captoc_page():
             <div class="tip-content">👉 Nhìn 3 đáp án đầu, chọn số <span class="highlight-red">LỚN NHẤT</span>.<br>Ví dụ: 18, 21, 24 ➡ Chọn <b>24</b>.</div>
         </div>
         <div class="tip-box" style="border-left-color: #8b5cf6;">
-            <div class="tip-title">🆔 Hạng Xe</div>
+            <div class="tip-title">🆔 Mẹo Hạng Xe</div>
             <div class="tip-content">
-            • Hỏi <b>FE</b>: Chọn ý <b>1</b> | Hỏi <b>FC</b>: Chọn ý <b>2</b>.<br>
+            • Hỏi <b>"B1, C1, D1, D2"</b> ➡ Lấy số + 1 = Đáp án.<br>
+            &nbsp;&nbsp;<i>(Ví dụ: B1 ➡ 1+1=2)</i><br>
+            • Hỏi <b>"A, B, C, D"</b> (không số) ➡ Chọn đáp án <b>cuối</b>.<br>
+            • Hỏi <b>"BE, CE, DE"</b> ➡ Bỏ E, tìm đáp án có chữ cái <b>B, C, D</b>.<br>
             • <b>Niên hạn:</b> Xe tải 25 năm | Xe khách 20 năm.
             </div>
         </div>
@@ -171,7 +174,7 @@ def render_captoc_page():
         imgs = load_multiple_images("tip_tocdo", folders)
         for img in imgs: st.image(img, use_container_width=True)
 
-    # TAB 3: BIỂN BÁO - KỸ THUẬT - LÀN
+    # TAB 3: BIỂN BÁO - KỸ THUẬT - MẸO KÉO/MÓC
     with tab3:
         st.markdown("""
         <div class="tip-box" style="border-left-color: #ef4444;">
@@ -280,6 +283,7 @@ def render_exam_page():
     
     current_img = q.get('image')
     if current_img:
+        # Lọc bỏ ảnh mẹo nếu dính vào câu 1
         if not (st.session_state.current_q_index == 0 and ("tip" in str(current_img) or current_img == "1")):
             img = load_image_smart(current_img, ["images", "images_a1"])
             if img: st.image(img)

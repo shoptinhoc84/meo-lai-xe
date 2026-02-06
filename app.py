@@ -241,8 +241,8 @@ def render_captoc_page():
         <div class="tip-box" style="border-left-color: #10b981;">
             <div class="tip-title">👮 Mẹo Quan Lớn - Quan Bé (Mới)</div>
             <div class="tip-content">
-            • Gặp câu hỏi có <b>2, 3 xe Quan</b> (Công an, Quân sự...):<br>
-            • Ưu tiên chọn đáp án có từ <b>"Cả"</b>.
+            • Gặp câu hỏi có <b>2, 3 từ Quan</b>:<br>
+            • Ưu tiên chọn đáp án có từ <b>"Cả" Không cả chọn Quan dài </b>.
             </div>
         </div>
         <div class="tip-box" style="border-left-color: #10b981;">

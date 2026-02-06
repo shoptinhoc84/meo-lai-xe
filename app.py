@@ -6,7 +6,7 @@ from PIL import Image, ImageOps
 
 # --- 1. CẤU HÌNH TRANG ---
 st.set_page_config(
-    page_title="GPLX Pro - Chuẩn Mẹo Sách",
+    page_title="GPLX Pro - Full Mẹo 2026",
     page_icon="🚗",
     layout="wide",
     initial_sidebar_state="collapsed"
@@ -20,7 +20,7 @@ if 'license_type' not in st.session_state:
 if 'current_q_index' not in st.session_state:
     st.session_state.current_q_index = 0
 
-# --- 3. CSS GIAO DIỆN (FONT TO, CARD ĐẸP) ---
+# --- 3. CSS GIAO DIỆN ---
 st.markdown("""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap');
@@ -42,7 +42,7 @@ st.markdown("""
         margin: 20px 0 15px 0; padding-bottom: 5px; border-bottom: 5px solid #3b82f6; display: inline-block;
     }
 
-    /* TIP BOX CHUẨN SÁCH */
+    /* TIP BOX */
     .tip-box {
         background: white; border-radius: 18px; padding: 25px; margin-bottom: 20px;
         border-left: 12px solid #3b82f6; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.08);
@@ -53,7 +53,6 @@ st.markdown("""
     .hl-red { color: #e11d48; font-weight: 800; background: #fff1f2; padding: 2px 8px; border-radius: 8px; }
     .hl-blue { color: #2563eb; font-weight: 800; background: #eff6ff; padding: 2px 8px; border-radius: 8px; }
 
-    /* RADIO BUTTONS */
     div[data-testid="stRadio"] div[role="radiogroup"] > label {
         background: white; border: 2px solid #cbd5e1; padding: 25px !important;
         border-radius: 18px; width: 100%; cursor: pointer; margin-bottom: 12px;
@@ -109,59 +108,66 @@ def load_image_smart(base_name, folders):
 
 # --- 5. TRANG CHỦ ---
 def render_home_page():
-    st.markdown('<div class="hero-card"><h1>🚗 GPLX MASTER PRO</h1><p style="font-size:1.4rem">Hệ thống ôn thi chuẩn mẹo sách</p></div>', unsafe_allow_html=True)
+    st.markdown('<div class="hero-card"><h1>🚗 GPLX MASTER PRO</h1><p style="font-size:1.4rem">Hệ thống ôn thi chuẩn Mẹo Sách & Auto 2026</p></div>', unsafe_allow_html=True)
     col_xm, col_ot = st.columns(2)
 
     with col_xm:
         st.markdown('<div class="section-title">🛵 XE MÁY (A1, A2)</div>', unsafe_allow_html=True)
-        if st.button("🚀 Mẹo Cấp Tốc Xe Máy", use_container_width=True, key="xm_1"):
+        if st.button("🚀 Mẹo Cấp Tốc Xe Máy", use_container_width=True, key="xm_cap"):
             st.session_state.license_type = "Xe máy (A1, A2)"; st.session_state.page = "captoc"; st.rerun()
-        if st.button("📖 Mẹo Chi Tiết Xe Máy", use_container_width=True, key="xm_2"):
+        if st.button("📖 Mẹo Chi Tiết Xe Máy", use_container_width=True, key="xm_tip"):
             st.session_state.license_type = "Xe máy (A1, A2)"; st.session_state.page = "tips"; st.rerun()
-        if st.button("📝 Luyện Thi Xe Máy", use_container_width=True, key="xm_3"):
+        if st.button("📝 Luyện Thi Xe Máy", use_container_width=True, key="xm_exam"):
             st.session_state.license_type = "Xe máy (A1, A2)"; st.session_state.page = "exam"; st.rerun()
 
     with col_ot:
         st.markdown('<div class="section-title">🚗 Ô TÔ (B1, B2, C)</div>', unsafe_allow_html=True)
-        if st.button("🚀 Mẹo Cấp Tốc Ô Tô", use_container_width=True, key="ot_1"):
+        if st.button("🚀 Mẹo Cấp Tốc Ô Tô", use_container_width=True, key="ot_cap"):
             st.session_state.license_type = "Ô tô (B1, B2, C...)"; st.session_state.page = "captoc"; st.rerun()
-        if st.button("📖 Mẹo Chi Tiết Ô Tô", use_container_width=True, key="ot_2"):
+        if st.button("📖 Mẹo Chi Tiết Ô Tô", use_container_width=True, key="ot_tip"):
             st.session_state.license_type = "Ô tô (B1, B2, C...)"; st.session_state.page = "tips"; st.rerun()
-        if st.button("📝 Luyện Thi Ô Tô", use_container_width=True, key="ot_3"):
+        if st.button("📝 Luyện Thi Ô Tô", use_container_width=True, key="ot_exam"):
             st.session_state.license_type = "Ô tô (B1, B2, C...)"; st.session_state.page = "exam"; st.rerun()
 
-# --- 6. TRANG MẸO CẤP TỐC (CHUẨN FILE WORD) ---
+# --- 6. TRANG MẸO CẤP TỐC (CẬP NHẬT FULL) ---
 def render_captoc_page():
     if st.button("🏠 VỀ TRANG CHỦ"): st.session_state.page = "home"; st.rerun()
     st.header(f"⚡ Mẹo Cấp Tốc: {st.session_state.license_type}")
     
-    tab1, tab2, tab3, tab4 = st.tabs(["🔢 SỐ & TUỔI", "🏎️ TỐC ĐỘ", "🛑 BIỂN BÁO", "🚔 SA HÌNH"])
+    # Chia tab
+    tab1, tab2, tab3, tab4 = st.tabs(["🔢 SỐ & TUỔI", "🏎️ TỐC ĐỘ", "🛑 BIỂN BÁO & KT", "🚔 SA HÌNH"])
     folders = ["images", "images_a1"]
 
+    # TAB 1: TUỔI - HẠNG - TỪ KHÓA
     with tab1:
         st.markdown("""
         <div class="tip-box">
             <div class="tip-title">🎂 Mẹo Độ Tuổi</div>
-            <div class="tip-content">👉 Nhìn 3 đáp án đầu, chọn số <span class="hl-red">LỚN NHẤT</span>.<br>Ví dụ: 18, 21, 24 ➡ Chọn <b>24</b>.</div>
+            <div class="tip-content">👉 Nhìn 3 đáp án đầu, chọn số <span class="highlight-red">LỚN NHẤT</span>.<br>Ví dụ: 18, 21, 24 ➡ Chọn <b>24</b>.</div>
         </div>
         <div class="tip-box" style="border-left-color: #8b5cf6;">
-            <div class="tip-title">🆔 Hạng Xe & Niên Hạn</div>
+            <div class="tip-title">🆔 Hạng Xe & Từ Khóa</div>
             <div class="tip-content">
             • Hỏi <b>FE</b>: Chọn ý <b>1</b> | Hỏi <b>FC</b>: Chọn ý <b>2</b>.<br>
-            • <b>Xe tải:</b> 25 năm | <b>Xe khách:</b> 20 năm.
+            • <b>Niên hạn:</b> Xe tải 25 năm | Xe khách 20 năm.<br>
+            • <b>Mẹo cuối câu:</b><br>
+            &nbsp;&nbsp;+ Có từ <b>"Kéo"</b> ➡ Chọn ý <span class="highlight-red">2</span>.<br>
+            &nbsp;&nbsp;+ Có từ <b>"Móc"</b> ➡ Chọn ý <span class="highlight-red">1</span>.
             </div>
         </div>
         """, unsafe_allow_html=True)
+        # Load ảnh
         imgs = load_multiple_images("tip_tuoi", folders) + load_multiple_images("tip_hang", folders)
         for img in imgs: st.image(img, use_container_width=True)
 
+    # TAB 2: TỐC ĐỘ
     with tab2:
         st.markdown("""
         <div class="tip-box" style="border-left-color: #f59e0b;">
             <div class="tip-title">🏎️ Tốc độ & Khoảng cách</div>
             <div class="tip-content">
-            • Đường <b>ĐÔI</b> (Có giải phân cách): <span class="hl-blue">60 km/h</span>.<br>
-            • Đường <b>2 CHIỀU</b> (Không giải phân cách): <span class="hl-blue">50 km/h</span>.<br>
+            • Đường <b>ĐÔI</b> (Có giải phân cách): <span class="highlight-blue">60 km/h</span>.<br>
+            • Đường <b>2 CHIỀU</b> (Không giải phân cách): <span class="highlight-blue">50 km/h</span>.<br>
             • <b>Khoảng cách:</b> Lấy V(max) <span class="highlight-red">TRỪ 30</span> ➡ Ra đáp án.
             </div>
         </div>
@@ -169,37 +175,36 @@ def render_captoc_page():
         imgs = load_multiple_images("tip_tocdo", folders)
         for img in imgs: st.image(img, use_container_width=True)
 
+    # TAB 3: BIỂN BÁO - KỸ THUẬT - LÊN CẦU
     with tab3:
-        # CẬP NHẬT CHÍNH XÁC TỪ FILE WORD
         st.markdown("""
         <div class="tip-box" style="border-left-color: #ef4444;">
-            <div class="tip-title">🛑 Biển Cấm Luật Định & STOP</div>
+            <div class="tip-title">🛑 Biển Báo & Lên Cầu</div>
             <div class="tip-content">
-            • Có từ <b>"Cấm"</b> ➡ Chọn ý <span class="hl-red">1</span>.<br>
-            • Còn lại ➡ Chọn ý <span class="hl-red">2</span>.
-            </div>
-        </div>
-        <div class="tip-box" style="border-left-color: #ef4444;">
-            <div class="tip-title">🛑 Mẹo Dừng Đỗ</div>
-            <div class="tip-content">
-            • Biển 1 dấu / (Cấm đỗ) ➡ Chọn ý <span class="hl-red">3</span>.<br>
-            • Biển 2 dấu X (Cấm dừng đỗ) ➡ Chọn ý <span class="hl-red">4</span>.
+            • <b>Biển cấm & STOP:</b> Có từ "Cấm" chọn <b>1</b>, còn lại chọn <b>2</b>.<br>
+            • <b>Mô tô & Ô tô đi cùng:</b> Cấm chọn <b>1</b>, Được chọn <b>3</b>.<br>
+            • <b>Dừng Đỗ:</b> 1 gạch (/) chọn <b>3</b>, 2 gạch (X) chọn <b>4</b>.<br>
+            • <b>Lên cầu - Xuống hầm:</b> Về số thấp (số 1).<br>
+            • <b>Cấm Moóc:</b> Cấm Máy kéo (không cấm Moóc). Cấm Moóc (cấm luôn Máy kéo).
             </div>
         </div>
         """, unsafe_allow_html=True)
-        imgs = load_multiple_images("tip_bienbao", folders)
+        # Load ảnh: bienbao + cauham + mooc
+        imgs = load_multiple_images("tip_bienbao", folders) + load_multiple_images("tip_cau_ham", folders) + load_multiple_images("tip_mooc", folders)
         for img in imgs: st.image(img, use_container_width=True)
 
+    # TAB 4: SA HÌNH
     with tab4:
-        # CẬP NHẬT CHÍNH XÁC TỪ FILE WORD
         st.markdown("""
         <div class="tip-box" style="border-left-color: #10b981;">
             <div class="tip-title">👮 Mẹo Sa Hình</div>
             <div class="tip-content">
-            • <b>Quy tắc 1-1-2-4:</b> Nhất chớm - Nhì ưu - Tam đường - Tứ hướng.<br>
+            • <b>Quy tắc:</b> 1-1-2-4 (Nhất chớm - Nhì ưu - Tam đường - Tứ hướng).<br>
             • <b>Xe Cảnh sát:</b> Ở ô nào chọn đáp án đó (thường là ý 2).<br>
             • <b>Xe Tải:</b> Đi thẳng hướng nào chọn đáp án đó (Trừ biển xanh).<br>
-            • <b>Thứ tự đi:</b> Gặp biển "Giao nhau với đường ưu tiên" ➡ Đi sau cùng.
+            • <b>Xe Mô tô:</b> Đường thẳng chọn <b>2</b>, đường nằm ngang chọn <b>3</b>.<br>
+            • <b>Áo xanh/đỏ:</b> Xe gắn máy áo xanh chọn <b>1</b>, Ô tô áo đỏ chọn <b>3</b>.<br>
+            • Gặp biển "Giao nhau với đường ưu tiên" ➡ Đi sau cùng.
             </div>
         </div>
         """, unsafe_allow_html=True)
@@ -208,10 +213,8 @@ def render_captoc_page():
             cols = st.columns(2)
             for i, img in enumerate(imgs):
                 with cols[i % 2]: st.image(img, use_container_width=True)
-        else:
-            st.info("Chưa có ảnh sa hình.")
 
-# --- 7. TRANG MẸO CHI TIẾT (MẸO CŨ) ---
+# --- 7. TRANG MẸO CHI TIẾT ---
 def render_tips_page():
     if st.button("🏠 Về Trang Chủ"): st.session_state.page = "home"; st.rerun()
     st.markdown(f"## 📖 Mẹo Chi Tiết: {st.session_state.license_type}")
@@ -231,7 +234,7 @@ def render_tips_page():
             img = load_image_smart(tip['image'], ["images", "images_a1"])
             if img: st.image(img, use_container_width=True)
 
-# --- 8. TRANG LUYỆN THI (AUTO & FIX ẢNH) ---
+# --- 8. TRANG LUYỆN THI ---
 def render_exam_page():
     if st.button("🏠 VỀ TRANG CHỦ"): st.session_state.page = "home"; st.rerun()
     all_qs = load_json_file('dulieu_600_cau.json')
@@ -241,15 +244,15 @@ def render_exam_page():
     st.write("---")
     c1, c2, c3 = st.columns([1, 1, 1])
     with c1:
-        if st.button("⬅️ Trước", key="p"): st.session_state.current_q_index = max(0, st.session_state.current_q_index - 1); st.rerun()
+        if st.button("⬅️ Trước"): st.session_state.current_q_index = max(0, st.session_state.current_q_index - 1); st.rerun()
     with c2:
         new_q = st.number_input("Câu:", 1, total, st.session_state.current_q_index + 1)
         if new_q - 1 != st.session_state.current_q_index: st.session_state.current_q_index = new_q - 1; st.rerun()
     with c3:
-        if st.button("Tiếp ➡️", key="n", type="primary"): st.session_state.current_q_index = min(total - 1, st.session_state.current_q_index + 1); st.rerun()
+        if st.button("Tiếp ➡️"): st.session_state.current_q_index = min(total - 1, st.session_state.current_q_index + 1); st.rerun()
 
     auto_mode = st.toggle("🚀 AUTO CHẠY LUÔN", key="auto")
-    delay = st.slider("Tốc độ (giây):", 1, 5, 2)
+    delay = st.slider("Tốc độ:", 1, 5, 2)
 
     q = all_qs[st.session_state.current_q_index]
     st.subheader(f"Câu {st.session_state.current_q_index + 1} / {total}")
@@ -257,7 +260,8 @@ def render_exam_page():
     
     current_img = q.get('image')
     if current_img:
-        if not (st.session_state.current_q_index == 0 and "tip" in str(current_img)):
+        # Không hiện ảnh nếu là câu 1 và tên ảnh chứa "tip" hoặc là "1"
+        if not (st.session_state.current_q_index == 0 and ("tip" in str(current_img) or current_img == "1")):
             img = load_image_smart(current_img, ["images", "images_a1"])
             if img: st.image(img)
 
@@ -265,7 +269,7 @@ def render_exam_page():
     options = q['options']
     correct_idx = [i for i, opt in enumerate(options) if opt.strip() == correct_ans][0]
 
-    user_choice = st.radio("Chọn đáp án:", options, index=correct_idx if auto_mode else None, key=f"r_{st.session_state.current_q_index}")
+    user_choice = st.radio("Chọn:", options, index=correct_idx if auto_mode else None, key=f"r_{st.session_state.current_q_index}")
 
     if user_choice:
         if user_choice.strip() == correct_ans:

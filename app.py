@@ -16,7 +16,7 @@ st.set_page_config(
 if 'page' not in st.session_state:
     st.session_state.page = "home"
 if 'license_type' not in st.session_state:
-    st.session_state.license_type = "Xe máy (A1, A2)"
+    st.session_state.license_type = "Xe máy (A1, A)"
 if 'current_q_index' not in st.session_state:
     st.session_state.current_q_index = 0
 
@@ -169,20 +169,20 @@ def render_home_page():
     with col_xm:
         st.markdown('<h3 style="text-align:center; color:#0f172a;">🛵 XE MÁY (A1, A2)</h3>', unsafe_allow_html=True)
         if st.button("🚀 Mẹo Cấp Tốc", use_container_width=True, key="xm1"):
-            st.session_state.license_type = "Xe máy (A1, A2)"; st.session_state.page = "captoc"; st.rerun()
+            st.session_state.license_type = "Xe máy (A1, A)"; st.session_state.page = "captoc"; st.rerun()
         if st.button("📖 Mẹo Chi Tiết", use_container_width=True, key="xm2"):
-            st.session_state.license_type = "Xe máy (A1, A2)"; st.session_state.page = "tips"; st.rerun()
+            st.session_state.license_type = "Xe máy (A1, A)"; st.session_state.page = "tips"; st.rerun()
         if st.button("📝 Thi Thử Xe Máy", use_container_width=True, key="xm3"):
-            st.session_state.license_type = "Xe máy (A1, A2)"; st.session_state.page = "exam"; st.rerun()
+            st.session_state.license_type = "Xe máy (A1, A)"; st.session_state.page = "exam"; st.rerun()
 
     with col_ot:
         st.markdown('<h3 style="text-align:center; color:#0f172a;">🚗 Ô TÔ (B, C, D)</h3>', unsafe_allow_html=True)
         if st.button("🚀 Mẹo Cấp Tốc", use_container_width=True, key="ot1"):
-            st.session_state.license_type = "Ô tô (B1, B2, C...)"; st.session_state.page = "captoc"; st.rerun()
+            st.session_state.license_type = "Ô tô (B01, B, C1...)"; st.session_state.page = "captoc"; st.rerun()
         if st.button("📖 Mẹo Chi Tiết", use_container_width=True, key="ot2"):
-            st.session_state.license_type = "Ô tô (B1, B2, C...)"; st.session_state.page = "tips"; st.rerun()
+            st.session_state.license_type = "Ô tô (B01, B, C1...)"; st.session_state.page = "tips"; st.rerun()
         if st.button("📝 Thi Thử Ô Tô", use_container_width=True, key="ot3"):
-            st.session_state.license_type = "Ô tô (B1, B2, C...)"; st.session_state.page = "exam"; st.rerun()
+            st.session_state.license_type = "Ô tô (B01, B, C...)"; st.session_state.page = "exam"; st.rerun()
 
 # --- 6. TRANG MẸO CẤP TỐC ---
 def render_captoc_page():

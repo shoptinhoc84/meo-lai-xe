@@ -167,7 +167,7 @@ def render_home_page():
     
     col_xm, col_ot = st.columns(2)
     with col_xm:
-        st.markdown('<h3 style="text-align:center; color:#0f172a;">🛵 XE MÁY (A1, A2)</h3>', unsafe_allow_html=True)
+        st.markdown('<h3 style="text-align:center; color:#0f172a;">🛵 XE MÁY (A1, A)</h3>', unsafe_allow_html=True)
         if st.button("🚀 Mẹo Cấp Tốc", use_container_width=True, key="xm1"):
             st.session_state.license_type = "Xe máy (A1, A)"; st.session_state.page = "captoc"; st.rerun()
         if st.button("📖 Mẹo Chi Tiết", use_container_width=True, key="xm2"):
@@ -176,7 +176,7 @@ def render_home_page():
             st.session_state.license_type = "Xe máy (A1, A)"; st.session_state.page = "exam"; st.rerun()
 
     with col_ot:
-        st.markdown('<h3 style="text-align:center; color:#0f172a;">🚗 Ô TÔ (B, C, D)</h3>', unsafe_allow_html=True)
+        st.markdown('<h3 style="text-align:center; color:#0f172a;">🚗 Ô TÔ (B01, C1, D)</h3>', unsafe_allow_html=True)
         if st.button("🚀 Mẹo Cấp Tốc", use_container_width=True, key="ot1"):
             st.session_state.license_type = "Ô tô (B01, B, C1...)"; st.session_state.page = "captoc"; st.rerun()
         if st.button("📖 Mẹo Chi Tiết", use_container_width=True, key="ot2"):
